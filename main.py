@@ -279,7 +279,7 @@ class Game:
             self.storyteller_text = "Night falls on the town...\nA villain lurks among you."
             self.killed_tonight = None
             self.history.append({"type": "night", "day": 1, "victim": None,
-                                  "description": "The first night fell. No one was killed."})
+                                  "description": "The first night fell. No one was killed, but there are rumors of a murderer on the loose."})
         else:
             # Villain kills someone
             innocents = [c for c in self.alive if not c["is_villain"]]
@@ -332,7 +332,7 @@ class Game:
                 f"Personality: {npc['personality']}. From: {npc['hometown']}. "
                 f"Weakness: {npc['weakness']}. "
                 f"The other living townspeople are: {', '.join(n for n in alive_names if n != npc['name'])}. "
-                f"IMPORTANT: Only refer to these people by their exact names. Do NOT invent any names. "
+                f"IMPORTANT: Only refer to these people by their exact names. Do NOT invent any names. Do not speak in third person."
             )
             if dead_names:
                 system += f"The following people have been killed: {', '.join(dead_names)}. "
