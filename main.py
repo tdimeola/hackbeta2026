@@ -622,7 +622,13 @@ def llm_get_result(key):
 # ── Game State ──────────────────────────────────────────────────
 class Game:
     def __init__(self):
-        self.state = "MENU"  # MENU, NIGHT, DAY, ACCUSE, ACCUSE_RESULT, WIN, LOSE
+        self.state = "MENU"  # MENU, NIGHT, DAY, ACCUSE, REVEAL, ACCUSE_RESULT, WIN, LOSE
+        # Reveal animation state
+        self.reveal_timer = 0.0
+        self.reveal_duration = 4.35    # total seconds for suspense animation
+        self.reveal_target_state = ""  # WIN, LOSE, or ACCUSE_RESULT
+        self.reveal_accused = None     # character dict being accused
+        self.reveal_correct = False
         self.night_num = 0
         self.wrong_guesses = 0
         self.characters = []
@@ -1308,9 +1314,18 @@ class Game:
         self.accuse_selection = 0
 
     def do_accuse(self, character):
-        if character["is_villain"]:
-            music_stop(fade_ms=1500)
-            REVEAL_SOUND.play()
+        # Start reveal animation — actual result resolves when timer ends
+        self.reveal_accused = character
+        self.reveal_correct = character["is_villain"]
+        self.reveal_timer = 0.0
+        self.state = "REVEAL"
+        music_stop(fade_ms=1500)
+        REVEAL_SOUND.play()
+
+    def _finish_reveal(self):
+        """Called when the reveal animation timer expires. Resolves the accusation."""
+        character = self.reveal_accused
+        if self.reveal_correct:
             self.state = "WIN"
             self.storyteller_text = (
                 f"You accused {character['name']}...\n"
@@ -1335,18 +1350,14 @@ class Game:
                     f"but they were innocent. The town was shocked and the real killer is still at large."
                 ),
             })
-            # Record accusation in NPC memories
             for npc in self.alive:
                 name = npc["name"]
                 if name in self.npc_memory:
                     self.npc_memory[name].append(f"Day {self.night_num}: Detective wrongly accused {character['name']}.")
-            # Villain becomes more desperate
             villain_npc = next((c for c in self.alive if c["is_villain"]), None)
             if villain_npc and villain_npc["name"] in self.npc_emotional_state:
                 self.npc_emotional_state[villain_npc["name"]]["desperation"] += 1
-            REVEAL_SOUND.play()
             if self.wrong_guesses >= 3:
-                music_stop(fade_ms=1500)
                 self.state = "LOSE"
                 self.storyteller_text = (
                     f"{character['name']} was innocent!\n"
@@ -1909,6 +1920,11 @@ while running:
 
     if game.state == "NIGHT":
         game.night_timer -= dt
+
+    if game.state == "REVEAL":
+        game.reveal_timer += dt
+        if game.reveal_timer >= game.reveal_duration:
+            game._finish_reveal()
 
     if game.state == "DAY" and not game.showing_journal and not game.showing_evidence_log and not game.showing_clue_tracker:
         # Movement
@@ -2485,6 +2501,40 @@ while running:
                 prefix = "> " if i == game.accuse_selection else "  "
                 text = f"{prefix}{c['name']}  ({c['personality']}, from {c['hometown']})"
                 draw_centered_text(screen, text, font_md, col, y_pos)
+
+    elif game.state == "REVEAL":
+        t = game.reveal_timer
+        dur = game.reveal_duration
+        progress = min(t / dur, 1.0)
+        accused = game.reveal_accused
+
+        screen.fill((10, 8, 15))
+
+        if accused:
+            if progress < 0.5:
+                # Suspense: "You accused..." then name fades in
+                fade_in = min(1.0, t / (dur * 0.25))
+                text_surf = font_lg.render("You accused...", True, (200, 200, 220))
+                text_surf.set_alpha(int(255 * fade_in))
+                screen.blit(text_surf, (SCREEN_W // 2 - text_surf.get_width() // 2, 220))
+
+                if progress > 0.15:
+                    name_surf = font_title.render(accused["name"], True, (255, 255, 255))
+                    name_surf.set_alpha(int(255 * min(1.0, (progress - 0.15) / 0.15)))
+                    screen.blit(name_surf, (SCREEN_W // 2 - name_surf.get_width() // 2, 310))
+            else:
+                # Reveal: flash then verdict
+                flash_progress = (progress - 0.5) / 0.5
+                if flash_progress < 0.2:
+                    flash = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
+                    flash.fill((255, 255, 255, int(255 * (1.0 - flash_progress / 0.2))))
+                    screen.blit(flash, (0, 0))
+
+                draw_centered_text(screen, accused["name"], font_title, (255, 255, 255), 250)
+                if game.reveal_correct:
+                    draw_centered_text(screen, "VILLAIN!", font_title, (255, 80, 80), 350)
+                else:
+                    draw_centered_text(screen, "INNOCENT...", font_title, (100, 200, 255), 350)
 
     elif game.state == "ACCUSE_RESULT":
         screen.fill((40, 30, 10))
