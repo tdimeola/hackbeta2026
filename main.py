@@ -1,4 +1,5 @@
 import tkinter as tk
+from PIL import Image, ImageTk
 from roles import GameState
 from dialog import get_npc_dialog
 
@@ -23,18 +24,84 @@ root.resizable(False, False)
 cv = tk.Canvas(root, width=W, height=H, bg=DARK_BG, highlightthickness=0)
 cv.place(x=0, y=0)
 
-_btns = []
-game  = GameState()
+_btns  = []
+_anim  = None   # pending after() id for GIF animation
+game   = GameState()
+
+# ── Image loading ─────────────────────────────────────────
+
+gif_frames  = []   # list of (ImageTk.PhotoImage, delay_ms)
+night_bg    = None
+
+def _load_images():
+    global gif_frames, night_bg
+
+    # Animated village GIF
+    try:
+        src = Image.open('images/bg_village.gif')
+        while True:
+            frame = src.copy().convert('RGB').resize((W, H), Image.LANCZOS)
+            delay = src.info.get('duration', 80)
+            gif_frames.append((ImageTk.PhotoImage(frame), delay))
+            try:
+                src.seek(src.tell() + 1)
+            except EOFError:
+                break
+    except Exception as e:
+        print(f'bg_village.gif not loaded: {e}')
+
+    # Night PNG
+    try:
+        img = Image.open('images/bg_night.png').convert('RGB').resize((W, H), Image.LANCZOS)
+        night_bg = ImageTk.PhotoImage(img)
+    except Exception as e:
+        print(f'bg_night.png not loaded: {e}')
+
+_load_images()
+
+
+def _draw_bg(image):
+    """Place a background image at canvas origin."""
+    if image:
+        cv.create_image(0, 0, anchor='nw', image=image, tags='bg')
+
+
+def _draw_village_last():
+    """Draw the last GIF frame as a static background."""
+    if gif_frames:
+        _draw_bg(gif_frames[-1][0])
+
+
+def _dim_overlay(alpha=140):
+    """Semi-transparent dark overlay so text stays readable over bright backgrounds."""
+    # Tkinter has no native transparency; simulate with a stipple rectangle
+    cv.create_rectangle(0, 0, W, H, fill='#000000',
+                        stipple='gray50', outline='', tags='overlay')
 
 
 # ── Utilities ─────────────────────────────────────────────
 
 def clear():
+    global _anim
+    if _anim:
+        root.after_cancel(_anim)
+        _anim = None
     cv.delete('all')
     cv.configure(bg=DARK_BG)
     for b in _btns:
         b.destroy()
     _btns.clear()
+
+
+def _animate_gif(idx=0):
+    """Advance GIF one frame; stop on the last frame."""
+    global _anim
+    if not gif_frames:
+        return
+    frame, delay = gif_frames[idx]
+    cv.itemconfig('bg', image=frame)
+    if idx < len(gif_frames) - 1:
+        _anim = root.after(delay, _animate_gif, idx + 1)
 
 
 def hc(hex_str):
@@ -117,6 +184,10 @@ def portraits_layout(players, cy, r=40):
 
 def show_title():
     clear()
+    if gif_frames:
+        _draw_bg(gif_frames[0][0])   # first frame; animation will overwrite
+        _dim_overlay()
+        root.after(50, _animate_gif)  # start after canvas is drawn
     T(W//2, 148, 'BLOOD ON THE CLOCKTOWER', size=46, color=YELLOW, bold=True)
     T(W//2, 222, 'HackBeta 2026  --  Into the Codeverse', size=22, color=GRAY)
     T(W//2, 282, 'Six players. One demon. Find it before the town falls.', size=18)
@@ -127,6 +198,8 @@ def show_title():
 
 def show_hero_select():
     clear()
+    _draw_village_last()
+    _dim_overlay()
     T(W//2, 44, 'CHOOSE YOUR HERO', size=34, color=YELLOW, bold=True)
     T(W//2, 94, 'Your stats determine the quality of your nightly clue.', size=16, color=GRAY)
 
@@ -170,6 +243,7 @@ def show_night():
     victim = game.do_night()
     cv.configure(bg='#050514')
     clear()
+    _draw_bg(night_bg)
 
     T(W//2,  80, f'NIGHT  {game.day}', size=46, color='#5a5ab4', bold=True)
     T(W//2, 188, 'The town falls asleep...', size=24, color=GRAY)
@@ -188,6 +262,8 @@ def show_night():
 def show_day():
     cv.configure(bg=DARK_BG)
     clear()
+    _draw_village_last()
+    _dim_overlay()
 
     alive      = game.alive_players()
     npcs_alive = game.alive_npcs()
