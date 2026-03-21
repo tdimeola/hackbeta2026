@@ -260,6 +260,21 @@ menu_bg_frame_idx = 0
 menu_bg_timer = 0.0
 MENU_BG_FPS = 15  # playback speed
 
+# Village skin — loaded once, scaled to full map dimensions
+def _load_village_skin(path):
+    from PIL import Image
+    try:
+        img = Image.open(path).convert("RGBA")
+        img = img.resize((MAP_W * TILE_SIZE, MAP_H * TILE_SIZE), Image.LANCZOS)
+        raw = img.tobytes()
+        surf = pygame.image.frombytes(raw, img.size, "RGBA").convert_alpha()
+        return surf
+    except Exception as e:
+        print(f"Could not load village skin: {e}")
+        return None
+
+village_skin = _load_village_skin("images/village.png")
+
 player_facing = "south"
 player_walking = False
 player_anim_timer = 0.0
@@ -1921,14 +1936,17 @@ while running:
 
         else:
             # ── Draw town map ──
-            for row in range(MAP_H):
-                for col in range(MAP_W):
-                    rect = pygame.Rect(
-                        col * TILE_SIZE - cam_x,
-                        row * TILE_SIZE - cam_y,
-                        TILE_SIZE, TILE_SIZE,
-                    )
-                    pygame.draw.rect(screen, TILE_COLORS[tilemap[row][col]], rect)
+            if village_skin:
+                screen.blit(village_skin, (-cam_x, -cam_y))
+            else:
+                for row in range(MAP_H):
+                    for col in range(MAP_W):
+                        rect = pygame.Rect(
+                            col * TILE_SIZE - cam_x,
+                            row * TILE_SIZE - cam_y,
+                            TILE_SIZE, TILE_SIZE,
+                        )
+                        pygame.draw.rect(screen, TILE_COLORS[tilemap[row][col]], rect)
 
             # Draw building name labels
             for i, (lx, ly) in enumerate(BUILDING_LABEL_POS):
