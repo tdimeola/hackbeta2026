@@ -122,6 +122,8 @@ EVIDENCE_SOUND = pygame.mixer.Sound("sounds/evidence_sounds.mp3")
 EVIDENCE_SOUND.set_volume(0.9)
 REVEAL_SOUND = pygame.mixer.Sound("sounds/reveal.mp3")
 REVEAL_SOUND.set_volume(0.9)
+sfx_reverb_drum = pygame.mixer.Sound("sounds/reverb_drum.mp3")
+sfx_reverb_drum.set_volume(0.8)
 NIGHT_SOUND = pygame.mixer.Sound("sounds/night_time.mp3")
 NIGHT_SOUND.set_volume(0.8)
 
@@ -1922,7 +1924,12 @@ while running:
         game.night_timer -= dt
 
     if game.state == "REVEAL":
+        prev = game.reveal_timer
         game.reveal_timer += dt
+        # Play drum hit at the moment the verdict appears (50% mark)
+        half = game.reveal_duration * 0.5
+        if prev < half <= game.reveal_timer:
+            sfx_reverb_drum.play()
         if game.reveal_timer >= game.reveal_duration:
             game._finish_reveal()
 
