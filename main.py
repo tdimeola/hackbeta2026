@@ -198,6 +198,7 @@ def llm_chat(system_prompt, user_prompt):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
+            options={"num_predict": 128},
         )
         return resp["message"]["content"].strip()
     except Exception as e:
