@@ -133,7 +133,7 @@ def _load_gif_frames(path, target_size):
         pil_img.seek(i)
         frame = pil_img.convert("RGBA")
         raw = frame.tobytes()
-        surf = pygame.image.fromstring(raw, frame.size, "RGBA").convert_alpha()
+        surf = pygame.image.frombytes(raw, frame.size, "RGBA").convert_alpha()
         surf = pygame.transform.smoothscale(surf, target_size)
         frames.append(surf)
     return frames
@@ -798,120 +798,111 @@ class Game:
 
     def _place_npcs_for_day(self):
         """Randomly place NPCs around town — some outside, some inside buildings.
-        The villain's placement subtly contradicts their alibi."""
+        No two NPCs can occupy the same tile."""
         clues = getattr(self, 'night_clues', {})
         murder_loc = clues.get("murder_location", None)
-
-        # Collect available interior spots (buildings the NPC doesn't live in add variety)
         interior_buildings = [b for b in INTERIORS.keys()]
-
-        # Collect outdoor spots, shuffle them
         outdoor_spots = list(NPC_OUTDOOR_SPOTS)
         random.shuffle(outdoor_spots)
         outdoor_idx = 0
+
+        # Track occupied positions: ("outside", tx, ty) or ("interior", building, tx, ty)
+        occupied = set()
+
+        def is_occupied(loc_type, building, tx, ty):
+            if loc_type == "interior":
+                return ("interior", building, tx, ty) in occupied
+            return ("outside", None, tx, ty) in occupied
+
+        def mark_occupied(loc_type, building, tx, ty):
+            if loc_type == "interior":
+                occupied.add(("interior", building, tx, ty))
+            else:
+                occupied.add(("outside", None, tx, ty))
+
+        def place_npc(npc, loc_type, building, tx, ty, desc):
+            npc["location_type"] = loc_type
+            npc["location_building"] = building
+            npc["location_desc"] = desc
+            npc["x"] = tx * TILE_SIZE
+            npc["y"] = ty * TILE_SIZE
+            npc["tile_x"] = tx
+            npc["tile_y"] = ty
+            mark_occupied(loc_type, building, tx, ty)
 
         for npc in self.alive:
             npc_idx = self.characters.index(npc)
             home = BUILDING_NAMES[npc_idx] if npc_idx < len(BUILDING_NAMES) else "their home"
 
             if npc["is_villain"] and murder_loc and self.night_num > 1:
-                # Villain placement: put them somewhere suspicious —
-                # near the murder location or NOT where their alibi says
-                villain_spots = []
-                # Try to place near murder location building
+                # Villain: place near murder location
+                placed = False
                 if murder_loc in INTERIORS:
                     interior = INTERIORS[murder_loc]
-                    # Place on a walkable floor tile inside the murder building
                     for r, row in enumerate(interior["map"]):
                         for c, tile in enumerate(row):
-                            if tile == 7:  # floor tile
-                                villain_spots.append(("interior", murder_loc, (c, r)))
+                            if tile == 7 and not is_occupied("interior", murder_loc, c, r):
+                                place_npc(npc, "interior", murder_loc, c, r, f"inside {murder_loc}")
+                                placed = True
                                 break
-                        if villain_spots:
+                        if placed:
                             break
-                # Also offer placing them outside near the murder building door
-                for door_pos, bname in DOOR_TO_BUILDING.items():
-                    if bname == murder_loc:
-                        villain_spots.append(("outside", None, (door_pos[0], door_pos[1] + 1)))
-                # Fallback: random outdoor
-                if not villain_spots and outdoor_idx < len(outdoor_spots):
-                    pos, area = outdoor_spots[outdoor_idx]
-                    villain_spots.append(("outside", None, pos))
-                    outdoor_idx += 1
-
-                choice = random.choice(villain_spots) if villain_spots else ("home", None, None)
-                if choice[0] == "interior":
-                    npc["location_type"] = "interior"
-                    npc["location_building"] = choice[1]
-                    npc["location_desc"] = f"inside {choice[1]}"
-                    ix, iy = choice[2]
-                    npc["x"] = ix * TILE_SIZE
-                    npc["y"] = iy * TILE_SIZE
-                    npc["tile_x"] = ix
-                    npc["tile_y"] = iy
-                elif choice[0] == "outside":
-                    npc["location_type"] = "outside"
-                    npc["location_building"] = None
-                    npc["location_desc"] = f"near {murder_loc}" if murder_loc else "in town"
-                    tx, ty = choice[2]
-                    npc["x"] = tx * TILE_SIZE
-                    npc["y"] = ty * TILE_SIZE
-                    npc["tile_x"] = tx
-                    npc["tile_y"] = ty
-                else:
-                    # Fallback to home door
+                if not placed:
+                    for door_pos, bname in DOOR_TO_BUILDING.items():
+                        if bname == murder_loc:
+                            tx, ty = door_pos[0], door_pos[1] + 1
+                            if not is_occupied("outside", None, tx, ty):
+                                place_npc(npc, "outside", None, tx, ty, f"near {murder_loc}")
+                                placed = True
+                                break
+                if not placed:
+                    while outdoor_idx < len(outdoor_spots):
+                        pos, area = outdoor_spots[outdoor_idx]
+                        outdoor_idx += 1
+                        if not is_occupied("outside", None, pos[0], pos[1]):
+                            place_npc(npc, "outside", None, pos[0], pos[1], f"at {area}")
+                            placed = True
+                            break
+                if not placed:
                     spawn = NPC_SPAWNS[npc_idx]
-                    npc["location_type"] = "outside"
-                    npc["location_building"] = None
-                    npc["location_desc"] = f"outside {home}"
-                    npc["x"] = spawn[0] * TILE_SIZE
-                    npc["y"] = spawn[1] * TILE_SIZE
-                    npc["tile_x"] = spawn[0]
-                    npc["tile_y"] = spawn[1]
+                    place_npc(npc, "outside", None, spawn[0], spawn[1], f"outside {home}")
             else:
                 # Innocent NPCs: randomly place at home, inside a building, or wandering
+                placed = False
                 roll = random.random()
                 if roll < 0.35 and interior_buildings:
-                    # Inside a random building
                     bname = random.choice(interior_buildings)
                     interior = INTERIORS[bname]
-                    # Find a walkable floor tile
-                    floor_tiles = []
-                    for r, row in enumerate(interior["map"]):
-                        for c, tile in enumerate(row):
-                            if tile == 7:
-                                floor_tiles.append((c, r))
+                    floor_tiles = [(c, r) for r, row in enumerate(interior["map"])
+                                   for c, tile in enumerate(row)
+                                   if tile == 7 and not is_occupied("interior", bname, c, r)]
                     if floor_tiles:
                         ix, iy = random.choice(floor_tiles)
-                        npc["location_type"] = "interior"
-                        npc["location_building"] = bname
-                        npc["location_desc"] = f"inside {bname}"
-                        npc["x"] = ix * TILE_SIZE
-                        npc["y"] = iy * TILE_SIZE
-                        npc["tile_x"] = ix
-                        npc["tile_y"] = iy
-                        continue
-                if roll < 0.65 and outdoor_idx < len(outdoor_spots):
-                    # Wandering outside
-                    pos, area = outdoor_spots[outdoor_idx]
-                    outdoor_idx += 1
-                    npc["location_type"] = "outside"
-                    npc["location_building"] = None
-                    npc["location_desc"] = f"at {area}"
-                    npc["x"] = pos[0] * TILE_SIZE
-                    npc["y"] = pos[1] * TILE_SIZE
-                    npc["tile_x"] = pos[0]
-                    npc["tile_y"] = pos[1]
-                else:
-                    # At their home door
+                        place_npc(npc, "interior", bname, ix, iy, f"inside {bname}")
+                        placed = True
+                if not placed and roll < 0.65:
+                    while outdoor_idx < len(outdoor_spots):
+                        pos, area = outdoor_spots[outdoor_idx]
+                        outdoor_idx += 1
+                        if not is_occupied("outside", None, pos[0], pos[1]):
+                            place_npc(npc, "outside", None, pos[0], pos[1], f"at {area}")
+                            placed = True
+                            break
+                if not placed:
                     spawn = NPC_SPAWNS[npc_idx]
-                    npc["location_type"] = "outside"
-                    npc["location_building"] = None
-                    npc["location_desc"] = f"outside {home}"
-                    npc["x"] = spawn[0] * TILE_SIZE
-                    npc["y"] = spawn[1] * TILE_SIZE
-                    npc["tile_x"] = spawn[0]
-                    npc["tile_y"] = spawn[1]
+                    if not is_occupied("outside", None, spawn[0], spawn[1]):
+                        place_npc(npc, "outside", None, spawn[0], spawn[1], f"outside {home}")
+                    else:
+                        # Home is taken, find any free outdoor spot
+                        while outdoor_idx < len(outdoor_spots):
+                            pos, area = outdoor_spots[outdoor_idx]
+                            outdoor_idx += 1
+                            if not is_occupied("outside", None, pos[0], pos[1]):
+                                place_npc(npc, "outside", None, pos[0], pos[1], f"at {area}")
+                                break
+                        else:
+                            # Last resort: offset from home
+                            place_npc(npc, "outside", None, spawn[0] + 1, spawn[1], f"outside {home}")
 
     def _place_evidence(self):
         """Pick a random subset of search spots to be active, then assign evidence."""
