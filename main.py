@@ -312,6 +312,77 @@ AREA_LABELS = [
     {"name": "the Forest", "tile": (24, 8)},
 ]
 
+# Per-building visual styles for the town map
+BUILDING_EXTERIOR_STYLES = {
+    "the Blacksmith": {
+        "wall": (100, 75, 55),   # warm brown stone
+        "roof": (80, 80, 90),    # dark gray slate
+        "door": (90, 55, 25),    # dark oak
+        "mortar": (75, 60, 40),
+        "accent": (200, 100, 30),  # orange forge glow on walls
+    },
+    "the Tavern": {
+        "wall": (110, 85, 60),   # lighter warm wood
+        "roof": (140, 70, 35),   # warm amber
+        "door": (130, 85, 35),   # golden oak
+        "mortar": (85, 65, 42),
+        "accent": (180, 150, 60),  # lantern yellow
+    },
+    "the Apothecary": {
+        "wall": (85, 95, 80),    # mossy gray-green
+        "roof": (60, 100, 70),   # green tiles
+        "door": (70, 90, 60),    # green-stained
+        "mortar": (65, 75, 60),
+        "accent": (100, 200, 120),  # potion green
+    },
+    "the Church": {
+        "wall": (130, 125, 115), # light stone / limestone
+        "roof": (60, 55, 75),    # deep purple-gray
+        "door": (80, 50, 40),    # dark mahogany
+        "mortar": (105, 100, 90),
+        "accent": (200, 180, 100),  # gold cross
+    },
+    "the General Store": {
+        "wall": (105, 80, 55),   # standard brown
+        "roof": (150, 60, 40),   # classic red
+        "door": (110, 75, 35),   # pine
+        "mortar": (80, 60, 38),
+        "accent": (180, 160, 100),
+    },
+    "Town Hall": {
+        "wall": (120, 110, 95),  # dignified tan stone
+        "roof": (50, 50, 65),    # slate blue-gray
+        "door": (100, 65, 35),   # polished wood
+        "mortar": (95, 85, 70),
+        "accent": (200, 180, 80),  # gold trim
+    },
+    "the Library": {
+        "wall": (95, 75, 65),    # dark warm brick
+        "roof": (110, 50, 40),   # deep red-brown
+        "door": (85, 55, 35),    # aged wood
+        "mortar": (70, 55, 45),
+        "accent": (160, 120, 60),  # leather brown
+    },
+}
+
+# Map each building tile (col, row) to its building name
+# Top row buildings: cols 2-5, 10-13, 18-21, 24-27 | rows 2-5
+# Bottom row buildings: cols 2-5, 10-13, 18-21 | rows 9-12
+BUILDING_TILE_MAP = {}
+_building_bounds = [
+    ("the Blacksmith",    2, 5, 2, 5),   # (name, col_start, col_end, row_start, row_end)
+    ("the Tavern",       10, 13, 2, 5),
+    ("the Apothecary",   18, 21, 2, 5),
+    ("the Church",       24, 27, 2, 5),
+    ("the General Store", 2, 5, 9, 12),
+    ("Town Hall",        10, 13, 9, 12),
+    ("the Library",      18, 21, 9, 12),
+]
+for _bname, _c0, _c1, _r0, _r1 in _building_bounds:
+    for _r in range(_r0, _r1 + 1):
+        for _c in range(_c0, _c1 + 1):
+            BUILDING_TILE_MAP[(_c, _r)] = _bname
+
 # Open areas that can be referenced in clues
 MAP_LANDMARKS = [
     "the town square",
@@ -1503,6 +1574,134 @@ def draw_text_wrapped(surface, text, font, color, rect, line_spacing=4):
         surface.blit(surf, (rect.x + 8, y))
         y += font.get_height() + line_spacing
 
+def draw_town_tile(surface, tile, rect, row, col):
+    """Draw a detailed town map tile with per-building unique styles."""
+    x, y, w, h = rect.x, rect.y, rect.width, rect.height
+    seed = row * 31 + col * 17
+
+    # Look up building ownership for this tile
+    bld = BUILDING_TILE_MAP.get((col, row))
+    bstyle = BUILDING_EXTERIOR_STYLES.get(bld) if bld else None
+
+    if tile == 0 or tile == 6:  # Grass
+        base = (72, 148, 0) if (row + col) % 2 == 0 else (80, 158, 5)
+        pygame.draw.rect(surface, base, rect)
+        tuft_col = (55, 120, 0)
+        for i in range(3):
+            tx = x + ((seed + i * 13) % (w - 6)) + 3
+            ty = y + ((seed + i * 7 + 5) % (h - 6)) + 3
+            pygame.draw.line(surface, tuft_col, (tx, ty + 4), (tx, ty), 1)
+            pygame.draw.line(surface, tuft_col, (tx + 2, ty + 4), (tx + 3, ty + 1), 1)
+        if tile == 6:
+            cs = pygame.Surface((12, 12), pygame.SRCALPHA)
+            cs.fill((255, 255, 200, 25))
+            surface.blit(cs, (x + w // 2 - 6, y + h // 2 - 6))
+
+    elif tile == 1:  # Wall — unique per building
+        base = bstyle["wall"] if bstyle else WALL_COLOR
+        mortar = bstyle["mortar"] if bstyle else (70, 55, 38)
+        accent = bstyle["accent"] if bstyle else None
+        pygame.draw.rect(surface, base, rect)
+        # Stone block mortar pattern
+        for ly in range(0, h, 12):
+            pygame.draw.line(surface, mortar, (x, y + ly), (x + w, y + ly), 1)
+        v_offset = 0 if (row % 2 == 0) else w // 4
+        for lx in range(v_offset, w, w // 2):
+            for ry in range(0, h, 12):
+                pygame.draw.line(surface, mortar, (x + lx, y + ry), (x + lx, y + ry + 12), 1)
+        # Block color variation
+        for by in range(0, h, 12):
+            for bx in range(0, w, w // 2):
+                boff = ((row + by // 12) * 7 + (col + bx // (w // 2)) * 3) % 5
+                if boff > 2:
+                    hl = pygame.Surface((w // 2 - 1, 11), pygame.SRCALPHA)
+                    hl.fill((255, 255, 255, 10))
+                    surface.blit(hl, (x + bx + 1, y + by + 1))
+        # Accent detail (e.g., forge glow for blacksmith)
+        if accent and bld:
+            # Small accent mark on certain wall tiles
+            if (row + col) % 5 == 0:
+                ag = pygame.Surface((w, h), pygame.SRCALPHA)
+                ag.fill((accent[0], accent[1], accent[2], 20))
+                surface.blit(ag, (x, y))
+        # Shadow at bottom
+        shadow = (max(base[0] - 30, 0), max(base[1] - 25, 0), max(base[2] - 20, 0))
+        pygame.draw.line(surface, shadow, (x, y + h - 1), (x + w, y + h - 1), 2)
+
+    elif tile == 2:  # Path — cobblestone
+        base = (170, 150, 110)
+        pygame.draw.rect(surface, base, rect)
+        mortar = (140, 125, 90)
+        stone_w, stone_h = 10, 10
+        offset_x = (row % 2) * (stone_w // 2)
+        for sy in range(0, h, stone_h + 2):
+            for sx in range(0, w, stone_w + 2):
+                actual_x = sx + offset_x
+                if actual_x >= w:
+                    actual_x -= w
+                sv = ((row * 3 + sy // stone_h) * 7 + (col * 5 + sx // stone_w) * 11) % 3
+                shade = [(175, 155, 115), (165, 145, 105), (180, 162, 122)][sv]
+                sr = pygame.Rect(x + actual_x, y + sy, stone_w, stone_h)
+                pygame.draw.rect(surface, shade, sr, border_radius=2)
+        for sy in range(0, h, stone_h + 2):
+            pygame.draw.line(surface, mortar, (x, y + sy + stone_h), (x + w, y + sy + stone_h), 1)
+        for sx in range(0, w, stone_w + 2):
+            pygame.draw.line(surface, mortar, (x + sx + offset_x, y), (x + sx + offset_x, y + h), 1)
+
+    elif tile == 3:  # Roof — unique per building
+        base = bstyle["roof"] if bstyle else ROOF_COLOR
+        pygame.draw.rect(surface, base, rect)
+        shingle_h = 8
+        line_col = (max(base[0] - 20, 0), max(base[1] - 15, 0), max(base[2] - 12, 0))
+        for sy in range(0, h, shingle_h):
+            row_off = (shingle_h // 2) if ((row * 4 + sy // shingle_h) % 2 == 1) else 0
+            pygame.draw.line(surface, line_col, (x, y + sy), (x + w, y + sy), 1)
+            for sx in range(row_off, w, 16):
+                pygame.draw.line(surface, line_col, (x + sx, y + sy), (x + sx, y + sy + shingle_h), 1)
+        # Ridge highlight at top
+        ridge = (min(base[0] + 20, 255), min(base[1] + 15, 255), min(base[2] + 15, 255))
+        pygame.draw.line(surface, ridge, (x, y + 1), (x + w, y + 1), 1)
+        # Overhang shadow at bottom
+        overhang = (max(base[0] - 40, 0), max(base[1] - 30, 0), max(base[2] - 25, 0))
+        pygame.draw.rect(surface, overhang, (x, y + h - 3, w, 3))
+
+    elif tile == 4:  # Door — unique per building
+        door_col = bstyle["door"] if bstyle else DOOR_COLOR
+        frame_col = (max(door_col[0] - 30, 0), max(door_col[1] - 25, 0), max(door_col[2] - 15, 0))
+        # Frame
+        pygame.draw.rect(surface, frame_col, rect)
+        # Inner panel
+        di = rect.inflate(-10, -6)
+        di.y += 3
+        pygame.draw.rect(surface, door_col, di)
+        # Panel lines
+        ph = di.height // 2 - 3
+        panel_line = (min(door_col[0] + 20, 255), min(door_col[1] + 15, 255), min(door_col[2] + 10, 255))
+        pygame.draw.rect(surface, panel_line, (di.x + 4, di.y + 3, di.width - 8, ph), 1)
+        pygame.draw.rect(surface, panel_line, (di.x + 4, di.y + ph + 6, di.width - 8, ph), 1)
+        # Handle
+        handle_col = bstyle["accent"] if bstyle else (200, 180, 100)
+        pygame.draw.circle(surface, handle_col, (di.x + di.width - 8, di.centery), 3)
+
+    elif tile == 5:  # Tree
+        grass_base = (65, 130, 0) if (row + col) % 2 == 0 else (70, 140, 5)
+        pygame.draw.rect(surface, grass_base, rect)
+        # Trunk
+        tw, th = 8, 14
+        pygame.draw.rect(surface, (90, 60, 30), (x + w // 2 - tw // 2, y + h - th - 2, tw, th))
+        # Canopy
+        cr = w // 2 - 4
+        cx, cy = x + w // 2, y + h // 2 - 4
+        cs = (seed % 3) * 8
+        cc = (25 + cs, 85 + cs, 15)
+        pygame.draw.circle(surface, cc, (cx, cy), cr)
+        # Canopy highlight
+        pygame.draw.circle(surface, (cc[0] + 15, cc[1] + 15, cc[2] + 10), (cx - 3, cy - 3), cr // 2)
+
+    else:
+        pygame.draw.rect(surface, TILE_COLORS.get(tile, BG_COLOR), rect)
+
+
 def blit_clamped(surface, surf, x, y):
     """Blit a surface clamped within screen bounds."""
     x = max(4, min(x, SCREEN_W - surf.get_width() - 4))
@@ -1933,7 +2132,7 @@ while running:
                         blit_clamped(screen, hint, sx - 5, sy - 38)
 
         else:
-            # ── Draw town map ──
+            # ── Draw town map with detailed tiles ──
             for row in range(MAP_H):
                 for col in range(MAP_W):
                     rect = pygame.Rect(
@@ -1941,7 +2140,7 @@ while running:
                         row * TILE_SIZE - cam_y,
                         TILE_SIZE, TILE_SIZE,
                     )
-                    pygame.draw.rect(screen, TILE_COLORS[tilemap[row][col]], rect)
+                    draw_town_tile(screen, tilemap[row][col], rect, row, col)
 
             # Draw building name labels
             for i, (lx, ly) in enumerate(BUILDING_LABEL_POS):
