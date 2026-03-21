@@ -124,6 +124,10 @@ REVEAL_SOUND = pygame.mixer.Sound("sounds/reveal.mp3")
 REVEAL_SOUND.set_volume(0.9)
 NIGHT_SOUND = pygame.mixer.Sound("sounds/night_time.mp3")
 NIGHT_SOUND.set_volume(0.8)
+DEATH_COLLAPSE_SOUND = pygame.mixer.Sound("sounds/death-collapse.mp3")
+DEATH_COLLAPSE_SOUND.set_volume(0.9)
+EVIL_LAUGH_SOUND = pygame.mixer.Sound("sounds/evil-laugh.mp3")
+EVIL_LAUGH_SOUND.set_volume(0.9)
 
 
 def music_start_menu():
@@ -1288,9 +1292,10 @@ class Game:
             villain_npc = next((c for c in self.alive if c["is_villain"]), None)
             if villain_npc and villain_npc["name"] in self.npc_emotional_state:
                 self.npc_emotional_state[villain_npc["name"]]["desperation"] += 1
-            REVEAL_SOUND.play()
+            DEATH_COLLAPSE_SOUND.play()
             if self.wrong_guesses >= 3:
                 music_stop(fade_ms=1500)
+                EVIL_LAUGH_SOUND.play()
                 self.state = "LOSE"
                 self.storyteller_text = (
                     f"{character['name']} was innocent!\n"
