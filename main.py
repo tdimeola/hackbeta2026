@@ -116,8 +116,6 @@ DAY_MUSIC = "sounds/in-game-sound-track.mp3"
 # Sound effects
 sfx_door = pygame.mixer.Sound("sounds/opening_door.mp3")
 sfx_door.set_volume(0.7)
-DOOR_SOUND = pygame.mixer.Sound("sounds/opening_door.mp3")
-DOOR_SOUND.set_volume(0.7)
 EVIDENCE_SOUND = pygame.mixer.Sound("sounds/evidence_sounds.mp3")
 EVIDENCE_SOUND.set_volume(0.9)
 
@@ -1361,7 +1359,6 @@ class Game:
         pty = int((self.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
         building = DOOR_TO_BUILDING.get((ptx, pty))
         if building and building in INTERIORS:
-            DOOR_SOUND.play()
             interior = INTERIORS[building]
             self.current_interior = building
             sx, sy = interior["player_start"]
@@ -1379,7 +1376,6 @@ class Game:
         pty = int((self.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
         ex, ey = interior["exit_tile"]
         if ptx == ex and pty == ey:
-            DOOR_SOUND.play()
             wx, wy = interior["exit_world_pos"]
             self.player_x = wx * TILE_SIZE
             self.player_y = wy * TILE_SIZE
