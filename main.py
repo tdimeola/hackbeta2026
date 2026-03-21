@@ -121,7 +121,10 @@ player_anim_frame = 0
 npc_sprite_files = [
     "assets/characters/blacksmith_south.png",
     "assets/characters/villager_south.png",
-    None, None, None, None, None,
+    "assets/characters/alien/rotations/south.png",
+    "assets/characters/superhero/rotations/south.png",
+    "assets/characters/librarian/rotations/south.png",
+    None, None,
 ]
 npc_sprites = [load_sprite(f) if f else None for f in npc_sprite_files]
 
