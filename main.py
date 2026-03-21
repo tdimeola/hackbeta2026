@@ -1359,15 +1359,10 @@ class Game:
 
     def _advance_from_reveal(self):
         """Called when player presses ENTER on the reveal screen."""
-        if self.reveal_correct:
-            self.state = "WIN"
-            self.storyteller_text = f"The town is saved!\n{self.reveal_accused['name']} was the villain all along."
-        elif self.wrong_guesses >= 3:
-            self.state = "LOSE"
-            self.storyteller_text = (
-                f"You've run out of guesses.\n"
-                f"The villain {self.villain_name} wins!"
-            )
+        if self.reveal_correct or self.wrong_guesses >= 3:
+            # Game over — go straight to menu
+            self.state = "MENU"
+            music_start_menu()
         else:
             self.start_night()
 
