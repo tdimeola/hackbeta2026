@@ -404,6 +404,7 @@ class Game:
         self.evidence_found = []      # persistent list of evidence dicts
         self.searched_spots = set()   # (area, spot_name) tuples searched this day
         self.evidence_placements = {} # maps (area, spot_name) -> evidence dict
+        self.active_spots = set()    # which search spots are available this night
         self.search_result_text = ""
         self.search_result_timer = 0.0
         self.showing_evidence_log = False
@@ -430,6 +431,7 @@ class Game:
         self.evidence_found = []
         self.searched_spots = set()
         self.evidence_placements = {}
+        self.active_spots = set()
         self.search_result_text = ""
         self.search_result_timer = 0.0
         self.showing_evidence_log = False
@@ -643,22 +645,28 @@ class Game:
         self._prefetch_dialogues()
 
     def _place_evidence(self):
-        """Assign physical evidence items to random search spots."""
-        evidence_list = self.night_clues.get("physical_evidence", [])
-        if not evidence_list:
-            return
-        # Gather all available spots (world + interiors)
+        """Pick a random subset of search spots to be active, then assign evidence."""
+        # Gather all possible spots
         all_spots = []
         for spot in WORLD_SEARCH_SPOTS:
             all_spots.append((spot["area"], spot["name"]))
         for bname, interior in INTERIORS.items():
             for spot in interior["search_spots"]:
                 all_spots.append((bname, spot["name"]))
+
+        # Randomly activate only some spots each night (40-60% of total)
         random.shuffle(all_spots)
+        active_count = max(3, int(len(all_spots) * random.uniform(0.4, 0.6)))
+        self.active_spots = set(all_spots[:active_count])
+
+        # Place evidence at active spots only
+        evidence_list = self.night_clues.get("physical_evidence", [])
+        active_list = list(self.active_spots)
+        random.shuffle(active_list)
         self.evidence_placements = {}
         for i, ev in enumerate(evidence_list):
-            if i < len(all_spots):
-                self.evidence_placements[all_spots[i]] = ev
+            if i < len(active_list):
+                self.evidence_placements[active_list[i]] = ev
 
     def _build_history_context(self):
         """Return a human-readable summary of all past events for LLM context."""
@@ -814,7 +822,7 @@ class Game:
             self.dialogue_loading = True
 
     def try_search(self):
-        """Check if player is near a searchable spot and search it."""
+        """Check if player is near an active searchable spot and search it."""
         ptx = int((self.player_x + (TILE_SIZE - 4) / 2) // TILE_SIZE)
         pty = int((self.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
 
@@ -831,6 +839,10 @@ class Game:
             if abs(ptx - sx) <= 1 and abs(pty - sy) <= 1:
                 spot_area = area or spot.get("area", "unknown")
                 key = (spot_area, spot["name"])
+
+                # Only active spots can be searched
+                if key not in self.active_spots:
+                    return False
 
                 if key in self.searched_spots:
                     self.show_search_result(f"You've already searched {spot['name']} today.")
@@ -891,17 +903,22 @@ class Game:
         return False
 
     def get_nearby_search_spot(self):
-        """Return the nearest search spot if player is close, else None."""
+        """Return the nearest active search spot if player is close, else None."""
         ptx = int((self.player_x + (TILE_SIZE - 4) / 2) // TILE_SIZE)
         pty = int((self.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
         if self.current_interior:
             spots = INTERIORS[self.current_interior]["search_spots"]
+            area = self.current_interior
         else:
             spots = WORLD_SEARCH_SPOTS
+            area = None
         for spot in spots:
             sx, sy = spot["tile"]
             if abs(ptx - sx) <= 1 and abs(pty - sy) <= 1:
-                return spot
+                spot_area = area or spot.get("area", "")
+                key = (spot_area, spot["name"])
+                if key in self.active_spots:
+                    return spot
         return None
 
     def is_on_door(self):
@@ -1230,24 +1247,23 @@ while running:
                     )
                     pygame.draw.rect(screen, TILE_COLORS.get(imap[row][col], BG_COLOR), rect)
 
-            # Draw search spot sparkles in interior
+            # Draw subtle glint on active search spots in interior
             interior = INTERIORS[game.current_interior]
-            pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() * 0.005)
+            t = pygame.time.get_ticks()
             for spot in interior["search_spots"]:
                 sx, sy = spot["tile"]
                 key = (game.current_interior, spot["name"])
+                if key not in game.active_spots:
+                    continue
                 scr_x = sx * TILE_SIZE - cam_x + TILE_SIZE // 2
                 scr_y = sy * TILE_SIZE - cam_y + TILE_SIZE // 2
                 if key not in game.searched_spots:
-                    # Pulsing gold diamond
-                    sz = int(6 + 4 * pulse)
-                    pts = [(scr_x, scr_y - sz), (scr_x + sz, scr_y),
-                           (scr_x, scr_y + sz), (scr_x - sz, scr_y)]
-                    pygame.draw.polygon(screen, (255, 220, 60), pts)
-                else:
-                    # Faded X mark
-                    pygame.draw.line(screen, (100, 100, 100), (scr_x - 5, scr_y - 5), (scr_x + 5, scr_y + 5), 2)
-                    pygame.draw.line(screen, (100, 100, 100), (scr_x + 5, scr_y - 5), (scr_x - 5, scr_y + 5), 2)
+                    # Subtle flickering glint — small dot that fades in and out
+                    flicker = max(0, math.sin(t * 0.003 + hash(spot["name"]) % 100))
+                    alpha = int(60 + 80 * flicker)
+                    glint = pygame.Surface((6, 6), pygame.SRCALPHA)
+                    glint.fill((255, 255, 200, alpha))
+                    screen.blit(glint, (scr_x - 3, scr_y - 3))
 
             # Interior name header
             int_label = font_md.render(f"Inside {game.current_interior}  [ESC] Exit", True, (255, 255, 220))
@@ -1291,21 +1307,21 @@ while running:
                 screen.blit(bg_surf, bg_rect)
                 screen.blit(label, (lsx, lsy))
 
-            # Draw search spot sparkles on world map
-            pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() * 0.005)
+            # Draw subtle glint on active search spots on world map
+            t = pygame.time.get_ticks()
             for spot in WORLD_SEARCH_SPOTS:
                 sx, sy = spot["tile"]
                 key = (spot["area"], spot["name"])
+                if key not in game.active_spots:
+                    continue
                 scr_x = sx * TILE_SIZE - cam_x + TILE_SIZE // 2
                 scr_y = sy * TILE_SIZE - cam_y + TILE_SIZE // 2
                 if key not in game.searched_spots:
-                    sz = int(6 + 4 * pulse)
-                    pts = [(scr_x, scr_y - sz), (scr_x + sz, scr_y),
-                           (scr_x, scr_y + sz), (scr_x - sz, scr_y)]
-                    pygame.draw.polygon(screen, (255, 220, 60), pts)
-                else:
-                    pygame.draw.line(screen, (100, 100, 100), (scr_x - 5, scr_y - 5), (scr_x + 5, scr_y + 5), 2)
-                    pygame.draw.line(screen, (100, 100, 100), (scr_x + 5, scr_y - 5), (scr_x - 5, scr_y + 5), 2)
+                    flicker = max(0, math.sin(t * 0.003 + hash(spot["name"]) % 100))
+                    alpha = int(60 + 80 * flicker)
+                    glint = pygame.Surface((6, 6), pygame.SRCALPHA)
+                    glint.fill((255, 255, 200, alpha))
+                    screen.blit(glint, (scr_x - 3, scr_y - 3))
 
             # Draw NPCs (only on town map)
             for npc in game.alive:
