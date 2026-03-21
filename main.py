@@ -221,17 +221,19 @@ DIRECTIONS = ["south", "north", "east", "west", "south-east", "south-west", "nor
 WALK_FRAME_COUNT = 6
 WALK_ANIM_SPEED = 10  # frames per second
 
+PLAYER_SPRITE_SIZE = (TILE_SIZE + 8, TILE_SIZE + 8)  # slightly bigger than a tile
+
 # Idle sprites from rotations/
 player_idle_sprites = {}
 for d in DIRECTIONS:
-    player_idle_sprites[d] = load_sprite(f"assets/characters/detective_hero/rotations/{d}.png")
+    player_idle_sprites[d] = load_sprite(f"assets/characters/detective_hero/rotations/{d}.png", PLAYER_SPRITE_SIZE)
 
 # Walk animation frames
 player_walk_frames = {}
 for d in DIRECTIONS:
     frames = []
     for i in range(WALK_FRAME_COUNT):
-        frame = load_sprite(f"assets/characters/detective_hero/animations/walk/{d}/frame_{i:03d}.png")
+        frame = load_sprite(f"assets/characters/detective_hero/animations/walk/{d}/frame_{i:03d}.png", PLAYER_SPRITE_SIZE)
         frames.append(frame)
     player_walk_frames[d] = frames
 
@@ -264,12 +266,17 @@ player_anim_timer = 0.0
 player_anim_frame = 0
 
 # NPC pixel art sprites (south-facing for standing NPCs)
+NPC_SPRITE_SIZE = (TILE_SIZE + 8, TILE_SIZE + 8)  # slightly bigger than a tile
 npc_sprite_files = [
     "assets/characters/blacksmith_south.png",
     "assets/characters/villager_south.png",
-    None, None, None, None, None,
+    "assets/characters/blacksmith_south.png",
+    "assets/characters/villager_south.png",
+    "assets/characters/blacksmith_south.png",
+    "assets/characters/villager_south.png",
+    "assets/characters/blacksmith_south.png",
 ]
-npc_sprites = [load_sprite(f) if f else None for f in npc_sprite_files]
+npc_sprites = [load_sprite(f, NPC_SPRITE_SIZE) if f else None for f in npc_sprite_files]
 
 # NPC spawn positions (outside each building door)
 NPC_SPAWNS = [
@@ -1874,6 +1881,7 @@ while running:
                     screen.blit(glint, (scr_x - 3, scr_y - 3))
 
             # Draw NPCs that are inside this building
+            npc_off = (NPC_SPRITE_SIZE[0] - TILE_SIZE) // 2
             for npc in game.alive:
                 if npc.get("location_type") == "interior" and npc.get("location_building") == game.current_interior:
                     sx = npc["x"] - cam_x
@@ -1881,11 +1889,11 @@ while running:
                     idx = game.characters.index(npc) if npc in game.characters else -1
                     sprite = npc_sprites[idx] if 0 <= idx < len(npc_sprites) else None
                     if sprite:
-                        screen.blit(sprite, (sx, sy))
+                        screen.blit(sprite, (sx - npc_off, sy - npc_off))
                     else:
                         pygame.draw.rect(screen, npc["color"], (sx, sy, TILE_SIZE - 4, TILE_SIZE - 4))
                     name_surf = font_sm.render(npc["name"], True, (255, 255, 255))
-                    screen.blit(name_surf, (sx + (TILE_SIZE - 4) / 2 - name_surf.get_width() / 2, sy - 20))
+                    screen.blit(name_surf, (sx + TILE_SIZE / 2 - name_surf.get_width() / 2, sy - 22))
                     if player_near(npc) and not game.dialogue_target:
                         if npc["name"] in game.talked_to:
                             hint = font_sm.render("(already spoke)", True, (150, 150, 150))
@@ -1945,6 +1953,7 @@ while running:
                     screen.blit(glint, (scr_x - 3, scr_y - 3))
 
             # Draw NPCs that are outside (on town map)
+            npc_off = (NPC_SPRITE_SIZE[0] - TILE_SIZE) // 2
             for npc in game.alive:
                 if npc.get("location_type") == "interior":
                     continue  # Skip NPCs inside buildings
@@ -1953,11 +1962,11 @@ while running:
                 idx = game.characters.index(npc) if npc in game.characters else -1
                 sprite = npc_sprites[idx] if 0 <= idx < len(npc_sprites) else None
                 if sprite:
-                    screen.blit(sprite, (sx, sy))
+                    screen.blit(sprite, (sx - npc_off, sy - npc_off))
                 else:
                     pygame.draw.rect(screen, npc["color"], (sx, sy, TILE_SIZE - 4, TILE_SIZE - 4))
                 name_surf = font_sm.render(npc["name"], True, (255, 255, 255))
-                screen.blit(name_surf, (sx + (TILE_SIZE - 4) / 2 - name_surf.get_width() / 2, sy - 20))
+                screen.blit(name_surf, (sx + TILE_SIZE / 2 - name_surf.get_width() / 2, sy - 22))
 
                 # Interaction hint
                 if player_near(npc) and not game.dialogue_target:
@@ -1979,8 +1988,9 @@ while running:
             p_sprite = frames[player_anim_frame] if frames else None
         else:
             p_sprite = player_idle_sprites.get(player_facing)
+        p_off = (PLAYER_SPRITE_SIZE[0] - TILE_SIZE) // 2
         if p_sprite:
-            screen.blit(p_sprite, (game.player_x - cam_x, game.player_y - cam_y))
+            screen.blit(p_sprite, (game.player_x - cam_x - p_off, game.player_y - cam_y - p_off))
         else:
             screen.blit(player_img_fallback, (game.player_x - cam_x, game.player_y - cam_y))
 
