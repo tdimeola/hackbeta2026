@@ -1,3 +1,4 @@
+import math
 import pygame
 import sys
 import os
@@ -31,8 +32,17 @@ DOOR_COLOR = (120, 80, 30)
 BG_COLOR = (30, 30, 30)
 NIGHT_OVERLAY = (10, 10, 40)
 BLOOD_RED = (180, 20, 20)
+TREE_COLOR = (30, 90, 20)
+SEARCH_COLOR = (100, 170, 60)
+INTERIOR_FLOOR_COLOR = (140, 110, 70)
+INTERIOR_WALL_COLOR = (60, 50, 45)
+FURNITURE_COLOR = (100, 70, 40)
 
-TILE_COLORS = {0: GRASS_COLOR, 1: WALL_COLOR, 2: PATH_COLOR, 3: ROOF_COLOR, 4: DOOR_COLOR}
+TILE_COLORS = {
+    0: GRASS_COLOR, 1: WALL_COLOR, 2: PATH_COLOR, 3: ROOF_COLOR, 4: DOOR_COLOR,
+    5: TREE_COLOR, 6: SEARCH_COLOR, 7: INTERIOR_FLOOR_COLOR, 8: INTERIOR_WALL_COLOR,
+    9: FURNITURE_COLOR,
+}
 
 # -- Load CSV data --
 def load_characters(path, count=7):
@@ -56,6 +66,7 @@ def load_characters(path, count=7):
     return characters
 
 # -- Tile map --
+# Tile legend: 0=grass, 1=wall, 2=path, 3=roof, 4=door, 5=tree, 6=search spot
 tilemap = [
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -65,13 +76,13 @@ tilemap = [
     [1,0,1,4,1,1,0,0,0,0,1,1,4,1,0,0,0,0,1,4,1,1,0,0,1,1,4,1,0,1],
     [1,0,0,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,1],
     [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
-    [1,0,0,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,1],
-    [1,0,3,3,3,3,0,0,0,0,3,3,3,3,0,0,0,0,3,3,3,3,0,0,0,0,0,0,0,1],
-    [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1],
-    [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1],
-    [1,0,1,1,4,1,0,0,0,0,1,4,1,1,0,0,0,0,1,1,4,1,0,0,0,0,0,0,0,1],
-    [1,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,1],
+    [1,0,0,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,1],
+    [1,0,3,3,3,3,0,0,0,0,3,3,3,3,0,0,0,0,3,3,3,3,0,2,5,5,0,5,0,1],
+    [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,2,5,0,6,0,5,1],
+    [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,2,0,5,0,5,0,1],
+    [1,0,1,1,4,1,0,0,0,0,1,4,1,1,0,0,0,0,1,1,4,1,0,2,5,0,0,6,5,1],
+    [1,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,0,2,5,5,0,5,0,1],
+    [1,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,0,2,0,0,6,0,0,1],
     [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
     [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -79,7 +90,7 @@ tilemap = [
 
 MAP_H = len(tilemap)
 MAP_W = len(tilemap[0])
-SOLID_TILES = {1, 3}
+SOLID_TILES = {1, 3, 5, 8}
 
 # -- Load pixel art sprites --
 def load_sprite(path, size=(TILE_SIZE, TILE_SIZE)):
@@ -149,6 +160,11 @@ BUILDING_LABEL_POS = [
     (2, 8), (10, 8), (18, 8),
 ]
 
+# Area labels (non-building labels drawn on the map)
+AREA_LABELS = [
+    {"name": "the Forest", "tile": (24, 8)},
+]
+
 # Open areas that can be referenced in clues
 MAP_LANDMARKS = [
     "the town square",
@@ -158,7 +174,121 @@ MAP_LANDMARKS = [
     "the old well near Town Hall",
     "the courtyard behind the General Store",
     "the graveyard beyond the Church walls",
+    "the Forest",
 ]
+
+# -- Searchable spots on the world map --
+WORLD_SEARCH_SPOTS = [
+    {"tile": (26, 10), "name": "a mossy clearing", "area": "the Forest"},
+    {"tile": (27, 12), "name": "a hollow tree stump", "area": "the Forest"},
+    {"tile": (26, 14), "name": "a patch of disturbed leaves", "area": "the Forest"},
+]
+
+# -- Door positions mapped to building names --
+DOOR_TO_BUILDING = {
+    (3, 5): "the Blacksmith",
+    (12, 5): "the Tavern",
+    (19, 5): "the Apothecary",
+    (26, 5): "the Church",
+    (4, 12): "the General Store",
+    (11, 12): "Town Hall",
+    (20, 12): "the Library",
+}
+
+# -- Building interiors (separate maps) --
+# Tiles: 7=floor, 8=wall, 4=exit door, 9=furniture
+INTERIORS = {
+    "the Blacksmith": {
+        "map": [
+            [8,8,8,8,8,8,8,8],
+            [8,7,9,7,7,9,7,8],
+            [8,7,7,7,7,7,7,8],
+            [8,9,7,7,7,7,9,8],
+            [8,7,7,7,7,7,7,8],
+            [8,7,7,4,7,7,7,8],
+        ],
+        "player_start": (3, 4),
+        "exit_tile": (3, 5),
+        "exit_world_pos": (3, 6),
+        "search_spots": [
+            {"tile": (2, 1), "name": "the anvil"},
+            {"tile": (5, 1), "name": "a tool rack"},
+            {"tile": (1, 3), "name": "a storage crate"},
+        ],
+    },
+    "the Tavern": {
+        "map": [
+            [8,8,8,8,8,8,8,8],
+            [8,9,9,7,7,7,9,8],
+            [8,7,7,7,7,7,7,8],
+            [8,7,7,9,9,7,7,8],
+            [8,7,7,7,7,7,7,8],
+            [8,7,7,7,4,7,7,8],
+        ],
+        "player_start": (4, 4),
+        "exit_tile": (4, 5),
+        "exit_world_pos": (12, 6),
+        "search_spots": [
+            {"tile": (1, 1), "name": "the bar counter"},
+            {"tile": (6, 1), "name": "a shelf of bottles"},
+            {"tile": (3, 3), "name": "a table in the corner"},
+        ],
+    },
+    "the Apothecary": {
+        "map": [
+            [8,8,8,8,8,8,8,8],
+            [8,9,7,7,7,9,9,8],
+            [8,7,7,7,7,7,7,8],
+            [8,7,9,7,7,7,7,8],
+            [8,7,7,7,7,7,7,8],
+            [8,7,4,7,7,7,7,8],
+        ],
+        "player_start": (2, 4),
+        "exit_tile": (2, 5),
+        "exit_world_pos": (19, 6),
+        "search_spots": [
+            {"tile": (1, 1), "name": "a shelf of potions"},
+            {"tile": (5, 1), "name": "a mortar and pestle"},
+            {"tile": (2, 3), "name": "a locked cabinet"},
+        ],
+    },
+    "Town Hall": {
+        "map": [
+            [8,8,8,8,8,8,8,8],
+            [8,7,7,9,7,7,7,8],
+            [8,7,7,7,7,7,7,8],
+            [8,9,7,7,7,9,7,8],
+            [8,7,7,7,7,7,7,8],
+            [8,7,7,4,7,7,7,8],
+        ],
+        "player_start": (3, 4),
+        "exit_tile": (3, 5),
+        "exit_world_pos": (11, 13),
+        "search_spots": [
+            {"tile": (3, 1), "name": "the mayor's desk"},
+            {"tile": (1, 3), "name": "a filing cabinet"},
+            {"tile": (5, 3), "name": "a bookshelf"},
+        ],
+    },
+    "the Library": {
+        "map": [
+            [8,8,8,8,8,8,8,8],
+            [8,9,7,9,7,9,7,8],
+            [8,7,7,7,7,7,7,8],
+            [8,9,7,9,7,7,7,8],
+            [8,7,7,7,7,7,7,8],
+            [8,7,7,7,4,7,7,8],
+        ],
+        "player_start": (4, 4),
+        "exit_tile": (4, 5),
+        "exit_world_pos": (20, 13),
+        "search_spots": [
+            {"tile": (1, 1), "name": "a dusty bookshelf"},
+            {"tile": (3, 1), "name": "the reading desk"},
+            {"tile": (1, 3), "name": "a pile of old records"},
+        ],
+    },
+}
 
 NPC_COLORS = [
     (200, 60, 200), (60, 160, 220), (220, 180, 40),
@@ -269,6 +399,15 @@ class Game:
         # Dynamic state: ordered log of events across all days/nights
         self.history = []  # list of dicts: {type, day, ...details}
         self.night_clues = {}  # clue data for the current night's murder
+        # Interior / search state
+        self.current_interior = None  # None = town map, or key into INTERIORS
+        self.evidence_found = []      # persistent list of evidence dicts
+        self.searched_spots = set()   # (area, spot_name) tuples searched this day
+        self.evidence_placements = {} # maps (area, spot_name) -> evidence dict
+        self.search_result_text = ""
+        self.search_result_timer = 0.0
+        self.showing_evidence_log = False
+        self.evidence_log_scroll = 0
 
     def new_game(self):
         self.characters = load_characters("data (1).csv", 7)
@@ -287,6 +426,14 @@ class Game:
         self.dialogue_text = ""
         self.dialogue_loading = False
         self.history = []
+        self.current_interior = None
+        self.evidence_found = []
+        self.searched_spots = set()
+        self.evidence_placements = {}
+        self.search_result_text = ""
+        self.search_result_timer = 0.0
+        self.showing_evidence_log = False
+        self.evidence_log_scroll = 0
 
         # Place NPCs and assign home buildings
         for i, c in enumerate(self.characters):
@@ -311,6 +458,9 @@ class Game:
         self.dialogue_target = None
         self.dialogue_text = ""
         self.night_clues = {}
+        self.searched_spots = set()
+        self.evidence_placements = {}
+        self.current_interior = None
 
         if self.night_num == 1:
             self.storyteller_text = "Night falls on the town...\nA villain lurks among you."
@@ -439,6 +589,36 @@ class Game:
 
         npc_clues[villain["name"]] = villain_alibi
 
+        # Generate physical evidence items for searchable spots
+        physical_evidence = [
+            {
+                "name": weapon[1],
+                "description": f"You found {weapon[1]} hidden nearby. This appears to be the murder weapon used to kill {victim['name']}.",
+                "type": "weapon",
+                "day": self.night_num,
+            },
+            {
+                "name": "traces at the scene",
+                "description": f"{scene_evidence} This could help identify the killer.",
+                "type": "scene",
+                "day": self.night_num,
+            },
+            {
+                "name": villain_trace.split(",")[0] if "," in villain_trace else villain_trace[:50],
+                "description": f"You discovered {villain_trace}. This seems out of place and could point to the killer.",
+                "type": "trace",
+                "day": self.night_num,
+            },
+        ]
+        # 50% chance of a red herring
+        if random.random() > 0.5:
+            physical_evidence.append({
+                "name": random.choice(["a worn journal page", "a strange coin", "a crumpled note"]),
+                "description": "This seems interesting but may not be related to the murder.",
+                "type": "herring",
+                "day": self.night_num,
+            })
+
         return {
             "discovery": f"dead {loc[0]}, with {weapon[0]}",
             "murder_location": loc[1],
@@ -449,6 +629,7 @@ class Game:
             "npc_clues": npc_clues,
             "villain_alibi": villain_alibi,
             "victim_name": victim["name"],
+            "physical_evidence": physical_evidence,
         }
 
     def start_day(self):
@@ -456,7 +637,28 @@ class Game:
         self.dialogue_target = None
         self.dialogue_text = ""
         self.talked_to = set()  # track who we've talked to this day
+        self.search_result_text = ""
+        self.search_result_timer = 0.0
+        self._place_evidence()
         self._prefetch_dialogues()
+
+    def _place_evidence(self):
+        """Assign physical evidence items to random search spots."""
+        evidence_list = self.night_clues.get("physical_evidence", [])
+        if not evidence_list:
+            return
+        # Gather all available spots (world + interiors)
+        all_spots = []
+        for spot in WORLD_SEARCH_SPOTS:
+            all_spots.append((spot["area"], spot["name"]))
+        for bname, interior in INTERIORS.items():
+            for spot in interior["search_spots"]:
+                all_spots.append((bname, spot["name"]))
+        random.shuffle(all_spots)
+        self.evidence_placements = {}
+        for i, ev in enumerate(evidence_list):
+            if i < len(all_spots):
+                self.evidence_placements[all_spots[i]] = ev
 
     def _build_history_context(self):
         """Return a human-readable summary of all past events for LLM context."""
@@ -611,22 +813,146 @@ class Game:
             self.dialogue_text = ""
             self.dialogue_loading = True
 
+    def try_search(self):
+        """Check if player is near a searchable spot and search it."""
+        ptx = int((self.player_x + (TILE_SIZE - 4) / 2) // TILE_SIZE)
+        pty = int((self.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
+
+        if self.current_interior:
+            interior = INTERIORS[self.current_interior]
+            spots = interior["search_spots"]
+            area = self.current_interior
+        else:
+            spots = WORLD_SEARCH_SPOTS
+            area = None
+
+        for spot in spots:
+            sx, sy = spot["tile"]
+            if abs(ptx - sx) <= 1 and abs(pty - sy) <= 1:
+                spot_area = area or spot.get("area", "unknown")
+                key = (spot_area, spot["name"])
+
+                if key in self.searched_spots:
+                    self.show_search_result(f"You've already searched {spot['name']} today.")
+                    return True
+
+                self.searched_spots.add(key)
+
+                if key in self.evidence_placements:
+                    ev = self.evidence_placements[key]
+                    self.evidence_found.append(ev)
+                    self.show_search_result(f"EVIDENCE FOUND: {ev['description']}")
+                    self.history.append({
+                        "type": "evidence", "day": self.night_num,
+                        "description": f"The detective found {ev['name']} at {spot['name']}.",
+                    })
+                else:
+                    flavor = random.choice([
+                        f"You search {spot['name']} carefully but find nothing useful.",
+                        f"Nothing of interest at {spot['name']}.",
+                        f"You examine {spot['name']} — just dust and shadows.",
+                    ])
+                    self.show_search_result(flavor)
+                return True
+        return False
+
+    def show_search_result(self, text):
+        self.search_result_text = text
+        self.search_result_timer = 4.0
+
+    def try_enter_building(self):
+        """Check if player is on a door tile and enter the building interior."""
+        ptx = int((self.player_x + (TILE_SIZE - 4) / 2) // TILE_SIZE)
+        pty = int((self.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
+        building = DOOR_TO_BUILDING.get((ptx, pty))
+        if building and building in INTERIORS:
+            interior = INTERIORS[building]
+            self.current_interior = building
+            sx, sy = interior["player_start"]
+            self.player_x = sx * TILE_SIZE
+            self.player_y = sy * TILE_SIZE
+            return True
+        return False
+
+    def try_exit_interior(self):
+        """Check if player is on the exit door tile of the current interior."""
+        if not self.current_interior:
+            return False
+        interior = INTERIORS[self.current_interior]
+        ptx = int((self.player_x + (TILE_SIZE - 4) / 2) // TILE_SIZE)
+        pty = int((self.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
+        ex, ey = interior["exit_tile"]
+        if ptx == ex and pty == ey:
+            wx, wy = interior["exit_world_pos"]
+            self.player_x = wx * TILE_SIZE
+            self.player_y = wy * TILE_SIZE
+            self.current_interior = None
+            return True
+        return False
+
+    def get_nearby_search_spot(self):
+        """Return the nearest search spot if player is close, else None."""
+        ptx = int((self.player_x + (TILE_SIZE - 4) / 2) // TILE_SIZE)
+        pty = int((self.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
+        if self.current_interior:
+            spots = INTERIORS[self.current_interior]["search_spots"]
+        else:
+            spots = WORLD_SEARCH_SPOTS
+        for spot in spots:
+            sx, sy = spot["tile"]
+            if abs(ptx - sx) <= 1 and abs(pty - sy) <= 1:
+                return spot
+        return None
+
+    def is_on_door(self):
+        """Check if player is standing on a door tile (for enter prompt)."""
+        ptx = int((self.player_x + (TILE_SIZE - 4) / 2) // TILE_SIZE)
+        pty = int((self.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
+        building = DOOR_TO_BUILDING.get((ptx, pty))
+        return building if building and building in INTERIORS else None
+
+    def is_on_exit(self):
+        """Check if player is on the exit tile of current interior."""
+        if not self.current_interior:
+            return False
+        interior = INTERIORS[self.current_interior]
+        ptx = int((self.player_x + (TILE_SIZE - 4) / 2) // TILE_SIZE)
+        pty = int((self.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
+        ex, ey = interior["exit_tile"]
+        return ptx == ex and pty == ey
+
 
 game = Game()
 
 # ── Helpers ─────────────────────────────────────────────────────
 def is_wall(px, py, w, h):
-    left = int(px) // TILE_SIZE
-    right = int(px + w - 1) // TILE_SIZE
-    top = int(py) // TILE_SIZE
-    bottom = int(py + h - 1) // TILE_SIZE
-    for r in range(top, bottom + 1):
-        for c in range(left, right + 1):
-            if r < 0 or r >= MAP_H or c < 0 or c >= MAP_W:
-                return True
-            if tilemap[r][c] in SOLID_TILES:
-                return True
-    return False
+    if game.current_interior:
+        imap = INTERIORS[game.current_interior]["map"]
+        ih = len(imap)
+        iw = len(imap[0])
+        left = int(px) // TILE_SIZE
+        right = int(px + w - 1) // TILE_SIZE
+        top = int(py) // TILE_SIZE
+        bottom = int(py + h - 1) // TILE_SIZE
+        for r in range(top, bottom + 1):
+            for c in range(left, right + 1):
+                if r < 0 or r >= ih or c < 0 or c >= iw:
+                    return True
+                if imap[r][c] in SOLID_TILES:
+                    return True
+        return False
+    else:
+        left = int(px) // TILE_SIZE
+        right = int(px + w - 1) // TILE_SIZE
+        top = int(py) // TILE_SIZE
+        bottom = int(py + h - 1) // TILE_SIZE
+        for r in range(top, bottom + 1):
+            for c in range(left, right + 1):
+                if r < 0 or r >= MAP_H or c < 0 or c >= MAP_W:
+                    return True
+                if tilemap[r][c] in SOLID_TILES:
+                    return True
+        return False
 
 def player_near(npc):
     pcx = game.player_x + (TILE_SIZE - 4) / 2
@@ -701,10 +1027,22 @@ while running:
                 if game.state in ("DAY", "ACCUSE"):
                     if game.state == "ACCUSE":
                         game.state = "DAY"
+                    elif game.showing_evidence_log:
+                        game.showing_evidence_log = False
+                    elif game.search_result_timer > 0:
+                        game.search_result_timer = 0
+                        game.search_result_text = ""
                     elif game.dialogue_target:
                         game.dialogue_target = None
                         game.dialogue_text = ""
                         game.dialogue_loading = False
+                    elif game.current_interior:
+                        # Exit interior back to town
+                        interior = INTERIORS[game.current_interior]
+                        wx, wy = interior["exit_world_pos"]
+                        game.player_x = wx * TILE_SIZE
+                        game.player_y = wy * TILE_SIZE
+                        game.current_interior = None
                     else:
                         running = False
                 else:
@@ -722,18 +1060,52 @@ while running:
             # Day
             if game.state == "DAY":
                 if event.key == pygame.K_e:
-                    if game.dialogue_target:
+                    # Dismiss search result
+                    if game.search_result_timer > 0:
+                        game.search_result_timer = 0
+                        game.search_result_text = ""
+                    # Close dialogue
+                    elif game.dialogue_target:
                         game.dialogue_target = None
                         game.dialogue_text = ""
                         game.dialogue_loading = False
-                    else:
+                    # Close evidence log
+                    elif game.showing_evidence_log:
+                        game.showing_evidence_log = False
+                    # Try exit interior
+                    elif game.current_interior and game.is_on_exit():
+                        game.try_exit_interior()
+                    # Try enter building
+                    elif not game.current_interior and game.is_on_door():
+                        game.try_enter_building()
+                    # Try talk to NPC (only on town map)
+                    elif not game.current_interior:
+                        talked = False
                         for npc in game.alive:
                             if player_near(npc):
                                 game.talk_to_npc(npc)
+                                talked = True
                                 break
+                        # Try search spot
+                        if not talked:
+                            game.try_search()
+                    # Try search spot (inside building)
+                    else:
+                        game.try_search()
 
-                if event.key == pygame.K_TAB:
+                if event.key == pygame.K_l:
+                    game.showing_evidence_log = not game.showing_evidence_log
+                    game.evidence_log_scroll = 0
+
+                if event.key == pygame.K_TAB and not game.showing_evidence_log:
                     game.open_accuse()
+
+                # Scroll evidence log
+                if game.showing_evidence_log:
+                    if event.key == pygame.K_UP:
+                        game.evidence_log_scroll = max(0, game.evidence_log_scroll - 1)
+                    if event.key == pygame.K_DOWN:
+                        game.evidence_log_scroll += 1
 
             # Accuse menu
             elif game.state == "ACCUSE":
@@ -803,6 +1175,12 @@ while running:
             player_anim_timer = 0.0
             player_anim_frame = 0
 
+        # Update search result timer
+        if game.search_result_timer > 0:
+            game.search_result_timer -= dt
+            if game.search_result_timer <= 0:
+                game.search_result_text = ""
+
         # Check LLM responses
         if game.dialogue_loading and game.dialogue_target:
             key = f"npc_{game.dialogue_target['name']}_{game.night_num}"
@@ -823,7 +1201,7 @@ while running:
         draw_centered_text(screen, "A villain hides among the townspeople.", font_md, (200, 200, 200), 270)
         draw_centered_text(screen, "Find them before it's too late.", font_md, (200, 200, 200), 310)
         draw_centered_text(screen, "Press ENTER to begin", font_md, (255, 255, 255), 420)
-        draw_centered_text(screen, "[WASD] Move  [E] Talk  [TAB] Accuse  [ESC] Quit", font_sm, (150, 150, 150), 500)
+        draw_centered_text(screen, "[WASD] Move  [E] Talk/Search/Enter  [L] Evidence Log  [TAB] Accuse", font_sm, (150, 150, 150), 500)
 
     elif game.state == "NIGHT":
         screen.fill(NIGHT_OVERLAY)
@@ -839,52 +1217,124 @@ while running:
         cam_x = game.player_x + pw / 2 - SCREEN_W / 2
         cam_y = game.player_y + ph / 2 - SCREEN_H / 2
 
-        # Draw tiles
-        for row in range(MAP_H):
-            for col in range(MAP_W):
-                rect = pygame.Rect(
-                    col * TILE_SIZE - cam_x,
-                    row * TILE_SIZE - cam_y,
-                    TILE_SIZE, TILE_SIZE,
-                )
-                pygame.draw.rect(screen, TILE_COLORS[tilemap[row][col]], rect)
+        if game.current_interior:
+            # ── Draw interior map ──
+            imap = INTERIORS[game.current_interior]["map"]
+            ih, iw = len(imap), len(imap[0])
+            for row in range(ih):
+                for col in range(iw):
+                    rect = pygame.Rect(
+                        col * TILE_SIZE - cam_x,
+                        row * TILE_SIZE - cam_y,
+                        TILE_SIZE, TILE_SIZE,
+                    )
+                    pygame.draw.rect(screen, TILE_COLORS.get(imap[row][col], BG_COLOR), rect)
 
-        # Draw building name labels
-        for i, (lx, ly) in enumerate(BUILDING_LABEL_POS):
-            if i < len(BUILDING_NAMES):
-                label = font_sm.render(BUILDING_NAMES[i], True, (255, 255, 220))
+            # Draw search spot sparkles in interior
+            interior = INTERIORS[game.current_interior]
+            pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() * 0.005)
+            for spot in interior["search_spots"]:
+                sx, sy = spot["tile"]
+                key = (game.current_interior, spot["name"])
+                scr_x = sx * TILE_SIZE - cam_x + TILE_SIZE // 2
+                scr_y = sy * TILE_SIZE - cam_y + TILE_SIZE // 2
+                if key not in game.searched_spots:
+                    # Pulsing gold diamond
+                    sz = int(6 + 4 * pulse)
+                    pts = [(scr_x, scr_y - sz), (scr_x + sz, scr_y),
+                           (scr_x, scr_y + sz), (scr_x - sz, scr_y)]
+                    pygame.draw.polygon(screen, (255, 220, 60), pts)
+                else:
+                    # Faded X mark
+                    pygame.draw.line(screen, (100, 100, 100), (scr_x - 5, scr_y - 5), (scr_x + 5, scr_y + 5), 2)
+                    pygame.draw.line(screen, (100, 100, 100), (scr_x + 5, scr_y - 5), (scr_x - 5, scr_y + 5), 2)
+
+            # Interior name header
+            int_label = font_md.render(f"Inside {game.current_interior}  [ESC] Exit", True, (255, 255, 220))
+            lbg = pygame.Surface((int_label.get_width() + 16, int_label.get_height() + 8), pygame.SRCALPHA)
+            lbg.fill((0, 0, 0, 180))
+            screen.blit(lbg, (SCREEN_W // 2 - int_label.get_width() // 2 - 8, 50))
+            screen.blit(int_label, (SCREEN_W // 2 - int_label.get_width() // 2, 54))
+
+        else:
+            # ── Draw town map ──
+            for row in range(MAP_H):
+                for col in range(MAP_W):
+                    rect = pygame.Rect(
+                        col * TILE_SIZE - cam_x,
+                        row * TILE_SIZE - cam_y,
+                        TILE_SIZE, TILE_SIZE,
+                    )
+                    pygame.draw.rect(screen, TILE_COLORS[tilemap[row][col]], rect)
+
+            # Draw building name labels
+            for i, (lx, ly) in enumerate(BUILDING_LABEL_POS):
+                if i < len(BUILDING_NAMES):
+                    label = font_sm.render(BUILDING_NAMES[i], True, (255, 255, 220))
+                    lsx = lx * TILE_SIZE - cam_x + TILE_SIZE * 2 - label.get_width() / 2
+                    lsy = ly * TILE_SIZE - cam_y + 4
+                    bg_rect = pygame.Rect(lsx - 4, lsy - 2, label.get_width() + 8, label.get_height() + 4)
+                    bg_surf = pygame.Surface((bg_rect.width, bg_rect.height), pygame.SRCALPHA)
+                    bg_surf.fill((0, 0, 0, 160))
+                    screen.blit(bg_surf, bg_rect)
+                    screen.blit(label, (lsx, lsy))
+
+            # Draw area labels (Forest, etc.)
+            for area in AREA_LABELS:
+                lx, ly = area["tile"]
+                label = font_sm.render(area["name"], True, (200, 255, 200))
                 lsx = lx * TILE_SIZE - cam_x + TILE_SIZE * 2 - label.get_width() / 2
                 lsy = ly * TILE_SIZE - cam_y + 4
-                # Dark background for readability
                 bg_rect = pygame.Rect(lsx - 4, lsy - 2, label.get_width() + 8, label.get_height() + 4)
                 bg_surf = pygame.Surface((bg_rect.width, bg_rect.height), pygame.SRCALPHA)
                 bg_surf.fill((0, 0, 0, 160))
                 screen.blit(bg_surf, bg_rect)
                 screen.blit(label, (lsx, lsy))
 
-        # Draw NPCs
-        for npc in game.alive:
-            sx = npc["x"] - cam_x
-            sy = npc["y"] - cam_y
-            idx = game.characters.index(npc) if npc in game.characters else -1
-            sprite = npc_sprites[idx] if 0 <= idx < len(npc_sprites) else None
-            if sprite:
-                screen.blit(sprite, (sx, sy))
-            else:
-                pygame.draw.rect(screen, npc["color"], (sx, sy, TILE_SIZE - 4, TILE_SIZE - 4))
-            # Name label
-            name_surf = font_sm.render(npc["name"], True, (255, 255, 255))
-            screen.blit(name_surf, (sx + (TILE_SIZE - 4) / 2 - name_surf.get_width() / 2, sy - 20))
-
-            # Interaction hint
-            if player_near(npc) and not game.dialogue_target:
-                if npc["name"] in game.talked_to:
-                    hint = font_sm.render("(already spoke)", True, (150, 150, 150))
+            # Draw search spot sparkles on world map
+            pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() * 0.005)
+            for spot in WORLD_SEARCH_SPOTS:
+                sx, sy = spot["tile"]
+                key = (spot["area"], spot["name"])
+                scr_x = sx * TILE_SIZE - cam_x + TILE_SIZE // 2
+                scr_y = sy * TILE_SIZE - cam_y + TILE_SIZE // 2
+                if key not in game.searched_spots:
+                    sz = int(6 + 4 * pulse)
+                    pts = [(scr_x, scr_y - sz), (scr_x + sz, scr_y),
+                           (scr_x, scr_y + sz), (scr_x - sz, scr_y)]
+                    pygame.draw.polygon(screen, (255, 220, 60), pts)
                 else:
-                    hint = font_sm.render("[E] Talk", True, (255, 255, 200))
-                screen.blit(hint, (sx - 5, sy - 38))
+                    pygame.draw.line(screen, (100, 100, 100), (scr_x - 5, scr_y - 5), (scr_x + 5, scr_y + 5), 2)
+                    pygame.draw.line(screen, (100, 100, 100), (scr_x + 5, scr_y - 5), (scr_x - 5, scr_y + 5), 2)
 
-        # Draw player
+            # Draw NPCs (only on town map)
+            for npc in game.alive:
+                sx = npc["x"] - cam_x
+                sy = npc["y"] - cam_y
+                idx = game.characters.index(npc) if npc in game.characters else -1
+                sprite = npc_sprites[idx] if 0 <= idx < len(npc_sprites) else None
+                if sprite:
+                    screen.blit(sprite, (sx, sy))
+                else:
+                    pygame.draw.rect(screen, npc["color"], (sx, sy, TILE_SIZE - 4, TILE_SIZE - 4))
+                name_surf = font_sm.render(npc["name"], True, (255, 255, 255))
+                screen.blit(name_surf, (sx + (TILE_SIZE - 4) / 2 - name_surf.get_width() / 2, sy - 20))
+
+                # Interaction hint
+                if player_near(npc) and not game.dialogue_target:
+                    if npc["name"] in game.talked_to:
+                        hint = font_sm.render("(already spoke)", True, (150, 150, 150))
+                    else:
+                        hint = font_sm.render("[E] Talk", True, (255, 255, 200))
+                    screen.blit(hint, (sx - 5, sy - 38))
+
+            # Door enter hint
+            door_building = game.is_on_door()
+            if door_building and not game.dialogue_target:
+                hint = font_sm.render(f"[E] Enter {door_building}", True, (255, 255, 200))
+                screen.blit(hint, (game.player_x - cam_x - hint.get_width() // 2 + pw // 2, game.player_y - cam_y - 25))
+
+        # Draw player (both town and interior)
         if player_walking:
             frames = player_walk_frames.get(player_facing)
             p_sprite = frames[player_anim_frame] if frames else None
@@ -895,14 +1345,33 @@ while running:
         else:
             screen.blit(player_img_fallback, (game.player_x - cam_x, game.player_y - cam_y))
 
+        # Search spot hint (both maps)
+        nearby_spot = game.get_nearby_search_spot()
+        if nearby_spot and not game.dialogue_target and game.search_result_timer <= 0:
+            spot_area = game.current_interior or nearby_spot.get("area", "")
+            key = (spot_area, nearby_spot["name"])
+            if key in game.searched_spots:
+                hint = font_sm.render(f"(searched)", True, (150, 150, 150))
+            else:
+                hint = font_sm.render(f"[E] Search {nearby_spot['name']}", True, (255, 255, 200))
+            screen.blit(hint, (game.player_x - cam_x - hint.get_width() // 2 + pw // 2, game.player_y - cam_y - 25))
+
+        # Exit hint in interior
+        if game.current_interior and game.is_on_exit():
+            hint = font_sm.render("[E] Exit", True, (255, 255, 200))
+            screen.blit(hint, (game.player_x - cam_x - hint.get_width() // 2 + pw // 2, game.player_y - cam_y - 25))
+
         # HUD
         hud_y = 10
-        day_surf = font_md.render(f"Day {game.night_num}  |  Guesses left: {3 - game.wrong_guesses}  |  [TAB] Accuse", True, (255, 255, 255))
+        ev_count = len(game.evidence_found)
+        loc_text = f"  |  Inside {game.current_interior}" if game.current_interior else ""
+        hud_text = f"Day {game.night_num}  |  Guesses: {3 - game.wrong_guesses}  |  Evidence: {ev_count}  |  [TAB] Accuse  [L] Log{loc_text}"
+        day_surf = font_md.render(hud_text, True, (255, 255, 255))
         pygame.draw.rect(screen, (0, 0, 0, 180), (0, 0, SCREEN_W, 45))
         screen.blit(day_surf, (15, hud_y))
 
         # Dialogue box
-        if game.dialogue_target:
+        if game.dialogue_target and not game.current_interior:
             box_h = 160
             box_rect = pygame.Rect(20, SCREEN_H - box_h - 20, SCREEN_W - 40, box_h)
             pygame.draw.rect(screen, (20, 20, 30), box_rect, border_radius=8)
@@ -917,6 +1386,60 @@ while running:
             else:
                 draw_text_wrapped(screen, game.dialogue_text, font_sm, (220, 220, 220),
                     pygame.Rect(box_rect.x, box_rect.y + 40, box_rect.width, box_rect.height - 40))
+
+        # Search result box
+        if game.search_result_text and game.search_result_timer > 0:
+            box_h = 120
+            box_rect = pygame.Rect(20, SCREEN_H - box_h - 20, SCREEN_W - 40, box_h)
+            is_evidence = game.search_result_text.startswith("EVIDENCE")
+            bg_col = (30, 25, 10) if is_evidence else (20, 20, 30)
+            border_col = (220, 180, 40) if is_evidence else (100, 100, 120)
+            pygame.draw.rect(screen, bg_col, box_rect, border_radius=8)
+            pygame.draw.rect(screen, border_col, box_rect, 2, border_radius=8)
+
+            header = "Evidence Found!" if is_evidence else "Investigation"
+            header_col = (255, 220, 60) if is_evidence else (180, 180, 200)
+            header_surf = font_md.render(header, True, header_col)
+            screen.blit(header_surf, (box_rect.x + 12, box_rect.y + 8))
+
+            display_text = game.search_result_text.replace("EVIDENCE FOUND: ", "") if is_evidence else game.search_result_text
+            draw_text_wrapped(screen, display_text, font_sm, (220, 220, 220),
+                pygame.Rect(box_rect.x, box_rect.y + 36, box_rect.width, box_rect.height - 36))
+
+        # Evidence log overlay
+        if game.showing_evidence_log:
+            overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 180))
+            screen.blit(overlay, (0, 0))
+
+            draw_centered_text(screen, "EVIDENCE LOG", font_lg, (255, 220, 60), 40)
+            draw_centered_text(screen, "[UP/DOWN] Scroll  [L/ESC] Close", font_sm, (180, 180, 180), 85)
+
+            if not game.evidence_found:
+                draw_centered_text(screen, "No evidence collected yet.", font_md, (150, 150, 150), 200)
+            else:
+                # Group evidence by day
+                by_day = {}
+                for ev in game.evidence_found:
+                    d = ev.get("day", "?")
+                    by_day.setdefault(d, []).append(ev)
+
+                log_lines = []
+                for day in sorted(by_day.keys()):
+                    log_lines.append((f"Day {day}:", (220, 180, 40), font_md))
+                    for ev in by_day[day]:
+                        log_lines.append((f"  - {ev['name']}: {ev['description']}", (200, 200, 200), font_sm))
+
+                visible_start = game.evidence_log_scroll
+                visible_end = min(visible_start + 12, len(log_lines))
+                game.evidence_log_scroll = min(game.evidence_log_scroll, max(0, len(log_lines) - 12))
+
+                y_pos = 120
+                for i in range(visible_start, visible_end):
+                    line_text, line_col, line_font = log_lines[i]
+                    # Word-wrap long evidence lines
+                    y_pos = draw_centered_text_wrapped(screen, line_text, line_font, line_col, y_pos, max_width=SCREEN_W - 100)
+                    y_pos += 4
 
         # Accusation overlay
         if game.state == "ACCUSE":
