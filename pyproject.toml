@@ -1,0 +1,12 @@
+[project]
+name = "hackathon-game"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "numpy>=2.4.3",
+    "ollama>=0.6.1",
+    "pygame-ce>=2.5.7",
+    "ursina>=8.3.0",
+]
