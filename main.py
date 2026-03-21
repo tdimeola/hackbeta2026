@@ -1698,7 +1698,7 @@ while running:
     if game.state == "NIGHT":
         game.night_timer -= dt
 
-    if game.state == "DAY":
+    if game.state == "DAY" and not game.showing_journal and not game.showing_evidence_log and not game.showing_clue_tracker:
         # Movement
         keys = pygame.key.get_pressed()
         dx, dy = 0, 0
