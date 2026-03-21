@@ -124,6 +124,25 @@ for d in DIRECTIONS:
 player_img_fallback = pygame.image.load("character.jpg").convert()
 player_img_fallback = pygame.transform.scale(player_img_fallback, (TILE_SIZE - 4, TILE_SIZE - 4))
 
+# Menu background — load animated GIF frames via Pillow
+def _load_gif_frames(path, target_size):
+    from PIL import Image
+    pil_img = Image.open(path)
+    frames = []
+    for i in range(pil_img.n_frames):
+        pil_img.seek(i)
+        frame = pil_img.convert("RGBA")
+        raw = frame.tobytes()
+        surf = pygame.image.fromstring(raw, frame.size, "RGBA").convert_alpha()
+        surf = pygame.transform.smoothscale(surf, target_size)
+        frames.append(surf)
+    return frames
+
+menu_bg_frames = _load_gif_frames("bg_village.gif", (SCREEN_W, SCREEN_H))
+menu_bg_frame_idx = 0
+menu_bg_timer = 0.0
+MENU_BG_FPS = 15  # playback speed
+
 player_facing = "south"
 player_walking = False
 player_anim_timer = 0.0
@@ -425,6 +444,13 @@ class Game:
         self.search_result_timer = 0.0
         self.showing_evidence_log = False
         self.evidence_log_scroll = 0
+        # Relationships & memory
+        self.relationships = {}       # (name_a, name_b) -> {"type": str, "detail": str}
+        self.npc_memory = {}          # name -> list of short memory strings
+        self.npc_emotional_state = {} # name -> {"fear": int, "anger": int, "desperation": int}
+        self.suspicion_log = []       # list of {"day": int, "source": str, "text": str}
+        self.showing_clue_tracker = False
+        self.clue_tracker_scroll = 0
 
     def new_game(self):
         self.characters = load_characters("data (1).csv", 7)
@@ -452,6 +478,9 @@ class Game:
         self.search_result_timer = 0.0
         self.showing_evidence_log = False
         self.evidence_log_scroll = 0
+        self.suspicion_log = []
+        self.showing_clue_tracker = False
+        self.clue_tracker_scroll = 0
 
         # Place NPCs and assign home buildings
         for i, c in enumerate(self.characters):
@@ -466,11 +495,93 @@ class Game:
             c["location_building"] = None
             c["location_desc"] = f"outside {c['home']}"
 
+        # Init per-NPC memory and emotions
+        self.npc_memory = {}
+        self.npc_emotional_state = {}
+        for c in self.characters:
+            self.npc_memory[c["name"]] = []
+            self.npc_emotional_state[c["name"]] = {"fear": 0, "anger": 0, "desperation": 0}
+
+        # Generate relationships
+        self._generate_relationships()
+
         # Player start
         self.player_x = 14.0 * TILE_SIZE
         self.player_y = 7.0 * TILE_SIZE
 
         self.start_night()
+
+    def _generate_relationships(self):
+        """Generate relationships between NPCs. Villain always has motive-type relationships."""
+        MOTIVE_TYPES = ["rivals", "old_grudge", "romantic"]
+        OTHER_TYPES = ["friends", "business_partners", "mentor_student"]
+        ALL_TYPES = MOTIVE_TYPES + OTHER_TYPES
+
+        TEMPLATES = {
+            "rivals": [
+                "{a} and {b} have competed for business for years.",
+                "{a} and {b} have clashed over influence in town.",
+                "{a} and {b} both wanted the same position at {a_home}.",
+            ],
+            "old_grudge": [
+                "{a} blames {b} for something from back in {a_town}.",
+                "{b} wronged {a} years ago and it was never forgiven.",
+                "{a} and {b} had a falling out that split the town.",
+            ],
+            "romantic": [
+                "{a} and {b} were once close, but things ended badly.",
+                "{a} still has feelings for {b}, but {b} moved on.",
+                "{a} and {b} had a secret relationship that fell apart.",
+            ],
+            "friends": [
+                "{a} and {b} are close friends who look out for each other.",
+                "{a} and {b} have been loyal friends since childhood.",
+                "{a} and {b} share meals at {b_home} most evenings.",
+            ],
+            "business_partners": [
+                "{a} and {b} trade goods between {a_home} and {b_home}.",
+                "{a} supplies materials to {b} regularly.",
+                "{a} and {b} work together on town projects.",
+            ],
+            "mentor_student": [
+                "{a} taught {b} everything they know.",
+                "{b} apprenticed under {a} at {a_home} years ago.",
+                "{a} took {b} in when they first arrived from {b_town}.",
+            ],
+        }
+
+        self.relationships = {}
+        villain = next(c for c in self.characters if c["is_villain"])
+
+        for i, a in enumerate(self.characters):
+            for j, b in enumerate(self.characters):
+                if j <= i:
+                    continue
+                a_home = a.get("home", "town")
+                b_home = b.get("home", "town")
+
+                # Villain must have a motive with everyone
+                if a["is_villain"] or b["is_villain"]:
+                    rtype = random.choice(MOTIVE_TYPES)
+                elif random.random() < 0.4:
+                    rtype = random.choice(ALL_TYPES)
+                else:
+                    continue
+
+                template = random.choice(TEMPLATES[rtype])
+                detail = template.format(
+                    a=a["name"], b=b["name"],
+                    a_home=a_home, b_home=b_home,
+                    a_town=a["hometown"], b_town=b["hometown"],
+                )
+                self.relationships[(a["name"], b["name"])] = {"type": rtype, "detail": detail}
+
+    def get_relationship(self, name_a, name_b):
+        """Look up relationship between two NPCs (checks both orderings)."""
+        r = self.relationships.get((name_a, name_b))
+        if r:
+            return r
+        return self.relationships.get((name_b, name_a))
 
     def start_night(self):
         self.night_num += 1
@@ -513,8 +624,21 @@ class Game:
                         f"{self.night_clues['scene_evidence']}"
                     ),
                 })
+                # Record murder memory and escalate emotions for all survivors
+                for npc in self.alive:
+                    name = npc["name"]
+                    if name in self.npc_memory:
+                        self.npc_memory[name].append(f"Day {self.night_num}: {victim['name']} was murdered.")
+                    if name in self.npc_emotional_state:
+                        self.npc_emotional_state[name]["fear"] += 1
+                        self.npc_emotional_state[name]["anger"] += 1
             else:
                 self.storyteller_text = f"Night {self.night_num}..."
+
+        # Escalate fear for all survivors each night
+        for npc in self.alive:
+            if npc["name"] in self.npc_emotional_state:
+                self.npc_emotional_state[npc["name"]]["fear"] += 1
 
     def _generate_night_clues(self, victim, villain):
         """Generate specific, interconnected clues for this night's murder."""
@@ -651,7 +775,15 @@ class Game:
             "villain_alibi": villain_alibi,
             "victim_name": victim["name"],
             "physical_evidence": physical_evidence,
+            "motive_hint": self._get_motive_hint(villain, victim),
         }
+
+    def _get_motive_hint(self, villain, victim):
+        """Look up the relationship between villain and victim for motive context."""
+        rel = self.get_relationship(villain["name"], victim["name"])
+        if rel:
+            return f"{villain['name']} and {victim['name']} were {rel['type'].replace('_', ' ')}. {rel['detail']}"
+        return ""
 
     def start_day(self):
         self.state = "DAY"
@@ -845,6 +977,49 @@ class Game:
             if dead_names:
                 system += f"The dead so far: {', '.join(dead_names)}. "
 
+            # Relationships
+            rel_parts = []
+            for other in self.alive:
+                if other["name"] == npc["name"]:
+                    continue
+                rel = self.get_relationship(npc["name"], other["name"])
+                if rel:
+                    rel_parts.append(f"{rel['type'].replace('_', ' ')} with {other['name']}")
+            if rel_parts:
+                system += f"Your relationships: {'; '.join(rel_parts)}. "
+
+            # Memory (last 4 entries)
+            memories = self.npc_memory.get(npc["name"], [])
+            if memories:
+                recent = memories[-4:]
+                system += f"Your recent memories: {'; '.join(recent)}. "
+
+            # Emotional state
+            emo = self.npc_emotional_state.get(npc["name"], {})
+            fear = emo.get("fear", 0)
+            if is_villain:
+                desp = emo.get("desperation", 0)
+                if desp >= 2:
+                    system += "Suspicion may be mounting. Aggressively deflect blame onto others. Act offended if questioned. "
+                elif desp >= 1:
+                    system += "You sense the detective is getting closer. Be more careful with your words. "
+            else:
+                if fear >= 3:
+                    system += "You are terrified and desperate for answers. "
+                elif fear >= 2:
+                    system += "You are very scared and anxious. "
+                elif fear >= 1:
+                    system += "You are nervous and on edge. "
+
+            # Accusation awareness
+            past_accusations = [e for e in self.history if e["type"] == "accusation" and not e["correct"]]
+            if past_accusations:
+                if is_villain:
+                    names = [e["accused"] for e in past_accusations]
+                    system += f"The detective wrongly accused {', '.join(names)} before. Use this — suggest the detective is confused. "
+                elif any(e["accused"] == npc["name"] for e in past_accusations):
+                    system += "You were wrongly accused before and you are angry about it. Remind the detective of their mistake. "
+
             if history_context:
                 system += f"\n{history_context}\n"
 
@@ -887,9 +1062,12 @@ class Game:
                     for other in self.alive:
                         if other["name"] != npc["name"]:
                             other_locations.append(f"{other['name']} is {other.get('location_desc', 'in town')}")
+                    motive = clues.get("motive_hint", "")
+                    motive_line = f"Motive to consider: {motive} " if motive else ""
                     system += (
                         f"{victim_name} was found dead at {murder_loc} with {cause}, killed {time_desc}. "
                         f"YOUR SPECIFIC OBSERVATION: {npc_clue} "
+                        f"{motive_line}"
                         f"You can see where other people are today: {'; '.join(other_locations)}. "
                         f"You MUST share your observation with the detective — it's the most important thing you know. "
                         f"If you notice someone is in a suspicious location (near the murder scene), you may mention it. "
@@ -934,6 +1112,15 @@ class Game:
                     f"but they were innocent. The town was shocked and the real killer is still at large."
                 ),
             })
+            # Record accusation in NPC memories
+            for npc in self.alive:
+                name = npc["name"]
+                if name in self.npc_memory:
+                    self.npc_memory[name].append(f"Day {self.night_num}: Detective wrongly accused {character['name']}.")
+            # Villain becomes more desperate
+            villain_npc = next((c for c in self.alive if c["is_villain"]), None)
+            if villain_npc and villain_npc["name"] in self.npc_emotional_state:
+                self.npc_emotional_state[villain_npc["name"]]["desperation"] += 1
             if self.wrong_guesses >= 3:
                 self.state = "LOSE"
                 self.storyteller_text = (
@@ -961,6 +1148,14 @@ class Game:
             text = re.sub(r'<think>.*?</think>', '', result, flags=re.DOTALL).strip()
             self.dialogue_text = text if text else result.strip()
             self.dialogue_loading = False
+            # Record memory and suspicion log
+            if npc["name"] in self.npc_memory:
+                self.npc_memory[npc["name"]].append(f"Day {self.night_num}: Spoke to the detective.")
+            self.suspicion_log.append({
+                "day": self.night_num,
+                "source": npc["name"],
+                "text": self.dialogue_text[:150],
+            })
         else:
             # Still generating, show loading
             self.dialogue_text = ""
@@ -1002,6 +1197,11 @@ class Game:
                     self.history.append({
                         "type": "evidence", "day": self.night_num,
                         "description": f"The detective found {ev['name']} at {spot['name']}.",
+                    })
+                    self.suspicion_log.append({
+                        "day": self.night_num,
+                        "source": "Investigation",
+                        "text": f"Found {ev['name']} at {spot['name']}.",
                     })
                 else:
                     flavor = random.choice([
@@ -1191,6 +1391,8 @@ while running:
                         game.state = "DAY"
                     elif game.showing_evidence_log:
                         game.showing_evidence_log = False
+                    elif game.showing_clue_tracker:
+                        game.showing_clue_tracker = False
                     elif game.search_result_timer > 0:
                         game.search_result_timer = 0
                         game.search_result_text = ""
@@ -1260,17 +1462,28 @@ while running:
 
                 if event.key == pygame.K_l:
                     game.showing_evidence_log = not game.showing_evidence_log
+                    game.showing_clue_tracker = False
                     game.evidence_log_scroll = 0
 
-                if event.key == pygame.K_TAB and not game.showing_evidence_log:
+                if event.key == pygame.K_j:
+                    game.showing_clue_tracker = not game.showing_clue_tracker
+                    game.showing_evidence_log = False
+                    game.clue_tracker_scroll = 0
+
+                if event.key == pygame.K_TAB and not game.showing_evidence_log and not game.showing_clue_tracker:
                     game.open_accuse()
 
-                # Scroll evidence log
+                # Scroll overlays
                 if game.showing_evidence_log:
                     if event.key == pygame.K_UP:
                         game.evidence_log_scroll = max(0, game.evidence_log_scroll - 1)
                     if event.key == pygame.K_DOWN:
                         game.evidence_log_scroll += 1
+                if game.showing_clue_tracker:
+                    if event.key == pygame.K_UP:
+                        game.clue_tracker_scroll = max(0, game.clue_tracker_scroll - 1)
+                    if event.key == pygame.K_DOWN:
+                        game.clue_tracker_scroll += 1
 
             # Accuse menu
             elif game.state == "ACCUSE":
@@ -1362,11 +1575,17 @@ while running:
     screen.fill(BG_COLOR)
 
     if game.state == "MENU":
+        # Animate GIF background
+        menu_bg_timer += dt
+        if menu_bg_timer >= 1.0 / MENU_BG_FPS:
+            menu_bg_timer -= 1.0 / MENU_BG_FPS
+            menu_bg_frame_idx = (menu_bg_frame_idx + 1) % len(menu_bg_frames)
+        screen.blit(menu_bg_frames[menu_bg_frame_idx], (0, 0))
         draw_centered_text(screen, "MURDER MYSTERY", font_title, BLOOD_RED, 180)
         draw_centered_text(screen, "A villain hides among the townspeople.", font_md, (200, 200, 200), 270)
         draw_centered_text(screen, "Find them before it's too late.", font_md, (200, 200, 200), 310)
         draw_centered_text(screen, "Press ENTER to begin", font_md, (255, 255, 255), 420)
-        draw_centered_text(screen, "[WASD] Move  [E] Talk/Search/Enter  [L] Evidence Log  [TAB] Accuse", font_sm, (150, 150, 150), 500)
+        draw_centered_text(screen, "[WASD] Move  [E] Talk/Search/Enter  [L] Evidence  [J] Clues  [TAB] Accuse", font_sm, (150, 150, 150), 500)
 
     elif game.state == "NIGHT":
         screen.fill(NIGHT_OVERLAY)
@@ -1551,7 +1770,7 @@ while running:
         hud_y = 10
         ev_count = len(game.evidence_found)
         loc_text = f"  |  Inside {game.current_interior}" if game.current_interior else ""
-        hud_text = f"Day {game.night_num}  |  Guesses: {3 - game.wrong_guesses}  |  Evidence: {ev_count}  |  [TAB] Accuse  [L] Log{loc_text}"
+        hud_text = f"Day {game.night_num}  |  Guesses: {3 - game.wrong_guesses}  |  Evidence: {ev_count}  |  [TAB] Accuse  [L] Log  [J] Clues{loc_text}"
         day_surf = font_md.render(hud_text, True, (255, 255, 255))
         pygame.draw.rect(screen, (0, 0, 0, 180), (0, 0, SCREEN_W, 45))
         screen.blit(day_surf, (15, hud_y))
@@ -1624,6 +1843,42 @@ while running:
                 for i in range(visible_start, visible_end):
                     line_text, line_col, line_font = log_lines[i]
                     # Word-wrap long evidence lines
+                    y_pos = draw_centered_text_wrapped(screen, line_text, line_font, line_col, y_pos, max_width=SCREEN_W - 100)
+                    y_pos += 4
+
+        # Clue tracker overlay
+        if game.showing_clue_tracker:
+            overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 180))
+            screen.blit(overlay, (0, 0))
+
+            draw_centered_text(screen, "CLUE TRACKER", font_lg, (100, 200, 255), 40)
+            draw_centered_text(screen, "[UP/DOWN] Scroll  [J/ESC] Close", font_sm, (180, 180, 180), 85)
+
+            if not game.suspicion_log:
+                draw_centered_text(screen, "No clues collected yet. Talk to people and search.", font_md, (150, 150, 150), 200)
+            else:
+                # Group by day
+                by_day = {}
+                for entry in game.suspicion_log:
+                    d = entry.get("day", "?")
+                    by_day.setdefault(d, []).append(entry)
+
+                log_lines = []
+                for day in sorted(by_day.keys()):
+                    log_lines.append((f"Day {day}:", (100, 200, 255), font_md))
+                    for entry in by_day[day]:
+                        src = entry["source"]
+                        txt = entry["text"]
+                        log_lines.append((f"  [{src}] {txt}", (200, 200, 200), font_sm))
+
+                visible_start = game.clue_tracker_scroll
+                visible_end = min(visible_start + 12, len(log_lines))
+                game.clue_tracker_scroll = min(game.clue_tracker_scroll, max(0, len(log_lines) - 12))
+
+                y_pos = 120
+                for i in range(visible_start, visible_end):
+                    line_text, line_col, line_font = log_lines[i]
                     y_pos = draw_centered_text_wrapped(screen, line_text, line_font, line_col, y_pos, max_width=SCREEN_W - 100)
                     y_pos += 4
 
