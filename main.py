@@ -89,16 +89,33 @@ def load_sprite(path, size=(TILE_SIZE, TILE_SIZE)):
     except Exception:
         return None
 
-# Player sprite (detective) — 8 directions
-player_sprites = {}
-for d in ["south", "north", "east", "west", "south-east", "south-west", "north-east", "north-west"]:
-    player_sprites[d] = load_sprite(f"assets/characters/detective_{d}.png")
+# Player sprite (detective) — 8 directions: idle + walk animations
+DIRECTIONS = ["south", "north", "east", "west", "south-east", "south-west", "north-east", "north-west"]
+WALK_FRAME_COUNT = 6
+WALK_ANIM_SPEED = 10  # frames per second
+
+# Idle sprites from rotations/
+player_idle_sprites = {}
+for d in DIRECTIONS:
+    player_idle_sprites[d] = load_sprite(f"assets/characters/detective_hero/rotations/{d}.png")
+
+# Walk animation frames
+player_walk_frames = {}
+for d in DIRECTIONS:
+    frames = []
+    for i in range(WALK_FRAME_COUNT):
+        frame = load_sprite(f"assets/characters/detective_hero/animations/walk/{d}/frame_{i:03d}.png")
+        frames.append(frame)
+    player_walk_frames[d] = frames
 
 # Fallback player image
 player_img_fallback = pygame.image.load("character.jpg").convert()
 player_img_fallback = pygame.transform.scale(player_img_fallback, (TILE_SIZE - 4, TILE_SIZE - 4))
 
 player_facing = "south"
+player_walking = False
+player_anim_timer = 0.0
+player_anim_frame = 0
 
 # NPC pixel art sprites (south-facing for standing NPCs)
 npc_sprite_files = [
@@ -513,6 +530,19 @@ while running:
         if not is_wall(game.player_x, new_y, pw, ph):
             game.player_y = new_y
 
+        # Update walk animation
+        if dx != 0 or dy != 0:
+            player_walking = True
+            player_anim_timer += dt
+            frame_duration = 1.0 / WALK_ANIM_SPEED
+            if player_anim_timer >= frame_duration:
+                player_anim_timer -= frame_duration
+                player_anim_frame = (player_anim_frame + 1) % WALK_FRAME_COUNT
+        else:
+            player_walking = False
+            player_anim_timer = 0.0
+            player_anim_frame = 0
+
         # Check LLM responses
         if game.dialogue_loading and game.dialogue_target:
             key = f"npc_{game.dialogue_target['name']}_{game.night_num}"
@@ -581,7 +611,11 @@ while running:
                 screen.blit(hint, (sx - 5, sy - 38))
 
         # Draw player
-        p_sprite = player_sprites.get(player_facing)
+        if player_walking:
+            frames = player_walk_frames.get(player_facing)
+            p_sprite = frames[player_anim_frame] if frames else None
+        else:
+            p_sprite = player_idle_sprites.get(player_facing)
         if p_sprite:
             screen.blit(p_sprite, (game.player_x - cam_x, game.player_y - cam_y))
         else:
