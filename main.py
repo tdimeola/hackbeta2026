@@ -7,8 +7,10 @@ import random
 import re
 import threading
 import ollama
+import numpy as np
 
 pygame.init()
+pygame.mixer.init(frequency=44100, size=-16, channels=1, buffer=512)
 
 TILE_SIZE = 48
 SCREEN_W, SCREEN_H = 900, 700
@@ -22,6 +24,121 @@ font_sm = pygame.font.SysFont(None, 24)
 font_md = pygame.font.SysFont(None, 32)
 font_lg = pygame.font.SysFont(None, 48)
 font_title = pygame.font.SysFont(None, 72)
+
+# -- Procedural footstep sounds --
+def _bandpass(signal, low_hz, high_hz, sample_rate):
+    """Zero-phase FFT bandpass filter."""
+    fft = np.fft.rfft(signal)
+    freqs = np.fft.rfftfreq(len(signal), 1.0 / sample_rate)
+    fft[(freqs < low_hz) | (freqs > high_hz)] = 0
+    return np.fft.irfft(fft, len(signal))
+
+def _lowpass(signal, cutoff_hz, sample_rate):
+    """Simple IIR low-pass filter."""
+    alpha = 1.0 / (1.0 + sample_rate / (2.0 * np.pi * cutoff_hz))
+    out = np.zeros_like(signal)
+    out[0] = signal[0]
+    for i in range(1, len(signal)):
+        out[i] = out[i - 1] + alpha * (signal[i] - out[i - 1])
+    return out
+
+def _make_footstep(sample_rate=44100, kind="stone"):
+    """Generate a layered, realistic footstep sound as a pygame Sound."""
+    rng = np.random.default_rng()
+
+    if kind == "stone":
+        # Stone/cobblestone: heel click + sole slap + low body thud
+        n = int(sample_rate * 0.18)
+        t = np.linspace(0, 0.18, n, endpoint=False)
+        noise = rng.uniform(-1, 1, n)
+
+        # Layer 1: sharp heel click — high frequencies, very fast decay
+        click = _bandpass(noise, 2000, 7000, sample_rate)
+        click *= np.exp(-t * 120)
+        click *= 0.55
+
+        # Layer 2: sole slap — mid frequencies, medium decay
+        slap = _bandpass(noise, 300, 1200, sample_rate)
+        slap *= np.exp(-t * 45)
+        slap *= 0.7
+
+        # Layer 3: body thud — low sine sweep, slow decay
+        thud = np.sin(2 * np.pi * (100 - 40 * t) * t) * np.exp(-t * 30)
+        thud *= 0.9
+
+        wave = click + slap + thud
+
+    else:  # grass — soft compression underfoot: rustle + muffled thud
+        n = int(sample_rate * 0.22)
+        t = np.linspace(0, 0.22, n, endpoint=False)
+        noise = rng.uniform(-1, 1, n)
+
+        # Layer 1: high rustle — grass blades, moderate decay
+        rustle = _bandpass(noise, 800, 4000, sample_rate)
+        rustle *= np.exp(-t * 35) * (1 - np.exp(-t * 80))  # soft attack
+        rustle *= 0.45
+
+        # Layer 2: muffled thud — very low, heavily filtered
+        thud_noise = rng.uniform(-1, 1, n)
+        thud = _lowpass(thud_noise, 180, sample_rate)
+        thud *= np.exp(-t * 50)
+        thud *= 0.6
+
+        wave = rustle + thud
+
+    # Normalize and add slight random pitch variation for naturalness
+    peak = np.max(np.abs(wave))
+    if peak > 0:
+        wave /= peak
+    wave *= 0.75 + rng.uniform(-0.1, 0.1)
+
+    wave = (wave * 32767).clip(-32767, 32767).astype(np.int16)
+    if pygame.mixer.get_init()[2] == 2:  # stereo
+        wave = np.column_stack([wave, wave])
+    sound = pygame.sndarray.make_sound(wave)
+    sound.set_volume(0.55)
+    return sound
+
+# Pre-generate a small pool of variations so no two steps sound identical
+_stone_pool = [_make_footstep(kind="stone") for _ in range(4)]
+_grass_pool = [_make_footstep(kind="grass") for _ in range(4)]
+_step_index = 0
+
+def play_footstep(kind="stone"):
+    global _step_index
+    pool = _stone_pool if kind == "stone" else _grass_pool
+    pool[_step_index % len(pool)].play()
+    _step_index += 1
+
+MENU_MUSIC = "sounds/The_Crimson_Manor.mp3"
+DAY_MUSIC = "sounds/in-game-sound-track.mp3"
+
+# Sound effects
+sfx_door = pygame.mixer.Sound("sounds/opening_door.mp3")
+sfx_door.set_volume(0.7)
+DOOR_SOUND = pygame.mixer.Sound("sounds/opening_door.mp3")
+DOOR_SOUND.set_volume(0.7)
+EVIDENCE_SOUND = pygame.mixer.Sound("sounds/evidence_sounds.mp3")
+EVIDENCE_SOUND.set_volume(0.9)
+
+
+def music_start_menu():
+    """Fade in main menu soundtrack."""
+    pygame.mixer.music.load(MENU_MUSIC)
+    pygame.mixer.music.set_volume(0.5)
+    pygame.mixer.music.play(loops=-1, fade_ms=2000)
+
+
+def music_start_day():
+    """Fade in daytime soundtrack."""
+    pygame.mixer.music.load(DAY_MUSIC)
+    pygame.mixer.music.set_volume(0.6)
+    pygame.mixer.music.play(loops=-1, fade_ms=3000)
+
+
+def music_stop(fade_ms=2000):
+    """Fade out and stop music."""
+    pygame.mixer.music.fadeout(fade_ms)
 
 # -- Colors --
 GRASS_COLOR = (76, 153, 0)
@@ -611,6 +728,7 @@ class Game:
     def start_night(self):
         self.night_num += 1
         self.state = "NIGHT"
+        music_stop(fade_ms=2000)
         self.night_timer = 3.0  # seconds to show night screen
         self.dialogue_target = None
         self.dialogue_text = ""
@@ -817,6 +935,7 @@ class Game:
         self.talked_to = set()  # track who we've talked to this day
         self.search_result_text = ""
         self.search_result_timer = 0.0
+        music_start_day()
         self._place_npcs_for_day()
         self._place_evidence()
         self._prefetch_dialogues()
@@ -1104,6 +1223,7 @@ class Game:
 
     def do_accuse(self, character):
         if character["is_villain"]:
+            music_stop(fade_ms=1500)
             self.state = "WIN"
             self.storyteller_text = (
                 f"You accused {character['name']}...\n"
@@ -1138,6 +1258,7 @@ class Game:
             if villain_npc and villain_npc["name"] in self.npc_emotional_state:
                 self.npc_emotional_state[villain_npc["name"]]["desperation"] += 1
             if self.wrong_guesses >= 3:
+                music_stop(fade_ms=1500)
                 self.state = "LOSE"
                 self.storyteller_text = (
                     f"{character['name']} was innocent!\n"
@@ -1205,6 +1326,7 @@ class Game:
                     return True
 
                 self.searched_spots.add(key)
+                EVIDENCE_SOUND.play()
 
                 if key in self.evidence_placements:
                     ev = self.evidence_placements[key]
@@ -1239,6 +1361,7 @@ class Game:
         pty = int((self.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
         building = DOOR_TO_BUILDING.get((ptx, pty))
         if building and building in INTERIORS:
+            DOOR_SOUND.play()
             interior = INTERIORS[building]
             self.current_interior = building
             sx, sy = interior["player_start"]
@@ -1256,6 +1379,7 @@ class Game:
         pty = int((self.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
         ex, ey = interior["exit_tile"]
         if ptx == ex and pty == ey:
+            DOOR_SOUND.play()
             wx, wy = interior["exit_world_pos"]
             self.player_x = wx * TILE_SIZE
             self.player_y = wy * TILE_SIZE
@@ -1301,6 +1425,7 @@ class Game:
 
 
 game = Game()
+music_start_menu()
 
 # ── Helpers ─────────────────────────────────────────────────────
 def is_wall(px, py, w, h):
@@ -1423,6 +1548,7 @@ while running:
                         game.dialogue_text = ""
                         game.dialogue_loading = False
                     elif game.current_interior and not game.fading:
+                        sfx_door.play()
                         # Exit interior back to town with fade
                         game.start_fade(lambda: game.try_exit_interior())
                     else:
@@ -1456,9 +1582,11 @@ while running:
                         game.showing_evidence_log = False
                     # Try exit interior
                     elif game.current_interior and game.is_on_exit() and not game.fading:
+                        sfx_door.play()
                         game.start_fade(lambda: game.try_exit_interior())
                     # Try enter building
                     elif not game.current_interior and game.is_on_door() and not game.fading:
+                        sfx_door.play()
                         game.start_fade(lambda: game.try_enter_building())
                     # Try talk to NPC or search (works in town and interiors)
                     else:
@@ -1524,6 +1652,7 @@ while running:
                 if event.key == pygame.K_RETURN and not game.fading:
                     def _to_menu():
                         game.state = "MENU"
+                        music_start_menu()
                     game.start_fade(_to_menu)
 
     # ── Update ──────────────────────────────────────────────────
@@ -1586,6 +1715,17 @@ while running:
             if player_anim_timer >= frame_duration:
                 player_anim_timer -= frame_duration
                 player_anim_frame = (player_anim_frame + 1) % WALK_FRAME_COUNT
+                # Play footstep on every other frame (left foot / right foot)
+                if player_anim_frame % 3 == 0:
+                    ptx = int((game.player_x + (TILE_SIZE - 4) / 2) // TILE_SIZE)
+                    pty = int((game.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
+                    if game.current_interior:
+                        imap = INTERIORS[game.current_interior]["map"]
+                        tile = imap[pty][ptx] if 0 <= pty < len(imap) and 0 <= ptx < len(imap[0]) else 7
+                        play_footstep("stone" if tile in (7, 8) else "grass")
+                    else:
+                        tile = tilemap[pty][ptx] if 0 <= pty < MAP_H and 0 <= ptx < MAP_W else 0
+                        play_footstep("stone" if tile == 2 else "grass")
         else:
             player_walking = False
             player_anim_timer = 0.0
