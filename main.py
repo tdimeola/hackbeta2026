@@ -1557,7 +1557,7 @@ while running:
         screen.blit(day_surf, (15, hud_y))
 
         # Dialogue box
-        if game.dialogue_target and not game.current_interior:
+        if game.dialogue_target:
             box_h = 160
             box_rect = pygame.Rect(20, SCREEN_H - box_h - 20, SCREEN_W - 40, box_h)
             pygame.draw.rect(screen, (20, 20, 30), box_rect, border_radius=8)
