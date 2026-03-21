@@ -1803,8 +1803,8 @@ while running:
 
     elif game.state in ("DAY", "ACCUSE"):
         pw, ph = TILE_SIZE - 4, TILE_SIZE - 4
-        cam_x = game.player_x + pw / 2 - SCREEN_W / 2
-        cam_y = game.player_y + ph / 2 - SCREEN_H / 2
+        cam_x = int(game.player_x + pw / 2 - SCREEN_W / 2)
+        cam_y = int(game.player_y + ph / 2 - SCREEN_H / 2)
 
         if game.current_interior:
             # ── Draw interior map with visual polish ──
