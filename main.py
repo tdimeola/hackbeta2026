@@ -116,6 +116,8 @@ DAY_MUSIC = "sounds/in-game-sound-track.mp3"
 # Sound effects
 sfx_door = pygame.mixer.Sound("sounds/opening_door.mp3")
 sfx_door.set_volume(0.7)
+sfx_pop = pygame.mixer.Sound("sounds/pop.mp3")
+sfx_pop.set_volume(0.6)
 EVIDENCE_SOUND = pygame.mixer.Sound("sounds/evidence_sounds.mp3")
 EVIDENCE_SOUND.set_volume(0.9)
 
@@ -1615,24 +1617,28 @@ while running:
                             game.try_search()
 
                 if event.key == pygame.K_l:
+                    sfx_pop.play()
                     game.showing_evidence_log = not game.showing_evidence_log
                     game.showing_clue_tracker = False
                     game.showing_journal = False
                     game.evidence_log_scroll = 0
 
                 if event.key == pygame.K_j:
+                    sfx_pop.play()
                     game.showing_clue_tracker = not game.showing_clue_tracker
                     game.showing_evidence_log = False
                     game.showing_journal = False
                     game.clue_tracker_scroll = 0
 
                 if event.key == pygame.K_b:
+                    sfx_pop.play()
                     game.showing_journal = not game.showing_journal
                     game.showing_evidence_log = False
                     game.showing_clue_tracker = False
                     game.journal_page = 0
 
                 if event.key == pygame.K_TAB and not game.showing_evidence_log and not game.showing_clue_tracker and not game.showing_journal:
+                    sfx_pop.play()
                     game.open_accuse()
 
                 # Scroll overlays
