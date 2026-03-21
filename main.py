@@ -355,7 +355,7 @@ class Game:
 
             user_msg = (
                 f"The detective approaches you to talk. It is day {self.night_num}. "
-                f"Considering everything that has happened so far, what do you say?"
+                f"Respond to the detective's question:Considering everything that has happened so far, what do you say?"
             )
             llm_chat_async(f"npc_{npc['name']}_{self.night_num}", system, user_msg)
 
