@@ -332,7 +332,7 @@ class Game:
                 f"Personality: {npc['personality']}. From: {npc['hometown']}. "
                 f"Weakness: {npc['weakness']}. "
                 f"The other living townspeople are: {', '.join(n for n in alive_names if n != npc['name'])}. "
-                f"IMPORTANT: Only refer to these people by their exact names. Do NOT invent any names. Do not speak in third person."
+                f"IMPORTANT: Only refer to these people by their exact names. Do NOT invent any names."
             )
             if dead_names:
                 system += f"The following people have been killed: {', '.join(dead_names)}. "
@@ -343,14 +343,14 @@ class Game:
                     "You are secretly the villain. You must act innocent but occasionally "
                     "let subtle hints slip. Be evasive about your whereabouts last night. "
                     "If an innocent person was recently falsely accused, you may quietly deflect suspicion onto others. "
-                    "Never directly confess. Keep responses to 2-3 sentences."
+                    "Never directly confess. Keep responses to 2-3 sentences. Do not speak in third person."
                 )
             else:
                 system += (
                     "You are an innocent townsperson. You are scared and want to help "
                     "find the villain. Share your observations, reference the deaths you know about, "
                     "and let your fear and grief grow with each passing night. "
-                    "You don't know who the villain is. Keep responses to 2-3 sentences."
+                    "You don't know who the villain is. Keep responses to 2-3 sentences. Do not speak in third person."
                 )
 
             user_msg = (
