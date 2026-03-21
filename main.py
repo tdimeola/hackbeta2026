@@ -309,6 +309,15 @@ INTERIORS = {
     },
 }
 
+# Visual styles for building interiors (floor tint, accent color, furniture style)
+INTERIOR_STYLES = {
+    "the Blacksmith":    {"floor": (130, 100, 60), "accent": (200, 100, 30), "style": "forge"},
+    "the Tavern":        {"floor": (120, 90, 55),  "accent": (160, 120, 50), "style": "tavern"},
+    "the Apothecary":    {"floor": (110, 115, 90), "accent": (80, 160, 100), "style": "potions"},
+    "Town Hall":         {"floor": (140, 120, 80), "accent": (180, 160, 100),"style": "office"},
+    "the Library":       {"floor": (125, 105, 75), "accent": (140, 80, 50),  "style": "books"},
+}
+
 NPC_COLORS = [
     (200, 60, 200), (60, 160, 220), (220, 180, 40),
     (60, 200, 100), (220, 120, 60), (180, 60, 60), (100, 200, 200),
@@ -451,6 +460,22 @@ class Game:
         self.suspicion_log = []       # list of {"day": int, "source": str, "text": str}
         self.showing_clue_tracker = False
         self.clue_tracker_scroll = 0
+        # Fade transition system
+        self.fade_alpha = 0
+        self.fade_direction = 0   # 1=fading out, -1=fading in, 0=idle
+        self.fade_callback = None
+        self.fade_speed = 600     # alpha per second
+        self.loading_dot_timer = 0.0
+
+    def start_fade(self, callback=None):
+        """Start a fade-to-black transition. Callback fires at peak darkness."""
+        self.fade_direction = 1
+        self.fade_callback = callback
+        self.fade_alpha = 0
+
+    @property
+    def fading(self):
+        return self.fade_direction != 0
 
     def new_game(self):
         self.characters = load_characters("data (1).csv", 7)
@@ -1338,6 +1363,12 @@ def draw_text_wrapped(surface, text, font, color, rect, line_spacing=4):
         surface.blit(surf, (rect.x + 8, y))
         y += font.get_height() + line_spacing
 
+def blit_clamped(surface, surf, x, y):
+    """Blit a surface clamped within screen bounds."""
+    x = max(4, min(x, SCREEN_W - surf.get_width() - 4))
+    y = max(48, min(y, SCREEN_H - surf.get_height() - 4))
+    surface.blit(surf, (x, y))
+
 def draw_centered_text(surface, text, font, color, y):
     surf = font.render(text, True, color)
     surface.blit(surf, (SCREEN_W // 2 - surf.get_width() // 2, y))
@@ -1391,26 +1422,22 @@ while running:
                         game.dialogue_target = None
                         game.dialogue_text = ""
                         game.dialogue_loading = False
-                    elif game.current_interior:
-                        # Exit interior back to town
-                        interior = INTERIORS[game.current_interior]
-                        wx, wy = interior["exit_world_pos"]
-                        game.player_x = wx * TILE_SIZE
-                        game.player_y = wy * TILE_SIZE
-                        game.current_interior = None
+                    elif game.current_interior and not game.fading:
+                        # Exit interior back to town with fade
+                        game.start_fade(lambda: game.try_exit_interior())
                     else:
                         running = False
                 else:
                     running = False
 
             # Menu
-            if game.state == "MENU" and event.key == pygame.K_RETURN:
-                game.new_game()
+            if game.state == "MENU" and event.key == pygame.K_RETURN and not game.fading:
+                game.start_fade(lambda: game.new_game())
 
             # Night — skip with any key after timer
-            if game.state == "NIGHT" and game.night_timer <= 0:
+            if game.state == "NIGHT" and game.night_timer <= 0 and not game.fading:
                 if event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
-                    game.start_day()
+                    game.start_fade(lambda: game.start_day())
 
             # Day
             if game.state == "DAY":
@@ -1428,11 +1455,11 @@ while running:
                     elif game.showing_evidence_log:
                         game.showing_evidence_log = False
                     # Try exit interior
-                    elif game.current_interior and game.is_on_exit():
-                        game.try_exit_interior()
+                    elif game.current_interior and game.is_on_exit() and not game.fading:
+                        game.start_fade(lambda: game.try_exit_interior())
                     # Try enter building
-                    elif not game.current_interior and game.is_on_door():
-                        game.try_enter_building()
+                    elif not game.current_interior and game.is_on_door() and not game.fading:
+                        game.start_fade(lambda: game.try_enter_building())
                     # Try talk to NPC or search (works in town and interiors)
                     else:
                         talked = False
@@ -1489,15 +1516,35 @@ while running:
 
             # Accuse result — wrong guess, continue to next night
             elif game.state == "ACCUSE_RESULT":
-                if event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
-                    game.start_night()
+                if (event.key == pygame.K_RETURN or event.key == pygame.K_SPACE) and not game.fading:
+                    game.start_fade(lambda: game.start_night())
 
             # Win/Lose
             elif game.state in ("WIN", "LOSE"):
-                if event.key == pygame.K_RETURN:
-                    game.state = "MENU"
+                if event.key == pygame.K_RETURN and not game.fading:
+                    def _to_menu():
+                        game.state = "MENU"
+                    game.start_fade(_to_menu)
 
     # ── Update ──────────────────────────────────────────────────
+    # Fade transition
+    if game.fade_direction == 1:
+        game.fade_alpha += game.fade_speed * dt
+        if game.fade_alpha >= 255:
+            game.fade_alpha = 255
+            if game.fade_callback:
+                game.fade_callback()
+                game.fade_callback = None
+            game.fade_direction = -1
+    elif game.fade_direction == -1:
+        game.fade_alpha -= game.fade_speed * dt
+        if game.fade_alpha <= 0:
+            game.fade_alpha = 0
+            game.fade_direction = 0
+
+    # Loading dot animation
+    game.loading_dot_timer += dt
+
     if game.state == "NIGHT":
         game.night_timer -= dt
 
@@ -1593,17 +1640,84 @@ while running:
         cam_y = game.player_y + ph / 2 - SCREEN_H / 2
 
         if game.current_interior:
-            # ── Draw interior map ──
+            # ── Draw interior map with visual polish ──
             imap = INTERIORS[game.current_interior]["map"]
             ih, iw = len(imap), len(imap[0])
+            style = INTERIOR_STYLES.get(game.current_interior, {"floor": INTERIOR_FLOOR_COLOR, "accent": (150, 100, 50), "style": "office"})
+            floor_col = style["floor"]
+            floor_col_alt = (floor_col[0] - 10, floor_col[1] - 10, floor_col[2] - 10)
+            accent_col = style["accent"]
+            bld_style = style["style"]
+
             for row in range(ih):
                 for col in range(iw):
+                    tile = imap[row][col]
                     rect = pygame.Rect(
                         col * TILE_SIZE - cam_x,
                         row * TILE_SIZE - cam_y,
                         TILE_SIZE, TILE_SIZE,
                     )
-                    pygame.draw.rect(screen, TILE_COLORS.get(imap[row][col], BG_COLOR), rect)
+
+                    if tile == 7:  # Floor — wood plank effect
+                        base = floor_col if row % 2 == 0 else floor_col_alt
+                        pygame.draw.rect(screen, base, rect)
+                        # Plank lines
+                        for py in range(0, TILE_SIZE, 12):
+                            pygame.draw.line(screen, (base[0] - 15, base[1] - 15, base[2] - 15),
+                                (rect.x, rect.y + py), (rect.x + TILE_SIZE, rect.y + py), 1)
+                    elif tile == 8:  # Wall — with baseboard and trim
+                        pygame.draw.rect(screen, INTERIOR_WALL_COLOR, rect)
+                        # Lighter trim at top
+                        pygame.draw.rect(screen, (80, 70, 60), (rect.x, rect.y, TILE_SIZE, 4))
+                        # Darker baseboard at bottom
+                        pygame.draw.rect(screen, (40, 35, 30), (rect.x, rect.y + TILE_SIZE - 5, TILE_SIZE, 5))
+                    elif tile == 9:  # Furniture — styled per building
+                        pygame.draw.rect(screen, FURNITURE_COLOR, rect)
+                        inner = rect.inflate(-8, -8)
+                        if bld_style == "forge":
+                            # Orange glow for anvil/forge
+                            pygame.draw.rect(screen, accent_col, inner)
+                            glow = pygame.Surface((inner.width, inner.height), pygame.SRCALPHA)
+                            glow.fill((255, 120, 20, 60))
+                            screen.blit(glow, inner)
+                        elif bld_style == "tavern":
+                            # Barrel/keg shapes
+                            pygame.draw.rect(screen, accent_col, inner)
+                            pygame.draw.ellipse(screen, (accent_col[0] + 20, accent_col[1] + 20, accent_col[2] + 10), inner.inflate(-4, -12))
+                        elif bld_style == "books":
+                            # Book spines — vertical lines (deterministic colors by position)
+                            book_colors = [(180, 60, 50), (50, 80, 140), (60, 130, 70), (160, 140, 50)]
+                            pygame.draw.rect(screen, accent_col, inner)
+                            bi = 0
+                            for bx in range(inner.x + 3, inner.x + inner.width - 3, 5):
+                                pygame.draw.line(screen, book_colors[(bi + col) % len(book_colors)],
+                                    (bx, inner.y + 2), (bx, inner.y + inner.height - 2), 3)
+                                bi += 1
+                        elif bld_style == "potions":
+                            # Vial circles (deterministic colors by position)
+                            vial_colors = [(100, 200, 100), (200, 80, 200), (80, 150, 220)]
+                            pygame.draw.rect(screen, accent_col, inner)
+                            vi = 0
+                            for vx in range(inner.x + 8, inner.x + inner.width - 4, 12):
+                                pygame.draw.circle(screen, vial_colors[(vi + row) % len(vial_colors)],
+                                    (vx, inner.centery), 4)
+                                vi += 1
+                        elif bld_style == "office":
+                            # Desk with paper
+                            pygame.draw.rect(screen, accent_col, inner)
+                            paper = inner.inflate(-16, -10)
+                            pygame.draw.rect(screen, (230, 225, 210), paper)
+                        else:
+                            pygame.draw.rect(screen, accent_col, inner)
+                    elif tile == 4:  # Door — visible frame with handle
+                        pygame.draw.rect(screen, (80, 60, 35), rect)  # frame
+                        door_inner = rect.inflate(-10, -6)
+                        door_inner.y += 3
+                        pygame.draw.rect(screen, DOOR_COLOR, door_inner)
+                        # Handle
+                        pygame.draw.circle(screen, (200, 180, 100), (door_inner.x + door_inner.width - 8, door_inner.centery), 3)
+                    else:
+                        pygame.draw.rect(screen, TILE_COLORS.get(tile, BG_COLOR), rect)
 
             # Draw subtle glint on active search spots in interior
             interior = INTERIORS[game.current_interior]
@@ -1641,14 +1755,7 @@ while running:
                             hint = font_sm.render("(already spoke)", True, (150, 150, 150))
                         else:
                             hint = font_sm.render("[E] Talk", True, (255, 255, 200))
-                        screen.blit(hint, (sx - 5, sy - 38))
-
-            # Interior name header
-            int_label = font_md.render(f"Inside {game.current_interior}  [ESC] Exit", True, (255, 255, 220))
-            lbg = pygame.Surface((int_label.get_width() + 16, int_label.get_height() + 8), pygame.SRCALPHA)
-            lbg.fill((0, 0, 0, 180))
-            screen.blit(lbg, (SCREEN_W // 2 - int_label.get_width() // 2 - 8, 50))
-            screen.blit(int_label, (SCREEN_W // 2 - int_label.get_width() // 2, 54))
+                        blit_clamped(screen, hint, sx - 5, sy - 38)
 
         else:
             # ── Draw town map ──
@@ -1722,13 +1829,13 @@ while running:
                         hint = font_sm.render("(already spoke)", True, (150, 150, 150))
                     else:
                         hint = font_sm.render("[E] Talk", True, (255, 255, 200))
-                    screen.blit(hint, (sx - 5, sy - 38))
+                    blit_clamped(screen, hint, sx - 5, sy - 38)
 
             # Door enter hint
             door_building = game.is_on_door()
             if door_building and not game.dialogue_target:
                 hint = font_sm.render(f"[E] Enter {door_building}", True, (255, 255, 200))
-                screen.blit(hint, (game.player_x - cam_x - hint.get_width() // 2 + pw // 2, game.player_y - cam_y - 25))
+                blit_clamped(screen, hint, game.player_x - cam_x - hint.get_width() // 2 + pw // 2, game.player_y - cam_y - 25)
 
         # Draw player (both town and interior)
         if player_walking:
@@ -1750,21 +1857,29 @@ while running:
                 hint = font_sm.render(f"(searched)", True, (150, 150, 150))
             else:
                 hint = font_sm.render(f"[E] Search {nearby_spot['name']}", True, (255, 255, 200))
-            screen.blit(hint, (game.player_x - cam_x - hint.get_width() // 2 + pw // 2, game.player_y - cam_y - 25))
+            blit_clamped(screen, hint, game.player_x - cam_x - hint.get_width() // 2 + pw // 2, game.player_y - cam_y - 25)
 
         # Exit hint in interior
         if game.current_interior and game.is_on_exit():
             hint = font_sm.render("[E] Exit", True, (255, 255, 200))
-            screen.blit(hint, (game.player_x - cam_x - hint.get_width() // 2 + pw // 2, game.player_y - cam_y - 25))
+            blit_clamped(screen, hint, game.player_x - cam_x - hint.get_width() // 2 + pw // 2, game.player_y - cam_y - 25)
 
-        # HUD
+        # HUD — split left/right to prevent overflow
         hud_y = 10
         ev_count = len(game.evidence_found)
-        loc_text = f"  |  Inside {game.current_interior}" if game.current_interior else ""
-        hud_text = f"Day {game.night_num}  |  Guesses: {3 - game.wrong_guesses}  |  Evidence: {ev_count}  |  [TAB] Accuse  [L] Log  [J] Clues{loc_text}"
-        day_surf = font_md.render(hud_text, True, (255, 255, 255))
-        pygame.draw.rect(screen, (0, 0, 0, 180), (0, 0, SCREEN_W, 45))
-        screen.blit(day_surf, (15, hud_y))
+        hud_h = 45
+        if game.current_interior:
+            hud_h = 65  # extra row for location
+        pygame.draw.rect(screen, (0, 0, 0, 180), (0, 0, SCREEN_W, hud_h))
+
+        hud_left = font_md.render(f"Day {game.night_num}  |  Guesses: {3 - game.wrong_guesses}  |  Evidence: {ev_count}", True, (255, 255, 255))
+        hud_right = font_sm.render("[TAB] Accuse  [L] Log  [J] Clues", True, (180, 180, 180))
+        screen.blit(hud_left, (15, hud_y))
+        screen.blit(hud_right, (SCREEN_W - hud_right.get_width() - 15, hud_y + 5))
+
+        if game.current_interior:
+            loc_surf = font_sm.render(f"Inside {game.current_interior}  |  [ESC] Exit", True, (200, 200, 150))
+            screen.blit(loc_surf, (SCREEN_W // 2 - loc_surf.get_width() // 2, hud_y + 32))
 
         # Dialogue box
         if game.dialogue_target:
@@ -1777,7 +1892,8 @@ while running:
             screen.blit(name_surf, (box_rect.x + 12, box_rect.y + 8))
 
             if game.dialogue_loading:
-                draw_text_wrapped(screen, "...", font_sm, (200, 200, 200),
+                dots = "." * (int(game.loading_dot_timer / 0.4) % 3 + 1)
+                draw_text_wrapped(screen, f"Thinking{dots}", font_sm, (160, 160, 180),
                     pygame.Rect(box_rect.x, box_rect.y + 40, box_rect.width, box_rect.height - 40))
             else:
                 draw_text_wrapped(screen, game.dialogue_text, font_sm, (220, 220, 220),
@@ -1830,12 +1946,16 @@ while running:
                 visible_end = min(visible_start + 12, len(log_lines))
                 game.evidence_log_scroll = min(game.evidence_log_scroll, max(0, len(log_lines) - 12))
 
+                # Scroll indicators
+                if visible_start > 0:
+                    draw_centered_text(screen, "▲", font_md, (180, 180, 180), 105)
                 y_pos = 120
                 for i in range(visible_start, visible_end):
                     line_text, line_col, line_font = log_lines[i]
-                    # Word-wrap long evidence lines
                     y_pos = draw_centered_text_wrapped(screen, line_text, line_font, line_col, y_pos, max_width=SCREEN_W - 100)
                     y_pos += 4
+                if visible_end < len(log_lines):
+                    draw_centered_text(screen, "▼", font_md, (180, 180, 180), SCREEN_H - 40)
 
         # Clue tracker overlay
         if game.showing_clue_tracker:
@@ -1867,11 +1987,15 @@ while running:
                 visible_end = min(visible_start + 12, len(log_lines))
                 game.clue_tracker_scroll = min(game.clue_tracker_scroll, max(0, len(log_lines) - 12))
 
+                if visible_start > 0:
+                    draw_centered_text(screen, "▲", font_md, (180, 180, 180), 105)
                 y_pos = 120
                 for i in range(visible_start, visible_end):
                     line_text, line_col, line_font = log_lines[i]
                     y_pos = draw_centered_text_wrapped(screen, line_text, line_font, line_col, y_pos, max_width=SCREEN_W - 100)
                     y_pos += 4
+                if visible_end < len(log_lines):
+                    draw_centered_text(screen, "▼", font_md, (180, 180, 180), SCREEN_H - 40)
 
         # Accusation overlay
         if game.state == "ACCUSE":
@@ -1910,6 +2034,12 @@ while running:
         for line in game.storyteller_text.split("\n"):
             cur_y = draw_centered_text_wrapped(screen, line, font_lg, BLOOD_RED, cur_y)
         draw_centered_text(screen, "Press ENTER for main menu", font_md, (255, 180, 180), 500)
+
+    # Fade overlay (drawn over everything)
+    if game.fade_alpha > 0:
+        fade_surf = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
+        fade_surf.fill((0, 0, 0, int(game.fade_alpha)))
+        screen.blit(fade_surf, (0, 0))
 
     pygame.display.flip()
 
