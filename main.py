@@ -295,6 +295,22 @@ NPC_COLORS = [
     (60, 200, 100), (220, 120, 60), (180, 60, 60), (100, 200, 200),
 ]
 
+# Outdoor wandering positions NPCs can appear at (tile coords, area name)
+NPC_OUTDOOR_SPOTS = [
+    ((7, 7), "the main road"),
+    ((14, 7), "the town square"),
+    ((20, 7), "the main road"),
+    ((7, 15), "the south road"),
+    ((14, 15), "the south road"),
+    ((4, 1), "near the Blacksmith"),
+    ((13, 1), "near the Tavern"),
+    ((8, 8), "the town square"),
+    ((15, 13), "the south side of town"),
+    ((3, 8), "outside the General Store"),
+    ((12, 8), "outside Town Hall"),
+    ((20, 8), "outside the Library"),
+]
+
 INTERACT_DIST = TILE_SIZE * 1.8
 
 # ── Ollama LLM ──────────────────────────────────────────────────
@@ -446,6 +462,9 @@ class Game:
             c["y"] = spawn[1] * TILE_SIZE
             c["color"] = NPC_COLORS[i]
             c["home"] = BUILDING_NAMES[i] if i < len(BUILDING_NAMES) else "their home"
+            c["location_type"] = "outside"
+            c["location_building"] = None
+            c["location_desc"] = f"outside {c['home']}"
 
         # Player start
         self.player_x = 14.0 * TILE_SIZE
@@ -641,8 +660,126 @@ class Game:
         self.talked_to = set()  # track who we've talked to this day
         self.search_result_text = ""
         self.search_result_timer = 0.0
+        self._place_npcs_for_day()
         self._place_evidence()
         self._prefetch_dialogues()
+
+    def _place_npcs_for_day(self):
+        """Randomly place NPCs around town — some outside, some inside buildings.
+        The villain's placement subtly contradicts their alibi."""
+        clues = getattr(self, 'night_clues', {})
+        murder_loc = clues.get("murder_location", None)
+
+        # Collect available interior spots (buildings the NPC doesn't live in add variety)
+        interior_buildings = [b for b in INTERIORS.keys()]
+
+        # Collect outdoor spots, shuffle them
+        outdoor_spots = list(NPC_OUTDOOR_SPOTS)
+        random.shuffle(outdoor_spots)
+        outdoor_idx = 0
+
+        for npc in self.alive:
+            npc_idx = self.characters.index(npc)
+            home = BUILDING_NAMES[npc_idx] if npc_idx < len(BUILDING_NAMES) else "their home"
+
+            if npc["is_villain"] and murder_loc and self.night_num > 1:
+                # Villain placement: put them somewhere suspicious —
+                # near the murder location or NOT where their alibi says
+                villain_spots = []
+                # Try to place near murder location building
+                if murder_loc in INTERIORS:
+                    interior = INTERIORS[murder_loc]
+                    # Place on a walkable floor tile inside the murder building
+                    for r, row in enumerate(interior["map"]):
+                        for c, tile in enumerate(row):
+                            if tile == 7:  # floor tile
+                                villain_spots.append(("interior", murder_loc, (c, r)))
+                                break
+                        if villain_spots:
+                            break
+                # Also offer placing them outside near the murder building door
+                for door_pos, bname in DOOR_TO_BUILDING.items():
+                    if bname == murder_loc:
+                        villain_spots.append(("outside", None, (door_pos[0], door_pos[1] + 1)))
+                # Fallback: random outdoor
+                if not villain_spots and outdoor_idx < len(outdoor_spots):
+                    pos, area = outdoor_spots[outdoor_idx]
+                    villain_spots.append(("outside", None, pos))
+                    outdoor_idx += 1
+
+                choice = random.choice(villain_spots) if villain_spots else ("home", None, None)
+                if choice[0] == "interior":
+                    npc["location_type"] = "interior"
+                    npc["location_building"] = choice[1]
+                    npc["location_desc"] = f"inside {choice[1]}"
+                    ix, iy = choice[2]
+                    npc["x"] = ix * TILE_SIZE
+                    npc["y"] = iy * TILE_SIZE
+                    npc["tile_x"] = ix
+                    npc["tile_y"] = iy
+                elif choice[0] == "outside":
+                    npc["location_type"] = "outside"
+                    npc["location_building"] = None
+                    npc["location_desc"] = f"near {murder_loc}" if murder_loc else "in town"
+                    tx, ty = choice[2]
+                    npc["x"] = tx * TILE_SIZE
+                    npc["y"] = ty * TILE_SIZE
+                    npc["tile_x"] = tx
+                    npc["tile_y"] = ty
+                else:
+                    # Fallback to home door
+                    spawn = NPC_SPAWNS[npc_idx]
+                    npc["location_type"] = "outside"
+                    npc["location_building"] = None
+                    npc["location_desc"] = f"outside {home}"
+                    npc["x"] = spawn[0] * TILE_SIZE
+                    npc["y"] = spawn[1] * TILE_SIZE
+                    npc["tile_x"] = spawn[0]
+                    npc["tile_y"] = spawn[1]
+            else:
+                # Innocent NPCs: randomly place at home, inside a building, or wandering
+                roll = random.random()
+                if roll < 0.35 and interior_buildings:
+                    # Inside a random building
+                    bname = random.choice(interior_buildings)
+                    interior = INTERIORS[bname]
+                    # Find a walkable floor tile
+                    floor_tiles = []
+                    for r, row in enumerate(interior["map"]):
+                        for c, tile in enumerate(row):
+                            if tile == 7:
+                                floor_tiles.append((c, r))
+                    if floor_tiles:
+                        ix, iy = random.choice(floor_tiles)
+                        npc["location_type"] = "interior"
+                        npc["location_building"] = bname
+                        npc["location_desc"] = f"inside {bname}"
+                        npc["x"] = ix * TILE_SIZE
+                        npc["y"] = iy * TILE_SIZE
+                        npc["tile_x"] = ix
+                        npc["tile_y"] = iy
+                        continue
+                if roll < 0.65 and outdoor_idx < len(outdoor_spots):
+                    # Wandering outside
+                    pos, area = outdoor_spots[outdoor_idx]
+                    outdoor_idx += 1
+                    npc["location_type"] = "outside"
+                    npc["location_building"] = None
+                    npc["location_desc"] = f"at {area}"
+                    npc["x"] = pos[0] * TILE_SIZE
+                    npc["y"] = pos[1] * TILE_SIZE
+                    npc["tile_x"] = pos[0]
+                    npc["tile_y"] = pos[1]
+                else:
+                    # At their home door
+                    spawn = NPC_SPAWNS[npc_idx]
+                    npc["location_type"] = "outside"
+                    npc["location_building"] = None
+                    npc["location_desc"] = f"outside {home}"
+                    npc["x"] = spawn[0] * TILE_SIZE
+                    npc["y"] = spawn[1] * TILE_SIZE
+                    npc["tile_x"] = spawn[0]
+                    npc["tile_y"] = spawn[1]
 
     def _place_evidence(self):
         """Pick a random subset of search spots to be active, then assign evidence."""
@@ -690,13 +827,15 @@ class Game:
             npc_home = BUILDING_NAMES[npc_idx] if npc_idx < len(BUILDING_NAMES) else "their home"
 
             # Base identity
+            npc_location = npc.get("location_desc", f"outside {npc_home}")
             system = (
                 f"You are {npc['name']}, a resident of a small town in a murder mystery. "
                 f"You live and work at {npc_home}. "
+                f"Right now you are {npc_location}. "
                 f"Personality: {npc['personality']}. Originally from: {npc['hometown']}. "
                 f"Known weakness: {npc['weakness']}. "
                 f"The surviving townspeople are: {', '.join(n for n in alive_names if n != npc['name'])}. "
-                f"The town has these locations: {', '.join(BUILDING_NAMES[:len(self.characters)])} along with the main road, the town square, and the old well. "
+                f"The town has these locations: {', '.join(BUILDING_NAMES[:len(self.characters)])} along with the main road, the town square, the Forest, and the old well. "
                 f"IMPORTANT: Only refer to people and places by their exact names listed above. Do NOT invent names or locations. "
                 f"RULE: You must ALWAYS speak in first person as {npc['name']}. Use 'I', 'me', 'my'. "
                 f"NEVER use third person. NEVER say '{npc['name']} thinks' or '{npc['name']} says' — say 'I think' or 'I saw'. "
@@ -737,18 +876,24 @@ class Game:
                     system += (
                         f"{victim_name} was found dead at {murder_loc} with {cause}, killed {time_desc}. "
                         f"You are the killer. Your alibi: {npc_clue} "
+                        f"The detective found you {npc_location} — if asked why you are here, have a plausible excuse. "
                         f"Deliver your alibi naturally, as if just making conversation. "
                         f"Act shocked and saddened. If pressed, subtly cast suspicion on another living townsperson by name. "
-                        f"You might reference a specific location to make your alibi sound credible. "
                         f"Never confess or admit guilt. Keep responses to 2-3 sentences."
                     )
                 else:
+                    # Tell innocent NPCs where other people are, so they can mention it
+                    other_locations = []
+                    for other in self.alive:
+                        if other["name"] != npc["name"]:
+                            other_locations.append(f"{other['name']} is {other.get('location_desc', 'in town')}")
                     system += (
                         f"{victim_name} was found dead at {murder_loc} with {cause}, killed {time_desc}. "
                         f"YOUR SPECIFIC OBSERVATION: {npc_clue} "
-                        f"You MUST share this observation with the detective — it's the most important thing you know. "
+                        f"You can see where other people are today: {'; '.join(other_locations)}. "
+                        f"You MUST share your observation with the detective — it's the most important thing you know. "
+                        f"If you notice someone is in a suspicious location (near the murder scene), you may mention it. "
                         f"Weave it naturally into your response. You are scared and want justice. "
-                        f"Reference the specific location, time, or person from your observation. "
                         f"Keep responses to 2-3 sentences."
                     )
 
@@ -1095,20 +1240,23 @@ while running:
                     # Try enter building
                     elif not game.current_interior and game.is_on_door():
                         game.try_enter_building()
-                    # Try talk to NPC (only on town map)
-                    elif not game.current_interior:
+                    # Try talk to NPC or search (works in town and interiors)
+                    else:
                         talked = False
                         for npc in game.alive:
+                            # Only interact with NPCs in the same map
+                            if game.current_interior:
+                                if npc.get("location_type") != "interior" or npc.get("location_building") != game.current_interior:
+                                    continue
+                            else:
+                                if npc.get("location_type") == "interior":
+                                    continue
                             if player_near(npc):
                                 game.talk_to_npc(npc)
                                 talked = True
                                 break
-                        # Try search spot
                         if not talked:
                             game.try_search()
-                    # Try search spot (inside building)
-                    else:
-                        game.try_search()
 
                 if event.key == pygame.K_l:
                     game.showing_evidence_log = not game.showing_evidence_log
@@ -1265,6 +1413,26 @@ while running:
                     glint.fill((255, 255, 200, alpha))
                     screen.blit(glint, (scr_x - 3, scr_y - 3))
 
+            # Draw NPCs that are inside this building
+            for npc in game.alive:
+                if npc.get("location_type") == "interior" and npc.get("location_building") == game.current_interior:
+                    sx = npc["x"] - cam_x
+                    sy = npc["y"] - cam_y
+                    idx = game.characters.index(npc) if npc in game.characters else -1
+                    sprite = npc_sprites[idx] if 0 <= idx < len(npc_sprites) else None
+                    if sprite:
+                        screen.blit(sprite, (sx, sy))
+                    else:
+                        pygame.draw.rect(screen, npc["color"], (sx, sy, TILE_SIZE - 4, TILE_SIZE - 4))
+                    name_surf = font_sm.render(npc["name"], True, (255, 255, 255))
+                    screen.blit(name_surf, (sx + (TILE_SIZE - 4) / 2 - name_surf.get_width() / 2, sy - 20))
+                    if player_near(npc) and not game.dialogue_target:
+                        if npc["name"] in game.talked_to:
+                            hint = font_sm.render("(already spoke)", True, (150, 150, 150))
+                        else:
+                            hint = font_sm.render("[E] Talk", True, (255, 255, 200))
+                        screen.blit(hint, (sx - 5, sy - 38))
+
             # Interior name header
             int_label = font_md.render(f"Inside {game.current_interior}  [ESC] Exit", True, (255, 255, 220))
             lbg = pygame.Surface((int_label.get_width() + 16, int_label.get_height() + 8), pygame.SRCALPHA)
@@ -1323,8 +1491,10 @@ while running:
                     glint.fill((255, 255, 200, alpha))
                     screen.blit(glint, (scr_x - 3, scr_y - 3))
 
-            # Draw NPCs (only on town map)
+            # Draw NPCs that are outside (on town map)
             for npc in game.alive:
+                if npc.get("location_type") == "interior":
+                    continue  # Skip NPCs inside buildings
                 sx = npc["x"] - cam_x
                 sy = npc["y"] - cam_y
                 idx = game.characters.index(npc) if npc in game.characters else -1
