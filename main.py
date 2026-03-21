@@ -1,5 +1,6 @@
 import pygame
 import sys
+import os
 import csv
 import random
 import re
@@ -131,6 +132,34 @@ NPC_SPAWNS = [
     (4, 13), (11, 13), (20, 13),
 ]
 
+# Named locations for buildings and map landmarks
+BUILDING_NAMES = [
+    "the Blacksmith",      # top-left building
+    "the Tavern",          # top building 2
+    "the Apothecary",      # top building 3
+    "the Church",          # top-right building
+    "the General Store",   # bottom-left building
+    "Town Hall",           # bottom building 2
+    "the Library",         # bottom building 3
+]
+
+# Label positions (tile coords) for drawing building names on the map
+BUILDING_LABEL_POS = [
+    (2, 1), (10, 1), (18, 1), (24, 1),
+    (2, 8), (10, 8), (18, 8),
+]
+
+# Open areas that can be referenced in clues
+MAP_LANDMARKS = [
+    "the town square",
+    "the main road",
+    "the alley behind the Tavern",
+    "the path between the Apothecary and the Church",
+    "the old well near Town Hall",
+    "the courtyard behind the General Store",
+    "the graveyard beyond the Church walls",
+]
+
 NPC_COLORS = [
     (200, 60, 200), (60, 160, 220), (220, 180, 40),
     (60, 200, 100), (220, 120, 60), (180, 60, 60), (100, 200, 200),
@@ -139,12 +168,16 @@ NPC_COLORS = [
 INTERACT_DIST = TILE_SIZE * 1.8
 
 # ── Ollama LLM ──────────────────────────────────────────────────
-OLLAMA_MODEL = "llama3.1"  # swap to "qwen3.5:0.8b" if llama3.1 not available
+# Set OLLAMA_HOST env var to connect to a remote machine, e.g.:
+#   OLLAMA_HOST=http://192.168.1.50:11434 python main.py
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+_ollama_client = ollama.Client(host=OLLAMA_HOST)
+print(f"Connecting to Ollama at: {OLLAMA_HOST}")
 
 def _pick_model():
     """Use llama3.1 if available, fall back to qwen3.5."""
     try:
-        models = ollama.list()
+        models = _ollama_client.list()
         names = [m.model for m in models.models]
         for preferred in ["llama3.1", "llama3.1:latest", "qwen3.5:0.8b"]:
             if preferred in names:
@@ -159,7 +192,7 @@ print(f"Using LLM model: {OLLAMA_MODEL}")
 def llm_chat(system_prompt, user_prompt):
     """Call ollama synchronously and return the response text."""
     try:
-        resp = ollama.chat(
+        resp = _ollama_client.chat(
             model=OLLAMA_MODEL,
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -234,6 +267,7 @@ class Game:
         self.player_y = 0.0
         # Dynamic state: ordered log of events across all days/nights
         self.history = []  # list of dicts: {type, day, ...details}
+        self.night_clues = {}  # clue data for the current night's murder
 
     def new_game(self):
         self.characters = load_characters("data (1).csv", 7)
@@ -253,7 +287,7 @@ class Game:
         self.dialogue_loading = False
         self.history = []
 
-        # Place NPCs
+        # Place NPCs and assign home buildings
         for i, c in enumerate(self.characters):
             spawn = NPC_SPAWNS[i]
             c["tile_x"] = spawn[0]
@@ -261,6 +295,7 @@ class Game:
             c["x"] = spawn[0] * TILE_SIZE
             c["y"] = spawn[1] * TILE_SIZE
             c["color"] = NPC_COLORS[i]
+            c["home"] = BUILDING_NAMES[i] if i < len(BUILDING_NAMES) else "their home"
 
         # Player start
         self.player_x = 14.0 * TILE_SIZE
@@ -274,12 +309,13 @@ class Game:
         self.night_timer = 3.0  # seconds to show night screen
         self.dialogue_target = None
         self.dialogue_text = ""
+        self.night_clues = {}
 
         if self.night_num == 1:
             self.storyteller_text = "Night falls on the town...\nA villain lurks among you."
             self.killed_tonight = None
             self.history.append({"type": "night", "day": 1, "victim": None,
-                                  "description": "The first night fell. No one was killed, but there are rumors of a murderer on the loose."})
+                                  "description": "The first night fell. No one was killed, but there are rumors of a murderer among the townspeople."})
         else:
             # Villain kills someone
             innocents = [c for c in self.alive if not c["is_villain"]]
@@ -287,21 +323,132 @@ class Game:
                 victim = random.choice(innocents)
                 self.killed_tonight = victim
                 self.alive.remove(victim)
+
+                # Generate rich murder details
+                villain = next(c for c in self.alive if c["is_villain"])
+                self.night_clues = self._generate_night_clues(victim, villain)
+
                 self.storyteller_text = (
                     f"Night {self.night_num}...\n"
-                    f"{victim['name']} was found dead this morning!"
+                    f"{victim['name']} was found {self.night_clues['discovery']}!"
                 )
                 self.history.append({
                     "type": "night", "day": self.night_num,
                     "victim": victim["name"],
                     "description": (
                         f"On the morning of day {self.night_num}, "
-                        f"{victim['name']} was found dead. "
-                        f"The town is grieving and afraid."
+                        f"{victim['name']} was found {self.night_clues['discovery']}. "
+                        f"{self.night_clues['scene_evidence']}"
                     ),
                 })
             else:
                 self.storyteller_text = f"Night {self.night_num}..."
+
+    def _generate_night_clues(self, victim, villain):
+        """Generate specific, interconnected clues for this night's murder."""
+        # Where the victim's body was found
+        murder_locations = [
+            ("behind the Blacksmith", "the Blacksmith"),
+            ("slumped against the Tavern wall", "the Tavern"),
+            ("inside the Apothecary's back room", "the Apothecary"),
+            ("on the steps of the Church", "the Church"),
+            ("in the storeroom of the General Store", "the General Store"),
+            ("on the floor of Town Hall", "Town Hall"),
+            ("among the shelves of the Library", "the Library"),
+            ("in the alley behind the Tavern", "the Tavern"),
+            ("near the old well by Town Hall", "Town Hall"),
+            ("in the courtyard behind the General Store", "the General Store"),
+        ]
+        # How they were killed
+        cause_of_death = [
+            ("a deep stab wound in the chest", "a bloodied knife", "a blade"),
+            ("blunt force trauma to the head", "a heavy iron hammer from the Blacksmith", "something heavy"),
+            ("strangulation marks around the neck", "torn fabric under their fingernails", "bare hands"),
+            ("signs of poisoning — dark veins and pale skin", "a broken vial with purple residue from the Apothecary", "poison"),
+            ("a crossbow bolt in the back", "a rare iron-tipped bolt", "a crossbow"),
+        ]
+        time_of_death = [
+            ("just after midnight", "around midnight"),
+            ("deep in the night, around 2 AM", "in the dead of night"),
+            ("shortly before dawn", "near dawn"),
+        ]
+
+        loc = random.choice(murder_locations)
+        weapon = random.choice(cause_of_death)
+        tod = random.choice(time_of_death)
+
+        # Physical evidence at the scene
+        scene_evidence = random.choice([
+            f"Boot prints in the mud led away from {loc[1]} toward the main road.",
+            f"A torn piece of dark cloth was snagged on a nail outside {loc[1]}.",
+            f"There were signs of a struggle — crates toppled and scratch marks on the walls of {loc[1]}.",
+            f"A strange symbol was scratched into the dirt near the body outside {loc[1]}.",
+            f"The victim's belongings were scattered across the floor of {loc[1]}, but nothing was stolen.",
+        ])
+
+        # Something that subtly ties to the villain
+        villain_trace = random.choice([
+            f"a faint smell of forge smoke lingering near {loc[1]}, far from the Blacksmith",
+            f"a coin from {villain['hometown']} found clutched in the victim's hand",
+            f"fresh scratches on the door of {loc[1]}, as if someone forced it open in a hurry",
+            f"a button torn from a coat lying in the dirt near {loc[1]}",
+            f"traces of ash near the body, as if someone burned something at {loc[1]}",
+        ])
+
+        # Assign each surviving innocent a specific clue
+        alive_innocents = [c for c in self.alive if not c["is_villain"]]
+        npc_clues = {}
+
+        # Get the building where this NPC lives (by index)
+        def npc_building(npc):
+            idx = self.characters.index(npc)
+            return BUILDING_NAMES[idx] if idx < len(BUILDING_NAMES) else "their home"
+
+        witness_pool = [
+            f"I heard a muffled scream coming from {loc[1]} {tod[1]}. I looked out my window at {npc_building(villain)} but saw no light there — {villain['name']}'s place was dark and empty.",
+            f"I saw a figure hurrying away from {loc[1]} {tod[1]}. They turned toward the main road. I couldn't see their face, but they moved like someone who knew the town well.",
+            f"I was restless and stepped outside {npc_building(alive_innocents[0]) if alive_innocents else 'my house'} for air {tod[1]}. I noticed the door to {loc[1]} was ajar — it's never left open at night.",
+            f"I found {villain_trace} this morning when I walked past {loc[1]}. That's strange — why would that be there?",
+            f"Last evening before the murder, I saw {victim['name']} and {villain['name']} having a tense conversation near {loc[1]}. {victim['name']} looked upset and walked away quickly.",
+            f"{victim['name']} told me yesterday they felt someone had been following them near {loc[1]}. They seemed genuinely frightened.",
+            f"I heard footsteps running past my door {tod[1]}, heading from {loc[1]} toward the north end of town. Heavy boots, moving fast.",
+            f"When I passed {loc[1]} this morning, I noticed {scene_evidence.lower()} and also found {weapon[1]} partially hidden nearby.",
+            f"I saw someone washing their hands at the well near Town Hall just before dawn. I couldn't make out who, but they were scrubbing hard, like they were trying to clean something off.",
+            f"I remember {villain['name']} asking about {victim['name']}'s routine yesterday — what time they usually close up, whether they'd be alone. It seemed odd at the time.",
+        ]
+
+        random.shuffle(witness_pool)
+        for i, npc in enumerate(alive_innocents):
+            if i < len(witness_pool):
+                npc_clues[npc["name"]] = witness_pool[i]
+            else:
+                npc_clues[npc["name"]] = f"I was asleep all night at {npc_building(npc)}, but I'm devastated about {victim['name']}. We have to find who did this."
+
+        # Villain's alibi (will have holes other NPCs can contradict)
+        villain_claimed_location = random.choice([
+            n for n in BUILDING_NAMES if n != loc[1]
+        ]) if len(BUILDING_NAMES) > 1 else "my home"
+        villain_alibi = random.choice([
+            f"I was asleep at {npc_building(villain)} all night. I didn't hear a thing until the commotion this morning.",
+            f"I was up late reading at {npc_building(villain)} and never stepped outside. This is terrible news.",
+            f"I spent the evening at {villain_claimed_location} and went straight home. I had no idea anything happened until now.",
+            f"I was tending to some work at {npc_building(villain)} all night. You can check — my candle was burning late.",
+            f"I took a walk to clear my head last night, but I went toward the Church, nowhere near {loc[1]}. I swear it.",
+        ])
+
+        npc_clues[villain["name"]] = villain_alibi
+
+        return {
+            "discovery": f"dead {loc[0]}, with {weapon[0]}",
+            "murder_location": loc[1],
+            "cause_of_death": weapon,
+            "time_of_death": tod,
+            "scene_evidence": scene_evidence,
+            "villain_trace": villain_trace,
+            "npc_clues": npc_clues,
+            "villain_alibi": villain_alibi,
+            "victim_name": victim["name"],
+        }
 
     def start_day(self):
         self.state = "DAY"
@@ -324,38 +471,80 @@ class Game:
         alive_names = [c["name"] for c in self.alive]
         dead_names = [c["name"] for c in self.characters if c not in self.alive]
         history_context = self._build_history_context()
+        clues = getattr(self, 'night_clues', {})
 
         for npc in self.alive:
             is_villain = npc["is_villain"]
+            npc_idx = self.characters.index(npc)
+            npc_home = BUILDING_NAMES[npc_idx] if npc_idx < len(BUILDING_NAMES) else "their home"
+
+            # Base identity
             system = (
-                f"You are {npc['name']}, a character in a murder mystery game. "
-                f"Personality: {npc['personality']}. From: {npc['hometown']}. "
-                f"Weakness: {npc['weakness']}. "
-                f"The other living townspeople are: {', '.join(n for n in alive_names if n != npc['name'])}. "
-                f"IMPORTANT: Only refer to these people by their exact names. Do NOT invent any names."
+                f"You are {npc['name']}, a resident of a small town in a murder mystery. "
+                f"You live and work at {npc_home}. "
+                f"Personality: {npc['personality']}. Originally from: {npc['hometown']}. "
+                f"Known weakness: {npc['weakness']}. "
+                f"The surviving townspeople are: {', '.join(n for n in alive_names if n != npc['name'])}. "
+                f"The town has these locations: {', '.join(BUILDING_NAMES[:len(self.characters)])} along with the main road, the town square, and the old well. "
+                f"IMPORTANT: Only refer to people and places by their exact names listed above. Do NOT invent names or locations. "
+                f"RULE: You must ALWAYS speak in first person as {npc['name']}. Use 'I', 'me', 'my'. "
+                f"NEVER use third person. NEVER say '{npc['name']} thinks' or '{npc['name']} says' — say 'I think' or 'I saw'. "
+                f"You ARE this character speaking directly to the detective. "
             )
+
             if dead_names:
-                system += f"The following people have been killed: {', '.join(dead_names)}. "
+                system += f"The dead so far: {', '.join(dead_names)}. "
+
             if history_context:
-                system += f"{history_context} React naturally to these events — reference specific deaths, false accusations, and rising fear as appropriate. "
-            if is_villain:
-                system += (
-                    "You are secretly the villain. You must act innocent but occasionally "
-                    "let subtle hints slip. Be evasive about your whereabouts last night. "
-                    "If an innocent person was recently falsely accused, you may quietly deflect suspicion onto others. "
-                    "Never directly confess. Keep responses to 2-3 sentences. Do not speak in third person."
-                )
+                system += f"\n{history_context}\n"
+
+            # Day 1: no murder yet — build atmosphere and relationships
+            if self.night_num == 1:
+                if is_villain:
+                    system += (
+                        "You are secretly the killer. No one has died yet, but you are planning. "
+                        "Act friendly and normal, but subtly steer conversation away from yourself. "
+                        "Maybe mention how safe the town usually is, or comment on another townsperson. "
+                        "Never confess. Keep responses to 2-3 sentences."
+                    )
+                else:
+                    system += (
+                        "No one has been killed yet, but rumors of danger have everyone on edge. "
+                        "Share something about your daily life at " + npc_home + ", mention your neighbors, "
+                        "or express worry about the rumors. Be specific — mention a location or person by name. "
+                        "Keep responses to 2-3 sentences."
+                    )
+            # Later days: murder happened, share specific clues
             else:
-                system += (
-                    "You are an innocent townsperson. You are scared and want to help "
-                    "find the villain. Share your observations, reference the deaths you know about, "
-                    "and let your fear and grief grow with each passing night. "
-                    "You don't know who the villain is. Keep responses to 2-3 sentences. Do not speak in third person."
-                )
+                npc_clue = clues.get("npc_clues", {}).get(npc["name"], "")
+                murder_loc = clues.get("murder_location", "somewhere in town")
+                victim_name = clues.get("victim_name", "someone")
+                cause = clues.get("cause_of_death", ("unknown injuries", "", ""))[0]
+                time_desc = clues.get("time_of_death", ("last night", "last night"))[0]
+
+                if is_villain:
+                    system += (
+                        f"{victim_name} was found dead at {murder_loc} with {cause}, killed {time_desc}. "
+                        f"You are the killer. Your alibi: {npc_clue} "
+                        f"Deliver your alibi naturally, as if just making conversation. "
+                        f"Act shocked and saddened. If pressed, subtly cast suspicion on another living townsperson by name. "
+                        f"You might reference a specific location to make your alibi sound credible. "
+                        f"Never confess or admit guilt. Keep responses to 2-3 sentences."
+                    )
+                else:
+                    system += (
+                        f"{victim_name} was found dead at {murder_loc} with {cause}, killed {time_desc}. "
+                        f"YOUR SPECIFIC OBSERVATION: {npc_clue} "
+                        f"You MUST share this observation with the detective — it's the most important thing you know. "
+                        f"Weave it naturally into your response. You are scared and want justice. "
+                        f"Reference the specific location, time, or person from your observation. "
+                        f"Keep responses to 2-3 sentences."
+                    )
 
             user_msg = (
-                f"The detective approaches you to talk. It is day {self.night_num}. "
-                f"Respond to the detective's question:Considering everything that has happened so far, what do you say?"
+                f"The detective approaches you on day {self.night_num}. "
+                f"Respond as yourself speaking directly to the detective. Use 'I' and 'me', never your own name in third person. "
+                f"Example format: 'I heard something last night...' NOT '{npc['name']} heard something last night...'"
             )
             llm_chat_async(f"npc_{npc['name']}_{self.night_num}", system, user_msg)
 
@@ -472,6 +661,29 @@ def draw_text_wrapped(surface, text, font, color, rect, line_spacing=4):
 def draw_centered_text(surface, text, font, color, y):
     surf = font.render(text, True, color)
     surface.blit(surf, (SCREEN_W // 2 - surf.get_width() // 2, y))
+
+def draw_centered_text_wrapped(surface, text, font, color, y, max_width=None, line_spacing=8):
+    """Draw word-wrapped, centered text. Returns the y position after the last line."""
+    if max_width is None:
+        max_width = SCREEN_W - 80
+    words = text.split(' ')
+    lines = []
+    current = ""
+    for word in words:
+        test = current + " " + word if current else word
+        if font.size(test)[0] <= max_width:
+            current = test
+        else:
+            if current:
+                lines.append(current)
+            current = word
+    if current:
+        lines.append(current)
+    for line in lines:
+        surf = font.render(line, True, color)
+        surface.blit(surf, (SCREEN_W // 2 - surf.get_width() // 2, y))
+        y += font.get_height() + line_spacing
+    return y
 
 
 # ── Main Loop ───────────────────────────────────────────────────
@@ -614,9 +826,10 @@ while running:
 
     elif game.state == "NIGHT":
         screen.fill(NIGHT_OVERLAY)
-        lines = game.storyteller_text.split("\n")
-        for i, line in enumerate(lines):
-            draw_centered_text(screen, line, font_lg, (220, 220, 255), 200 + i * 60)
+        cur_y = 200
+        for line in game.storyteller_text.split("\n"):
+            cur_y = draw_centered_text_wrapped(screen, line, font_lg, (220, 220, 255), cur_y)
+            cur_y += 10  # extra gap between paragraphs
         if game.night_timer <= 0:
             draw_centered_text(screen, "Press ENTER to continue", font_md, (150, 150, 180), 500)
 
@@ -634,6 +847,19 @@ while running:
                     TILE_SIZE, TILE_SIZE,
                 )
                 pygame.draw.rect(screen, TILE_COLORS[tilemap[row][col]], rect)
+
+        # Draw building name labels
+        for i, (lx, ly) in enumerate(BUILDING_LABEL_POS):
+            if i < len(BUILDING_NAMES):
+                label = font_sm.render(BUILDING_NAMES[i], True, (255, 255, 220))
+                lsx = lx * TILE_SIZE - cam_x + TILE_SIZE * 2 - label.get_width() / 2
+                lsy = ly * TILE_SIZE - cam_y + 4
+                # Dark background for readability
+                bg_rect = pygame.Rect(lsx - 4, lsy - 2, label.get_width() + 8, label.get_height() + 4)
+                bg_surf = pygame.Surface((bg_rect.width, bg_rect.height), pygame.SRCALPHA)
+                bg_surf.fill((0, 0, 0, 160))
+                screen.blit(bg_surf, bg_rect)
+                screen.blit(label, (lsx, lsy))
 
         # Draw NPCs
         for npc in game.alive:
@@ -710,23 +936,23 @@ while running:
 
     elif game.state == "ACCUSE_RESULT":
         screen.fill((40, 30, 10))
-        lines = game.storyteller_text.split("\n")
-        for i, line in enumerate(lines):
-            draw_centered_text(screen, line, font_lg, (255, 200, 80), 220 + i * 60)
+        cur_y = 220
+        for line in game.storyteller_text.split("\n"):
+            cur_y = draw_centered_text_wrapped(screen, line, font_lg, (255, 200, 80), cur_y)
         draw_centered_text(screen, "Press ENTER to continue", font_md, (200, 200, 180), 500)
 
     elif game.state == "WIN":
         screen.fill((10, 40, 10))
-        lines = game.storyteller_text.split("\n")
-        for i, line in enumerate(lines):
-            draw_centered_text(screen, line, font_lg, (100, 255, 100), 200 + i * 60)
+        cur_y = 200
+        for line in game.storyteller_text.split("\n"):
+            cur_y = draw_centered_text_wrapped(screen, line, font_lg, (100, 255, 100), cur_y)
         draw_centered_text(screen, "Press ENTER for main menu", font_md, (180, 255, 180), 500)
 
     elif game.state == "LOSE":
         screen.fill((40, 10, 10))
-        lines = game.storyteller_text.split("\n")
-        for i, line in enumerate(lines):
-            draw_centered_text(screen, line, font_lg, BLOOD_RED, 160 + i * 60)
+        cur_y = 160
+        for line in game.storyteller_text.split("\n"):
+            cur_y = draw_centered_text_wrapped(screen, line, font_lg, BLOOD_RED, cur_y)
         draw_centered_text(screen, "Press ENTER for main menu", font_md, (255, 180, 180), 500)
 
     pygame.display.flip()
