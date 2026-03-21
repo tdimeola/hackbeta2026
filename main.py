@@ -631,6 +631,7 @@ class Game:
         self.reveal_target_state = ""  # WIN, LOSE, or ACCUSE_RESULT
         self.reveal_accused = None     # character dict being accused
         self.reveal_correct = False
+        self.reveal_done = False
         self.night_num = 0
         self.wrong_guesses = 0
         self.characters = []
@@ -1320,19 +1321,16 @@ class Game:
         self.reveal_accused = character
         self.reveal_correct = character["is_villain"]
         self.reveal_timer = 0.0
+        self.reveal_done = False
         self.state = "REVEAL"
         music_stop(fade_ms=1500)
         REVEAL_SOUND.play()
 
     def _finish_reveal(self):
-        """Called when the reveal animation timer expires. Resolves the accusation."""
+        """Called when the reveal animation timer expires. Resolves the accusation but stays on REVEAL screen."""
         character = self.reveal_accused
+        self.reveal_done = True
         if self.reveal_correct:
-            self.state = "WIN"
-            self.storyteller_text = (
-                f"You accused {character['name']}...\n"
-                f"They WERE the villain! The town is saved!"
-            )
             self.history.append({
                 "type": "accusation", "day": self.night_num,
                 "accused": character["name"], "correct": True,
@@ -1343,7 +1341,6 @@ class Game:
             })
         else:
             self.wrong_guesses += 1
-            self.accuse_result_correct = False
             self.history.append({
                 "type": "accusation", "day": self.night_num,
                 "accused": character["name"], "correct": False,
@@ -1359,19 +1356,20 @@ class Game:
             villain_npc = next((c for c in self.alive if c["is_villain"]), None)
             if villain_npc and villain_npc["name"] in self.npc_emotional_state:
                 self.npc_emotional_state[villain_npc["name"]]["desperation"] += 1
-            if self.wrong_guesses >= 3:
-                self.state = "LOSE"
-                self.storyteller_text = (
-                    f"{character['name']} was innocent!\n"
-                    f"You've run out of guesses.\n"
-                    f"The villain {self.villain_name} wins!"
-                )
-            else:
-                self.state = "ACCUSE_RESULT"
-                self.storyteller_text = (
-                    f"{character['name']} was innocent!\n"
-                    f"Wrong guess! {3 - self.wrong_guesses} guesses remaining."
-                )
+
+    def _advance_from_reveal(self):
+        """Called when player presses ENTER on the reveal screen."""
+        if self.reveal_correct:
+            self.state = "WIN"
+            self.storyteller_text = f"The town is saved!\n{self.reveal_accused['name']} was the villain all along."
+        elif self.wrong_guesses >= 3:
+            self.state = "LOSE"
+            self.storyteller_text = (
+                f"You've run out of guesses.\n"
+                f"The villain {self.villain_name} wins!"
+            )
+        else:
+            self.start_night()
 
     def talk_to_npc(self, npc):
         if self.dialogue_loading:
@@ -1888,6 +1886,11 @@ while running:
                     if suspects:
                         game.do_accuse(suspects[game.accuse_selection])
 
+            # Reveal screen — press ENTER after verdict shown
+            elif game.state == "REVEAL" and game.reveal_done:
+                if (event.key == pygame.K_RETURN or event.key == pygame.K_SPACE) and not game.fading:
+                    game.start_fade(lambda: game._advance_from_reveal())
+
             # Accuse result — wrong guess, continue to next night
             elif game.state == "ACCUSE_RESULT":
                 if (event.key == pygame.K_RETURN or event.key == pygame.K_SPACE) and not game.fading:
@@ -1930,7 +1933,7 @@ while running:
         half = game.reveal_duration * 0.5
         if prev < half <= game.reveal_timer:
             sfx_reverb_drum.play()
-        if game.reveal_timer >= game.reveal_duration:
+        if game.reveal_timer >= game.reveal_duration and not game.reveal_done:
             game._finish_reveal()
 
     if game.state == "DAY" and not game.showing_journal and not game.showing_evidence_log and not game.showing_clue_tracker:
@@ -2537,11 +2540,28 @@ while running:
                     flash.fill((255, 255, 255, int(255 * (1.0 - flash_progress / 0.2))))
                     screen.blit(flash, (0, 0))
 
-                draw_centered_text(screen, accused["name"], font_title, (255, 255, 255), 250)
+                draw_centered_text(screen, accused["name"], font_title, (255, 255, 255), 200)
                 if game.reveal_correct:
-                    draw_centered_text(screen, "VILLAIN!", font_title, (255, 80, 80), 350)
+                    draw_centered_text(screen, "VILLAIN!", font_title, (255, 80, 80), 290)
                 else:
-                    draw_centered_text(screen, "INNOCENT...", font_title, (100, 200, 255), 350)
+                    draw_centered_text(screen, "INNOCENT...", font_title, (100, 200, 255), 290)
+
+                # After animation is done, show details and prompt
+                if game.reveal_done:
+                    if game.reveal_correct:
+                        draw_centered_text(screen, "The town is saved!", font_md, (100, 255, 100), 390)
+                    else:
+                        guesses_left = 3 - game.wrong_guesses
+                        if guesses_left <= 0:
+                            draw_centered_text(screen, "You have no guesses remaining...", font_md, BLOOD_RED, 390)
+                            draw_centered_text(screen, f"The villain {game.villain_name} wins!", font_md, BLOOD_RED, 430)
+                        else:
+                            draw_centered_text(screen, f"{guesses_left} guess{'es' if guesses_left > 1 else ''} remaining.", font_md, (200, 200, 180), 390)
+                            # Show who was killed if there was a victim
+                            if game.killed_tonight:
+                                draw_centered_text(screen, f"{game.killed_tonight['name']} was murdered last night.", font_md, (220, 160, 160), 430)
+
+                    draw_centered_text(screen, "Press ENTER to continue", font_md, (180, 180, 180), 530)
 
     elif game.state == "ACCUSE_RESULT":
         screen.fill((40, 30, 10))
