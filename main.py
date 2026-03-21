@@ -118,6 +118,10 @@ sfx_door = pygame.mixer.Sound("sounds/opening_door.mp3")
 sfx_door.set_volume(0.7)
 EVIDENCE_SOUND = pygame.mixer.Sound("sounds/evidence_sounds.mp3")
 EVIDENCE_SOUND.set_volume(0.9)
+REVEAL_SOUND = pygame.mixer.Sound("sounds/reveal.mp3")
+REVEAL_SOUND.set_volume(0.9)
+NIGHT_SOUND = pygame.mixer.Sound("sounds/night_time.mp3")
+NIGHT_SOUND.set_volume(0.8)
 
 
 def music_start_menu():
@@ -727,6 +731,7 @@ class Game:
         self.night_num += 1
         self.state = "NIGHT"
         music_stop(fade_ms=2000)
+        NIGHT_SOUND.play()
         self.night_timer = 3.0  # seconds to show night screen
         self.dialogue_target = None
         self.dialogue_text = ""
@@ -1222,6 +1227,7 @@ class Game:
     def do_accuse(self, character):
         if character["is_villain"]:
             music_stop(fade_ms=1500)
+            REVEAL_SOUND.play()
             self.state = "WIN"
             self.storyteller_text = (
                 f"You accused {character['name']}...\n"
@@ -1255,6 +1261,7 @@ class Game:
             villain_npc = next((c for c in self.alive if c["is_villain"]), None)
             if villain_npc and villain_npc["name"] in self.npc_emotional_state:
                 self.npc_emotional_state[villain_npc["name"]]["desperation"] += 1
+            REVEAL_SOUND.play()
             if self.wrong_guesses >= 3:
                 music_stop(fade_ms=1500)
                 self.state = "LOSE"
