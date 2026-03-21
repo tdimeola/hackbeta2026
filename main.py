@@ -232,6 +232,8 @@ class Game:
         self.talked_to = set()
         self.player_x = 0.0
         self.player_y = 0.0
+        # Dynamic state: ordered log of events across all days/nights
+        self.history = []  # list of dicts: {type, day, ...details}
 
     def new_game(self):
         self.characters = load_characters("data (1).csv", 7)
@@ -249,6 +251,7 @@ class Game:
         self.dialogue_target = None
         self.dialogue_text = ""
         self.dialogue_loading = False
+        self.history = []
 
         # Place NPCs
         for i, c in enumerate(self.characters):
@@ -275,6 +278,8 @@ class Game:
         if self.night_num == 1:
             self.storyteller_text = "Night falls on the town...\nA villain lurks among you."
             self.killed_tonight = None
+            self.history.append({"type": "night", "day": 1, "victim": None,
+                                  "description": "The first night fell. No one was killed."})
         else:
             # Villain kills someone
             innocents = [c for c in self.alive if not c["is_villain"]]
@@ -286,6 +291,15 @@ class Game:
                     f"Night {self.night_num}...\n"
                     f"{victim['name']} was found dead this morning!"
                 )
+                self.history.append({
+                    "type": "night", "day": self.night_num,
+                    "victim": victim["name"],
+                    "description": (
+                        f"On the morning of day {self.night_num}, "
+                        f"{victim['name']} was found dead. "
+                        f"The town is grieving and afraid."
+                    ),
+                })
             else:
                 self.storyteller_text = f"Night {self.night_num}..."
 
@@ -296,10 +310,20 @@ class Game:
         self.talked_to = set()  # track who we've talked to this day
         self._prefetch_dialogues()
 
+    def _build_history_context(self):
+        """Return a human-readable summary of all past events for LLM context."""
+        if not self.history:
+            return ""
+        lines = ["Here is what has happened so far in the town:"]
+        for event in self.history:
+            lines.append(f"- {event['description']}")
+        return " ".join(lines)
+
     def _prefetch_dialogues(self):
         """Pre-generate all NPC dialogue for this day so responses are instant."""
         alive_names = [c["name"] for c in self.alive]
         dead_names = [c["name"] for c in self.characters if c not in self.alive]
+        history_context = self._build_history_context()
 
         for npc in self.alive:
             is_villain = npc["is_villain"]
@@ -312,20 +336,27 @@ class Game:
             )
             if dead_names:
                 system += f"The following people have been killed: {', '.join(dead_names)}. "
+            if history_context:
+                system += f"{history_context} React naturally to these events — reference specific deaths, false accusations, and rising fear as appropriate. "
             if is_villain:
                 system += (
                     "You are secretly the villain. You must act innocent but occasionally "
                     "let subtle hints slip. Be evasive about your whereabouts last night. "
+                    "If an innocent person was recently falsely accused, you may quietly deflect suspicion onto others. "
                     "Never directly confess. Keep responses to 2-3 sentences."
                 )
             else:
                 system += (
                     "You are an innocent townsperson. You are scared and want to help "
-                    "find the villain. Share your observations but you don't know who "
-                    "the villain is. Keep responses to 2-3 sentences."
+                    "find the villain. Share your observations, reference the deaths you know about, "
+                    "and let your fear and grief grow with each passing night. "
+                    "You don't know who the villain is. Keep responses to 2-3 sentences."
                 )
 
-            user_msg = f"The player approaches you to talk. It is day {self.night_num}. What do you say?"
+            user_msg = (
+                f"The detective approaches you to talk. It is day {self.night_num}. "
+                f"Considering everything that has happened so far, what do you say?"
+            )
             llm_chat_async(f"npc_{npc['name']}_{self.night_num}", system, user_msg)
 
     def open_accuse(self):
@@ -339,9 +370,25 @@ class Game:
                 f"You accused {character['name']}...\n"
                 f"They WERE the villain! The town is saved!"
             )
+            self.history.append({
+                "type": "accusation", "day": self.night_num,
+                "accused": character["name"], "correct": True,
+                "description": (
+                    f"On day {self.night_num}, the detective correctly identified "
+                    f"{character['name']} as the villain. The town is saved."
+                ),
+            })
         else:
             self.wrong_guesses += 1
             self.accuse_result_correct = False
+            self.history.append({
+                "type": "accusation", "day": self.night_num,
+                "accused": character["name"], "correct": False,
+                "description": (
+                    f"On day {self.night_num}, the detective accused {character['name']}, "
+                    f"but they were innocent. The town was shocked and the real killer is still at large."
+                ),
+            })
             if self.wrong_guesses >= 3:
                 self.state = "LOSE"
                 self.storyteller_text = (
