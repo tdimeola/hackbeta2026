@@ -588,6 +588,9 @@ class Game:
         self.fade_callback = None
         self.fade_speed = 600     # alpha per second
         self.loading_dot_timer = 0.0
+        # Journal
+        self.showing_journal = False
+        self.journal_page = 0  # index into self.characters
 
     def start_fade(self, callback=None):
         """Start a fade-to-black transition. Callback fires at peak darkness."""
@@ -1543,6 +1546,8 @@ while running:
                         game.showing_evidence_log = False
                     elif game.showing_clue_tracker:
                         game.showing_clue_tracker = False
+                    elif game.showing_journal:
+                        game.showing_journal = False
                     elif game.search_result_timer > 0:
                         game.search_result_timer = 0
                         game.search_result_text = ""
@@ -1612,14 +1617,22 @@ while running:
                 if event.key == pygame.K_l:
                     game.showing_evidence_log = not game.showing_evidence_log
                     game.showing_clue_tracker = False
+                    game.showing_journal = False
                     game.evidence_log_scroll = 0
 
                 if event.key == pygame.K_j:
                     game.showing_clue_tracker = not game.showing_clue_tracker
                     game.showing_evidence_log = False
+                    game.showing_journal = False
                     game.clue_tracker_scroll = 0
 
-                if event.key == pygame.K_TAB and not game.showing_evidence_log and not game.showing_clue_tracker:
+                if event.key == pygame.K_b:
+                    game.showing_journal = not game.showing_journal
+                    game.showing_evidence_log = False
+                    game.showing_clue_tracker = False
+                    game.journal_page = 0
+
+                if event.key == pygame.K_TAB and not game.showing_evidence_log and not game.showing_clue_tracker and not game.showing_journal:
                     game.open_accuse()
 
                 # Scroll overlays
@@ -1633,6 +1646,11 @@ while running:
                         game.clue_tracker_scroll = max(0, game.clue_tracker_scroll - 1)
                     if event.key == pygame.K_DOWN:
                         game.clue_tracker_scroll += 1
+                if game.showing_journal:
+                    if event.key == pygame.K_LEFT:
+                        game.journal_page = (game.journal_page - 1) % len(game.characters)
+                    if event.key == pygame.K_RIGHT:
+                        game.journal_page = (game.journal_page + 1) % len(game.characters)
 
             # Accuse menu
             elif game.state == "ACCUSE":
@@ -1766,7 +1784,7 @@ while running:
         draw_centered_text(screen, "A villain hides among the townspeople.", font_md, (200, 200, 200), 270)
         draw_centered_text(screen, "Find them before it's too late.", font_md, (200, 200, 200), 310)
         draw_centered_text(screen, "Press ENTER to begin", font_md, (255, 255, 255), 420)
-        draw_centered_text(screen, "[WASD] Move  [E] Talk/Search/Enter  [L] Evidence  [J] Clues  [TAB] Accuse", font_sm, (150, 150, 150), 500)
+        draw_centered_text(screen, "[WASD] Move  [E] Interact  [B] Journal  [L] Log  [J] Clues  [TAB] Accuse", font_sm, (150, 150, 150), 500)
 
     elif game.state == "NIGHT":
         screen.fill(NIGHT_OVERLAY)
@@ -2019,13 +2037,23 @@ while running:
         pygame.draw.rect(screen, (0, 0, 0, 180), (0, 0, SCREEN_W, hud_h))
 
         hud_left = font_md.render(f"Day {game.night_num}  |  Guesses: {3 - game.wrong_guesses}  |  Evidence: {ev_count}", True, (255, 255, 255))
-        hud_right = font_sm.render("[TAB] Accuse  [L] Log  [J] Clues", True, (180, 180, 180))
+        hud_right = font_sm.render("[TAB] Accuse  [L] Log  [J] Clues  [B] Journal", True, (180, 180, 180))
         screen.blit(hud_left, (15, hud_y))
         screen.blit(hud_right, (SCREEN_W - hud_right.get_width() - 15, hud_y + 5))
 
         if game.current_interior:
             loc_surf = font_sm.render(f"Inside {game.current_interior}  |  [ESC] Exit", True, (200, 200, 150))
             screen.blit(loc_surf, (SCREEN_W // 2 - loc_surf.get_width() // 2, hud_y + 32))
+
+        # Journal side button
+        if not game.showing_journal and not game.showing_evidence_log and not game.showing_clue_tracker:
+            jbtn = pygame.Rect(SCREEN_W - 85, SCREEN_H // 2 - 30, 75, 60)
+            pygame.draw.rect(screen, (55, 40, 28), jbtn, border_radius=5)
+            pygame.draw.rect(screen, (100, 80, 50), jbtn, 2, border_radius=5)
+            jtext = font_sm.render("Journal", True, (200, 190, 150))
+            screen.blit(jtext, (jbtn.x + jbtn.width // 2 - jtext.get_width() // 2, jbtn.y + 8))
+            jkey = font_sm.render("[B]", True, (150, 140, 110))
+            screen.blit(jkey, (jbtn.x + jbtn.width // 2 - jkey.get_width() // 2, jbtn.y + 32))
 
         # Dialogue box
         if game.dialogue_target:
@@ -2142,6 +2170,92 @@ while running:
                     y_pos += 4
                 if visible_end < len(log_lines):
                     draw_centered_text(screen, "▼", font_md, (180, 180, 180), SCREEN_H - 40)
+
+        # Journal overlay
+        if game.showing_journal and game.characters:
+            overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 200))
+            screen.blit(overlay, (0, 0))
+
+            # Book background
+            book = pygame.Rect(60, 30, SCREEN_W - 120, SCREEN_H - 60)
+            pygame.draw.rect(screen, (45, 35, 25), book, border_radius=6)
+            pygame.draw.rect(screen, (90, 70, 45), book, 3, border_radius=6)
+            pygame.draw.line(screen, (70, 55, 35),
+                (book.centerx, book.y + 10), (book.centerx, book.y + book.height - 10), 2)
+
+            pg = game.journal_page
+            total = len(game.characters)
+            c = game.characters[pg]
+            alive = c in game.alive
+            status_col = (100, 200, 100) if alive else BLOOD_RED
+
+            # Navigation
+            draw_centered_text(screen, f"< {pg + 1} / {total} >", font_sm, (160, 150, 120), book.y + book.height - 30)
+            draw_centered_text(screen, "[LEFT/RIGHT] Turn Page  [B/ESC] Close", font_sm, (120, 110, 90), book.y + book.height - 12)
+
+            # ── Left page: portrait + identity ──
+            lx, ly = book.x + 30, book.y + 20
+            name_surf = font_lg.render(c["name"], True, (220, 210, 180))
+            screen.blit(name_surf, (lx, ly))
+            ly += 55
+            screen.blit(font_md.render("ALIVE" if alive else "DECEASED", True, status_col), (lx, ly))
+            ly += 40
+
+            # Portrait
+            idx = game.characters.index(c)
+            sprite = npc_sprites[idx] if 0 <= idx < len(npc_sprites) else None
+            if sprite:
+                portrait = pygame.transform.smoothscale(sprite, (80, 80))
+                screen.blit(portrait, (lx, ly))
+            else:
+                pygame.draw.rect(screen, c["color"], (lx, ly, 80, 80))
+            ly += 95
+
+            left_w = book.width // 2 - 50
+            draw_text_wrapped(screen, f"Residence: {c.get('home', '?')}", font_sm, (180, 170, 140),
+                pygame.Rect(lx, ly, left_w, 30))
+            ly += 28
+            if alive:
+                draw_text_wrapped(screen, f"Last seen: {c.get('location_desc', '?')}", font_sm, (180, 170, 140),
+                    pygame.Rect(lx, ly, left_w, 30))
+
+            # ── Right page: details + relationships ──
+            rx, ry = book.centerx + 20, book.y + 25
+            right_w = book.width // 2 - 50
+
+            for label, value in [
+                ("Personality", c.get("personality", "?")),
+                ("Hometown", c.get("hometown", "?")),
+                ("Weakness", c.get("weakness", "?")),
+                ("Power", c.get("power", "?")),
+                ("Type", "Human" if c.get("isHuman") else "Non-Human"),
+            ]:
+                screen.blit(font_sm.render(f"{label}:", True, (160, 140, 100)), (rx, ry))
+                ry += 22
+                draw_text_wrapped(screen, value, font_md, (220, 210, 180),
+                    pygame.Rect(rx + 10, ry, right_w, 40))
+                ry += 38
+
+            ry += 5
+            screen.blit(font_sm.render("Relationships:", True, (160, 140, 100)), (rx, ry))
+            ry += 24
+            has_rel = False
+            for other in game.characters:
+                if other["name"] == c["name"]:
+                    continue
+                rel = game.get_relationship(c["name"], other["name"])
+                if rel:
+                    draw_text_wrapped(screen,
+                        f"- {rel['type'].replace('_', ' ').title()} with {other['name']}",
+                        font_sm, (200, 190, 160), pygame.Rect(rx + 5, ry, right_w, 25))
+                    ry += 22
+                    has_rel = True
+                    if ry > book.y + book.height - 60:
+                        break
+            if not has_rel:
+                draw_text_wrapped(screen, "No known relationships.", font_sm, (140, 130, 110),
+                    pygame.Rect(rx + 5, ry, right_w, 25))
 
         # Accusation overlay
         if game.state == "ACCUSE":
