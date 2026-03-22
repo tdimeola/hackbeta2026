@@ -2738,6 +2738,13 @@ while running:
             (150, 150, 150),
             500,
         )
+        draw_centered_text(
+            screen,
+            "Tip: Press Fn + F11 for fullscreen",
+            font_sm,
+            (120, 120, 120),
+            530,
+        )
 
     elif game.state == "NIGHT":
         screen.fill(NIGHT_OVERLAY)
