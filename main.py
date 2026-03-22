@@ -17,13 +17,14 @@ SCREEN_W, SCREEN_H = 900, 700
 FPS = 60
 
 screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
-pygame.display.set_caption("Murder Mystery")
+pygame.display.set_caption("Q.U.A.N.T.U.M Blood")
 clock = pygame.time.Clock()
 
 font_sm = pygame.font.SysFont(None, 24)
 font_md = pygame.font.SysFont(None, 32)
 font_lg = pygame.font.SysFont(None, 48)
-font_title = pygame.font.SysFont(None, 72)
+font_title = pygame.font.SysFont("serif", 72)
+
 
 # -- Procedural footstep sounds --
 def _bandpass(signal, low_hz, high_hz, sample_rate):
@@ -33,6 +34,7 @@ def _bandpass(signal, low_hz, high_hz, sample_rate):
     fft[(freqs < low_hz) | (freqs > high_hz)] = 0
     return np.fft.irfft(fft, len(signal))
 
+
 def _lowpass(signal, cutoff_hz, sample_rate):
     """Simple IIR low-pass filter."""
     alpha = 1.0 / (1.0 + sample_rate / (2.0 * np.pi * cutoff_hz))
@@ -41,6 +43,7 @@ def _lowpass(signal, cutoff_hz, sample_rate):
     for i in range(1, len(signal)):
         out[i] = out[i - 1] + alpha * (signal[i] - out[i - 1])
     return out
+
 
 def _make_footstep(sample_rate=44100, kind="stone"):
     """Generate a layered, realistic footstep sound as a pygame Sound."""
@@ -99,16 +102,19 @@ def _make_footstep(sample_rate=44100, kind="stone"):
     sound.set_volume(0.55)
     return sound
 
+
 # Pre-generate a small pool of variations so no two steps sound identical
 _stone_pool = [_make_footstep(kind="stone") for _ in range(4)]
 _grass_pool = [_make_footstep(kind="grass") for _ in range(4)]
 _step_index = 0
+
 
 def play_footstep(kind="stone"):
     global _step_index
     pool = _stone_pool if kind == "stone" else _grass_pool
     pool[_step_index % len(pool)].play()
     _step_index += 1
+
 
 MENU_MUSIC = "sounds/The_Crimson_Manor.mp3"
 DAY_MUSIC = "sounds/in-game-sound-track.mp3"
@@ -174,6 +180,7 @@ def music_stop(fade_ms=2000):
     """Fade out and stop music."""
     pygame.mixer.music.fadeout(fade_ms)
 
+
 # -- Colors --
 GRASS_COLOR = (76, 153, 0)
 WALL_COLOR = (90, 70, 50)
@@ -190,58 +197,628 @@ INTERIOR_WALL_COLOR = (60, 50, 45)
 FURNITURE_COLOR = (100, 70, 40)
 
 TILE_COLORS = {
-    0: GRASS_COLOR, 1: WALL_COLOR, 2: PATH_COLOR, 3: ROOF_COLOR, 4: DOOR_COLOR,
-    5: TREE_COLOR, 6: SEARCH_COLOR, 7: INTERIOR_FLOOR_COLOR, 8: INTERIOR_WALL_COLOR,
+    0: GRASS_COLOR,
+    1: WALL_COLOR,
+    2: PATH_COLOR,
+    3: ROOF_COLOR,
+    4: DOOR_COLOR,
+    5: TREE_COLOR,
+    6: SEARCH_COLOR,
+    7: INTERIOR_FLOOR_COLOR,
+    8: INTERIOR_WALL_COLOR,
     9: FURNITURE_COLOR,
 }
 
+
 # -- Load CSV data --
 def load_characters(path, count=7):
-    with open(path, newline='', encoding='utf-8') as f:
+    with open(path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         rows = list(reader)
     random.shuffle(rows)
     selected = rows[:count]
     characters = []
     for row in selected:
-        characters.append({
-            "name": row["Name"].strip(),
-            "personality": row[" Personality"].strip(),
-            "hometown": row[" Hometown"].strip(),
-            "weakness": row[" Weakness"].strip(),
-            "evilness": int(row[" Evilness"].strip()),
-            "power": row[" Power"].strip(),
-            "isVillain": row[" isVillain"].strip() == "True",
-            "isHuman": row[" isHuman"].strip() == "True",
-        })
+        characters.append(
+            {
+                "name": row["Name"].strip(),
+                "personality": row[" Personality"].strip(),
+                "hometown": row[" Hometown"].strip(),
+                "weakness": row[" Weakness"].strip(),
+                "evilness": int(row[" Evilness"].strip()),
+                "power": row[" Power"].strip(),
+                "isVillain": row[" isVillain"].strip() == "True",
+                "isHuman": row[" isHuman"].strip() == "True",
+            }
+        )
     return characters
+
 
 # -- Tile map --
 # Tile legend: 0=grass, 1=wall, 2=path, 3=roof, 4=door, 5=tree, 6=search spot
 tilemap = [
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,3,3,3,3,0,0,0,0,3,3,3,3,0,0,0,0,3,3,3,3,0,0,3,3,3,3,0,1],
-    [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,1,1,1,1,0,1],
-    [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,1,1,1,1,0,1],
-    [1,0,1,4,1,1,0,0,0,0,1,1,4,1,0,0,0,0,1,4,1,1,0,0,1,1,4,1,0,1],
-    [1,0,0,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,1],
-    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
-    [1,0,0,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,1],
-    [1,0,3,3,3,3,0,0,0,0,3,3,3,3,0,0,0,0,3,3,3,3,0,2,5,5,0,5,0,1],
-    [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,2,5,0,6,0,5,1],
-    [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,2,0,5,0,5,0,1],
-    [1,0,1,1,4,1,0,0,0,0,1,4,1,1,0,0,0,0,1,1,4,1,0,2,5,0,0,6,5,1],
-    [1,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,0,2,5,5,0,5,0,1],
-    [1,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,0,2,0,0,6,0,0,1],
-    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+    ],
+    [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+    ],
+    [
+        1,
+        0,
+        3,
+        3,
+        3,
+        3,
+        0,
+        0,
+        0,
+        0,
+        3,
+        3,
+        3,
+        3,
+        0,
+        0,
+        0,
+        0,
+        3,
+        3,
+        3,
+        3,
+        0,
+        0,
+        3,
+        3,
+        3,
+        3,
+        0,
+        1,
+    ],
+    [
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+    ],
+    [
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+    ],
+    [
+        1,
+        0,
+        1,
+        4,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        4,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        4,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        4,
+        1,
+        0,
+        1,
+    ],
+    [
+        1,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        1,
+    ],
+    [
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        1,
+    ],
+    [
+        1,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+    ],
+    [
+        1,
+        0,
+        3,
+        3,
+        3,
+        3,
+        0,
+        0,
+        0,
+        0,
+        3,
+        3,
+        3,
+        3,
+        0,
+        0,
+        0,
+        0,
+        3,
+        3,
+        3,
+        3,
+        0,
+        2,
+        5,
+        5,
+        0,
+        5,
+        0,
+        1,
+    ],
+    [
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        2,
+        5,
+        0,
+        6,
+        0,
+        5,
+        1,
+    ],
+    [
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        2,
+        0,
+        5,
+        0,
+        5,
+        0,
+        1,
+    ],
+    [
+        1,
+        0,
+        1,
+        1,
+        4,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        4,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        4,
+        1,
+        0,
+        2,
+        5,
+        0,
+        0,
+        6,
+        5,
+        1,
+    ],
+    [
+        1,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        2,
+        5,
+        5,
+        0,
+        5,
+        0,
+        1,
+    ],
+    [
+        1,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        2,
+        0,
+        0,
+        6,
+        0,
+        0,
+        1,
+    ],
+    [
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        1,
+    ],
+    [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+    ],
+    [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+    ],
 ]
 
 MAP_H = len(tilemap)
 MAP_W = len(tilemap[0])
 SOLID_TILES = {1, 3, 5, 8}
+
 
 # -- Load pixel art sprites --
 def load_sprite(path, size=(TILE_SIZE, TILE_SIZE)):
@@ -252,8 +829,18 @@ def load_sprite(path, size=(TILE_SIZE, TILE_SIZE)):
     except Exception:
         return None
 
+
 # Player sprite (detective) — 8 directions: idle + walk animations
-DIRECTIONS = ["south", "north", "east", "west", "south-east", "south-west", "north-east", "north-west"]
+DIRECTIONS = [
+    "south",
+    "north",
+    "east",
+    "west",
+    "south-east",
+    "south-west",
+    "north-east",
+    "north-west",
+]
 WALK_FRAME_COUNT = 6
 WALK_ANIM_SPEED = 10  # frames per second
 
@@ -262,24 +849,33 @@ PLAYER_SPRITE_SIZE = (TILE_SIZE + 8, TILE_SIZE + 8)  # slightly bigger than a ti
 # Idle sprites from rotations/
 player_idle_sprites = {}
 for d in DIRECTIONS:
-    player_idle_sprites[d] = load_sprite(f"assets/characters/detective_hero/rotations/{d}.png", PLAYER_SPRITE_SIZE)
+    player_idle_sprites[d] = load_sprite(
+        f"assets/characters/detective_hero/rotations/{d}.png", PLAYER_SPRITE_SIZE
+    )
 
 # Walk animation frames
 player_walk_frames = {}
 for d in DIRECTIONS:
     frames = []
     for i in range(WALK_FRAME_COUNT):
-        frame = load_sprite(f"assets/characters/detective_hero/animations/walk/{d}/frame_{i:03d}.png", PLAYER_SPRITE_SIZE)
+        frame = load_sprite(
+            f"assets/characters/detective_hero/animations/walk/{d}/frame_{i:03d}.png",
+            PLAYER_SPRITE_SIZE,
+        )
         frames.append(frame)
     player_walk_frames[d] = frames
 
 # Fallback player image
 player_img_fallback = pygame.image.load("character.jpg").convert()
-player_img_fallback = pygame.transform.scale(player_img_fallback, (TILE_SIZE - 4, TILE_SIZE - 4))
+player_img_fallback = pygame.transform.scale(
+    player_img_fallback, (TILE_SIZE - 4, TILE_SIZE - 4)
+)
+
 
 # Menu background — load animated GIF frames via Pillow
 def _load_gif_frames(path, target_size):
     from PIL import Image
+
     pil_img = Image.open(path)
     frames = []
     for i in range(pil_img.n_frames):
@@ -291,14 +887,17 @@ def _load_gif_frames(path, target_size):
         frames.append(surf)
     return frames
 
+
 menu_bg_frames = _load_gif_frames("bg_village.gif", (SCREEN_W, SCREEN_H))
 menu_bg_frame_idx = 0
 menu_bg_timer = 0.0
 MENU_BG_FPS = 15  # playback speed
 
+
 # Village skin — loaded once, scaled to full map dimensions
 def _load_village_skin(path):
     from PIL import Image
+
     try:
         img = Image.open(path).convert("RGBA")
         img = img.resize((MAP_W * TILE_SIZE, MAP_H * TILE_SIZE), Image.LANCZOS)
@@ -308,6 +907,7 @@ def _load_village_skin(path):
     except Exception as e:
         print(f"Could not load village skin: {e}")
         return None
+
 
 village_skin = _load_village_skin("images/village.png")
 
@@ -331,25 +931,35 @@ npc_sprites = [load_sprite(f, NPC_SPRITE_SIZE) if f else None for f in npc_sprit
 
 # NPC spawn positions (outside each building door)
 NPC_SPAWNS = [
-    (3, 6), (12, 6), (19, 6), (26, 6),
-    (4, 13), (11, 13), (20, 13),
+    (3, 6),
+    (12, 6),
+    (19, 6),
+    (26, 6),
+    (4, 13),
+    (11, 13),
+    (20, 13),
 ]
 
 # Named locations for buildings and map landmarks
 BUILDING_NAMES = [
-    "the Blacksmith",      # top-left building
-    "the Tavern",          # top building 2
-    "the Apothecary",      # top building 3
-    "the Church",          # top-right building
-    "the General Store",   # bottom-left building
-    "Town Hall",           # bottom building 2
-    "the Library",         # bottom building 3
+    "the Blacksmith",  # top-left building
+    "the Tavern",  # top building 2
+    "the Apothecary",  # top building 3
+    "the Church",  # top-right building
+    "the General Store",  # bottom-left building
+    "Town Hall",  # bottom building 2
+    "the Library",  # bottom building 3
 ]
 
 # Label positions (tile coords) for drawing building names on the map
 BUILDING_LABEL_POS = [
-    (2, 1), (10, 1), (18, 1), (24, 1),
-    (2, 8), (10, 8), (18, 8),
+    (2, 1),
+    (10, 1),
+    (18, 1),
+    (24, 1),
+    (2, 8),
+    (10, 8),
+    (18, 8),
 ]
 
 # Area labels (non-building labels drawn on the map)
@@ -392,12 +1002,12 @@ DOOR_TO_BUILDING = {
 INTERIORS = {
     "the Blacksmith": {
         "map": [
-            [8,8,8,8,8,8,8,8],
-            [8,7,9,7,7,9,7,8],
-            [8,7,7,7,7,7,7,8],
-            [8,9,7,7,7,7,9,8],
-            [8,7,7,7,7,7,7,8],
-            [8,7,7,4,7,7,7,8],
+            [8, 8, 8, 8, 8, 8, 8, 8],
+            [8, 7, 9, 7, 7, 9, 7, 8],
+            [8, 7, 7, 7, 7, 7, 7, 8],
+            [8, 9, 7, 7, 7, 7, 9, 8],
+            [8, 7, 7, 7, 7, 7, 7, 8],
+            [8, 7, 7, 4, 7, 7, 7, 8],
         ],
         "player_start": (3, 4),
         "exit_tile": (3, 5),
@@ -410,12 +1020,12 @@ INTERIORS = {
     },
     "the Tavern": {
         "map": [
-            [8,8,8,8,8,8,8,8],
-            [8,9,9,7,7,7,9,8],
-            [8,7,7,7,7,7,7,8],
-            [8,7,7,9,9,7,7,8],
-            [8,7,7,7,7,7,7,8],
-            [8,7,7,7,4,7,7,8],
+            [8, 8, 8, 8, 8, 8, 8, 8],
+            [8, 9, 9, 7, 7, 7, 9, 8],
+            [8, 7, 7, 7, 7, 7, 7, 8],
+            [8, 7, 7, 9, 9, 7, 7, 8],
+            [8, 7, 7, 7, 7, 7, 7, 8],
+            [8, 7, 7, 7, 4, 7, 7, 8],
         ],
         "player_start": (4, 4),
         "exit_tile": (4, 5),
@@ -428,12 +1038,12 @@ INTERIORS = {
     },
     "the Apothecary": {
         "map": [
-            [8,8,8,8,8,8,8,8],
-            [8,9,7,7,7,9,9,8],
-            [8,7,7,7,7,7,7,8],
-            [8,7,9,7,7,7,7,8],
-            [8,7,7,7,7,7,7,8],
-            [8,7,4,7,7,7,7,8],
+            [8, 8, 8, 8, 8, 8, 8, 8],
+            [8, 9, 7, 7, 7, 9, 9, 8],
+            [8, 7, 7, 7, 7, 7, 7, 8],
+            [8, 7, 9, 7, 7, 7, 7, 8],
+            [8, 7, 7, 7, 7, 7, 7, 8],
+            [8, 7, 4, 7, 7, 7, 7, 8],
         ],
         "player_start": (2, 4),
         "exit_tile": (2, 5),
@@ -446,12 +1056,12 @@ INTERIORS = {
     },
     "Town Hall": {
         "map": [
-            [8,8,8,8,8,8,8,8],
-            [8,7,7,9,7,7,7,8],
-            [8,7,7,7,7,7,7,8],
-            [8,9,7,7,7,9,7,8],
-            [8,7,7,7,7,7,7,8],
-            [8,7,7,4,7,7,7,8],
+            [8, 8, 8, 8, 8, 8, 8, 8],
+            [8, 7, 7, 9, 7, 7, 7, 8],
+            [8, 7, 7, 7, 7, 7, 7, 8],
+            [8, 9, 7, 7, 7, 9, 7, 8],
+            [8, 7, 7, 7, 7, 7, 7, 8],
+            [8, 7, 7, 4, 7, 7, 7, 8],
         ],
         "player_start": (3, 4),
         "exit_tile": (3, 5),
@@ -464,12 +1074,12 @@ INTERIORS = {
     },
     "the Library": {
         "map": [
-            [8,8,8,8,8,8,8,8],
-            [8,9,7,9,7,9,7,8],
-            [8,7,7,7,7,7,7,8],
-            [8,9,7,9,7,7,7,8],
-            [8,7,7,7,7,7,7,8],
-            [8,7,7,7,4,7,7,8],
+            [8, 8, 8, 8, 8, 8, 8, 8],
+            [8, 9, 7, 9, 7, 9, 7, 8],
+            [8, 7, 7, 7, 7, 7, 7, 8],
+            [8, 9, 7, 9, 7, 7, 7, 8],
+            [8, 7, 7, 7, 7, 7, 7, 8],
+            [8, 7, 7, 7, 4, 7, 7, 8],
         ],
         "player_start": (4, 4),
         "exit_tile": (4, 5),
@@ -484,16 +1094,33 @@ INTERIORS = {
 
 # Visual styles for building interiors (floor tint, accent color, furniture style)
 INTERIOR_STYLES = {
-    "the Blacksmith":    {"floor": (130, 100, 60), "accent": (200, 100, 30), "style": "forge"},
-    "the Tavern":        {"floor": (120, 90, 55),  "accent": (160, 120, 50), "style": "tavern"},
-    "the Apothecary":    {"floor": (110, 115, 90), "accent": (80, 160, 100), "style": "potions"},
-    "Town Hall":         {"floor": (140, 120, 80), "accent": (180, 160, 100),"style": "office"},
-    "the Library":       {"floor": (125, 105, 75), "accent": (140, 80, 50),  "style": "books"},
+    "the Blacksmith": {
+        "floor": (130, 100, 60),
+        "accent": (200, 100, 30),
+        "style": "forge",
+    },
+    "the Tavern": {"floor": (120, 90, 55), "accent": (160, 120, 50), "style": "tavern"},
+    "the Apothecary": {
+        "floor": (110, 115, 90),
+        "accent": (80, 160, 100),
+        "style": "potions",
+    },
+    "Town Hall": {
+        "floor": (140, 120, 80),
+        "accent": (180, 160, 100),
+        "style": "office",
+    },
+    "the Library": {"floor": (125, 105, 75), "accent": (140, 80, 50), "style": "books"},
 }
 
 NPC_COLORS = [
-    (200, 60, 200), (60, 160, 220), (220, 180, 40),
-    (60, 200, 100), (220, 120, 60), (180, 60, 60), (100, 200, 200),
+    (200, 60, 200),
+    (60, 160, 220),
+    (220, 180, 40),
+    (60, 200, 100),
+    (220, 120, 60),
+    (180, 60, 60),
+    (100, 200, 200),
 ]
 
 # Outdoor wandering positions NPCs can appear at (tile coords, area name)
@@ -521,6 +1148,7 @@ OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 _ollama_client = ollama.Client(host=OLLAMA_HOST)
 print(f"Connecting to Ollama at: {OLLAMA_HOST}")
 
+
 def _pick_model():
     """Use llama3.1 if available, fall back to qwen3.5."""
     try:
@@ -533,8 +1161,10 @@ def _pick_model():
         pass
     return "qwen3.5:0.8b"
 
+
 OLLAMA_MODEL = _pick_model()
 print(f"Using LLM model: {OLLAMA_MODEL}")
+
 
 def llm_chat(system_prompt, user_prompt):
     """Call ollama synchronously and return the response text."""
@@ -550,6 +1180,7 @@ def llm_chat(system_prompt, user_prompt):
         return resp["message"]["content"].strip()
     except Exception as e:
         return f"(LLM unavailable: {e})"
+
 
 # Async wrapper so the game doesn't freeze
 _llm_result = {}
@@ -567,20 +1198,25 @@ FALLBACK_LINES = [
     "Please, find whoever is doing this!",
 ]
 
+
 def llm_chat_async(key, system_prompt, user_prompt):
     """Fire off an LLM call in a background thread. Poll _llm_result[key]."""
     import time as _time
+
     def _run():
         result = llm_chat(system_prompt, user_prompt)
         with _llm_lock:
             _llm_result[key] = result
+
     with _llm_lock:
         _llm_result[key] = None  # None means in-progress
         _llm_start_time[key] = _time.time()
     threading.Thread(target=_run, daemon=True).start()
 
+
 def llm_get_result(key):
     import time as _time
+
     with _llm_lock:
         result = _llm_result.get(key, "NOT_STARTED")
         # Check for timeout
@@ -619,26 +1255,28 @@ class Game:
         self.night_clues = {}  # clue data for the current night's murder
         # Interior / search state
         self.current_interior = None  # None = town map, or key into INTERIORS
-        self.evidence_found = []      # persistent list of evidence dicts
-        self.searched_spots = set()   # (area, spot_name) tuples searched this day
-        self.evidence_placements = {} # maps (area, spot_name) -> evidence dict
-        self.active_spots = set()    # which search spots are available this night
+        self.evidence_found = []  # persistent list of evidence dicts
+        self.searched_spots = set()  # (area, spot_name) tuples searched this day
+        self.evidence_placements = {}  # maps (area, spot_name) -> evidence dict
+        self.active_spots = set()  # which search spots are available this night
         self.search_result_text = ""
         self.search_result_timer = 0.0
         self.showing_evidence_log = False
         self.evidence_log_scroll = 0
         # Relationships & memory
-        self.relationships = {}       # (name_a, name_b) -> {"type": str, "detail": str}
-        self.npc_memory = {}          # name -> list of short memory strings
-        self.npc_emotional_state = {} # name -> {"fear": int, "anger": int, "desperation": int}
-        self.suspicion_log = []       # list of {"day": int, "source": str, "text": str}
+        self.relationships = {}  # (name_a, name_b) -> {"type": str, "detail": str}
+        self.npc_memory = {}  # name -> list of short memory strings
+        self.npc_emotional_state = (
+            {}
+        )  # name -> {"fear": int, "anger": int, "desperation": int}
+        self.suspicion_log = []  # list of {"day": int, "source": str, "text": str}
         self.showing_clue_tracker = False
         self.clue_tracker_scroll = 0
         # Fade transition system
         self.fade_alpha = 0
-        self.fade_direction = 0   # 1=fading out, -1=fading in, 0=idle
+        self.fade_direction = 0  # 1=fading out, -1=fading in, 0=idle
         self.fade_callback = None
-        self.fade_speed = 600     # alpha per second
+        self.fade_speed = 600  # alpha per second
         self.loading_dot_timer = 0.0
         # Journal
         self.showing_journal = False
@@ -702,7 +1340,11 @@ class Game:
         self.npc_emotional_state = {}
         for c in self.characters:
             self.npc_memory[c["name"]] = []
-            self.npc_emotional_state[c["name"]] = {"fear": 0, "anger": 0, "desperation": 0}
+            self.npc_emotional_state[c["name"]] = {
+                "fear": 0,
+                "anger": 0,
+                "desperation": 0,
+            }
 
         # Generate relationships
         self._generate_relationships()
@@ -772,11 +1414,17 @@ class Game:
 
                 template = random.choice(TEMPLATES[rtype])
                 detail = template.format(
-                    a=a["name"], b=b["name"],
-                    a_home=a_home, b_home=b_home,
-                    a_town=a["hometown"], b_town=b["hometown"],
+                    a=a["name"],
+                    b=b["name"],
+                    a_home=a_home,
+                    b_home=b_home,
+                    a_town=a["hometown"],
+                    b_town=b["hometown"],
                 )
-                self.relationships[(a["name"], b["name"])] = {"type": rtype, "detail": detail}
+                self.relationships[(a["name"], b["name"])] = {
+                    "type": rtype,
+                    "detail": detail,
+                }
 
     def get_relationship(self, name_a, name_b):
         """Look up relationship between two NPCs (checks both orderings)."""
@@ -799,10 +1447,18 @@ class Game:
         self.current_interior = None
 
         if self.night_num == 1:
-            self.storyteller_text = "Night falls on the town...\nA villain lurks among you."
+            self.storyteller_text = (
+                "Night falls on the town...\nA villain lurks among you."
+            )
             self.killed_tonight = None
-            self.history.append({"type": "night", "day": 1, "victim": None,
-                                  "description": "The first night fell. No one was killed, but there are rumors of a murderer among the townspeople."})
+            self.history.append(
+                {
+                    "type": "night",
+                    "day": 1,
+                    "victim": None,
+                    "description": "The first night fell. No one was killed, but there are rumors of a murderer among the townspeople.",
+                }
+            )
         else:
             # Villain kills someone
             innocents = [c for c in self.alive if not c["is_villain"]]
@@ -819,20 +1475,25 @@ class Game:
                     f"Night {self.night_num}...\n"
                     f"{victim['name']} was found {self.night_clues['discovery']}!"
                 )
-                self.history.append({
-                    "type": "night", "day": self.night_num,
-                    "victim": victim["name"],
-                    "description": (
-                        f"On the morning of day {self.night_num}, "
-                        f"{victim['name']} was found {self.night_clues['discovery']}. "
-                        f"{self.night_clues['scene_evidence']}"
-                    ),
-                })
+                self.history.append(
+                    {
+                        "type": "night",
+                        "day": self.night_num,
+                        "victim": victim["name"],
+                        "description": (
+                            f"On the morning of day {self.night_num}, "
+                            f"{victim['name']} was found {self.night_clues['discovery']}. "
+                            f"{self.night_clues['scene_evidence']}"
+                        ),
+                    }
+                )
                 # Record murder memory and escalate emotions for all survivors
                 for npc in self.alive:
                     name = npc["name"]
                     if name in self.npc_memory:
-                        self.npc_memory[name].append(f"Day {self.night_num}: {victim['name']} was murdered.")
+                        self.npc_memory[name].append(
+                            f"Day {self.night_num}: {victim['name']} was murdered."
+                        )
                     if name in self.npc_emotional_state:
                         self.npc_emotional_state[name]["fear"] += 1
                         self.npc_emotional_state[name]["anger"] += 1
@@ -862,9 +1523,21 @@ class Game:
         # How they were killed
         cause_of_death = [
             ("a deep stab wound in the chest", "a bloodied knife", "a blade"),
-            ("blunt force trauma to the head", "a heavy iron hammer from the Blacksmith", "something heavy"),
-            ("strangulation marks around the neck", "torn fabric under their fingernails", "bare hands"),
-            ("signs of poisoning — dark veins and pale skin", "a broken vial with purple residue from the Apothecary", "poison"),
+            (
+                "blunt force trauma to the head",
+                "a heavy iron hammer from the Blacksmith",
+                "something heavy",
+            ),
+            (
+                "strangulation marks around the neck",
+                "torn fabric under their fingernails",
+                "bare hands",
+            ),
+            (
+                "signs of poisoning — dark veins and pale skin",
+                "a broken vial with purple residue from the Apothecary",
+                "poison",
+            ),
             ("a crossbow bolt in the back", "a rare iron-tipped bolt", "a crossbow"),
         ]
         time_of_death = [
@@ -878,22 +1551,26 @@ class Game:
         tod = random.choice(time_of_death)
 
         # Physical evidence at the scene
-        scene_evidence = random.choice([
-            f"Boot prints in the mud led away from {loc[1]} toward the main road.",
-            f"A torn piece of dark cloth was snagged on a nail outside {loc[1]}.",
-            f"There were signs of a struggle — crates toppled and scratch marks on the walls of {loc[1]}.",
-            f"A strange symbol was scratched into the dirt near the body outside {loc[1]}.",
-            f"The victim's belongings were scattered across the floor of {loc[1]}, but nothing was stolen.",
-        ])
+        scene_evidence = random.choice(
+            [
+                f"Boot prints in the mud led away from {loc[1]} toward the main road.",
+                f"A torn piece of dark cloth was snagged on a nail outside {loc[1]}.",
+                f"There were signs of a struggle — crates toppled and scratch marks on the walls of {loc[1]}.",
+                f"A strange symbol was scratched into the dirt near the body outside {loc[1]}.",
+                f"The victim's belongings were scattered across the floor of {loc[1]}, but nothing was stolen.",
+            ]
+        )
 
         # Something that subtly ties to the villain
-        villain_trace = random.choice([
-            f"a faint smell of forge smoke lingering near {loc[1]}, far from the Blacksmith",
-            f"a coin from {villain['hometown']} found clutched in the victim's hand",
-            f"fresh scratches on the door of {loc[1]}, as if someone forced it open in a hurry",
-            f"a button torn from a coat lying in the dirt near {loc[1]}",
-            f"traces of ash near the body, as if someone burned something at {loc[1]}",
-        ])
+        villain_trace = random.choice(
+            [
+                f"a faint smell of forge smoke lingering near {loc[1]}, far from the Blacksmith",
+                f"a coin from {villain['hometown']} found clutched in the victim's hand",
+                f"fresh scratches on the door of {loc[1]}, as if someone forced it open in a hurry",
+                f"a button torn from a coat lying in the dirt near {loc[1]}",
+                f"traces of ash near the body, as if someone burned something at {loc[1]}",
+            ]
+        )
 
         # Assign each surviving innocent a specific clue
         alive_innocents = [c for c in self.alive if not c["is_villain"]]
@@ -922,19 +1599,25 @@ class Game:
             if i < len(witness_pool):
                 npc_clues[npc["name"]] = witness_pool[i]
             else:
-                npc_clues[npc["name"]] = f"I was asleep all night at {npc_building(npc)}, but I'm devastated about {victim['name']}. We have to find who did this."
+                npc_clues[npc["name"]] = (
+                    f"I was asleep all night at {npc_building(npc)}, but I'm devastated about {victim['name']}. We have to find who did this."
+                )
 
         # Villain's alibi (will have holes other NPCs can contradict)
-        villain_claimed_location = random.choice([
-            n for n in BUILDING_NAMES if n != loc[1]
-        ]) if len(BUILDING_NAMES) > 1 else "my home"
-        villain_alibi = random.choice([
-            f"I was asleep at {npc_building(villain)} all night. I didn't hear a thing until the commotion this morning.",
-            f"I was up late reading at {npc_building(villain)} and never stepped outside. This is terrible news.",
-            f"I spent the evening at {villain_claimed_location} and went straight home. I had no idea anything happened until now.",
-            f"I was tending to some work at {npc_building(villain)} all night. You can check — my candle was burning late.",
-            f"I took a walk to clear my head last night, but I went toward the Church, nowhere near {loc[1]}. I swear it.",
-        ])
+        villain_claimed_location = (
+            random.choice([n for n in BUILDING_NAMES if n != loc[1]])
+            if len(BUILDING_NAMES) > 1
+            else "my home"
+        )
+        villain_alibi = random.choice(
+            [
+                f"I was asleep at {npc_building(villain)} all night. I didn't hear a thing until the commotion this morning.",
+                f"I was up late reading at {npc_building(villain)} and never stepped outside. This is terrible news.",
+                f"I spent the evening at {villain_claimed_location} and went straight home. I had no idea anything happened until now.",
+                f"I was tending to some work at {npc_building(villain)} all night. You can check — my candle was burning late.",
+                f"I took a walk to clear my head last night, but I went toward the Church, nowhere near {loc[1]}. I swear it.",
+            ]
+        )
 
         npc_clues[villain["name"]] = villain_alibi
 
@@ -953,7 +1636,11 @@ class Game:
                 "day": self.night_num,
             },
             {
-                "name": villain_trace.split(",")[0] if "," in villain_trace else villain_trace[:50],
+                "name": (
+                    villain_trace.split(",")[0]
+                    if "," in villain_trace
+                    else villain_trace[:50]
+                ),
                 "description": f"You discovered {villain_trace}. This seems out of place and could point to the killer.",
                 "type": "trace",
                 "day": self.night_num,
@@ -961,12 +1648,16 @@ class Game:
         ]
         # 50% chance of a red herring
         if random.random() > 0.5:
-            physical_evidence.append({
-                "name": random.choice(["a worn journal page", "a strange coin", "a crumpled note"]),
-                "description": "This seems interesting but may not be related to the murder.",
-                "type": "herring",
-                "day": self.night_num,
-            })
+            physical_evidence.append(
+                {
+                    "name": random.choice(
+                        ["a worn journal page", "a strange coin", "a crumpled note"]
+                    ),
+                    "description": "This seems interesting but may not be related to the murder.",
+                    "type": "herring",
+                    "day": self.night_num,
+                }
+            )
 
         return {
             "discovery": f"dead {loc[0]}, with {weapon[0]}",
@@ -1004,7 +1695,7 @@ class Game:
     def _place_npcs_for_day(self):
         """Randomly place NPCs around town — some outside, some inside buildings.
         No two NPCs can occupy the same tile."""
-        clues = getattr(self, 'night_clues', {})
+        clues = getattr(self, "night_clues", {})
         murder_loc = clues.get("murder_location", None)
         interior_buildings = [b for b in INTERIORS.keys()]
         outdoor_spots = list(NPC_OUTDOOR_SPOTS)
@@ -1037,7 +1728,11 @@ class Game:
 
         for npc in self.alive:
             npc_idx = self.characters.index(npc)
-            home = BUILDING_NAMES[npc_idx] if npc_idx < len(BUILDING_NAMES) else "their home"
+            home = (
+                BUILDING_NAMES[npc_idx]
+                if npc_idx < len(BUILDING_NAMES)
+                else "their home"
+            )
 
             if npc["is_villain"] and murder_loc and self.night_num > 1:
                 # Villain: place near murder location
@@ -1046,8 +1741,17 @@ class Game:
                     interior = INTERIORS[murder_loc]
                     for r, row in enumerate(interior["map"]):
                         for c, tile in enumerate(row):
-                            if tile == 7 and not is_occupied("interior", murder_loc, c, r):
-                                place_npc(npc, "interior", murder_loc, c, r, f"inside {murder_loc}")
+                            if tile == 7 and not is_occupied(
+                                "interior", murder_loc, c, r
+                            ):
+                                place_npc(
+                                    npc,
+                                    "interior",
+                                    murder_loc,
+                                    c,
+                                    r,
+                                    f"inside {murder_loc}",
+                                )
                                 placed = True
                                 break
                         if placed:
@@ -1057,7 +1761,9 @@ class Game:
                         if bname == murder_loc:
                             tx, ty = door_pos[0], door_pos[1] + 1
                             if not is_occupied("outside", None, tx, ty):
-                                place_npc(npc, "outside", None, tx, ty, f"near {murder_loc}")
+                                place_npc(
+                                    npc, "outside", None, tx, ty, f"near {murder_loc}"
+                                )
                                 placed = True
                                 break
                 if not placed:
@@ -1065,12 +1771,16 @@ class Game:
                         pos, area = outdoor_spots[outdoor_idx]
                         outdoor_idx += 1
                         if not is_occupied("outside", None, pos[0], pos[1]):
-                            place_npc(npc, "outside", None, pos[0], pos[1], f"at {area}")
+                            place_npc(
+                                npc, "outside", None, pos[0], pos[1], f"at {area}"
+                            )
                             placed = True
                             break
                 if not placed:
                     spawn = NPC_SPAWNS[npc_idx]
-                    place_npc(npc, "outside", None, spawn[0], spawn[1], f"outside {home}")
+                    place_npc(
+                        npc, "outside", None, spawn[0], spawn[1], f"outside {home}"
+                    )
             else:
                 # Innocent NPCs: randomly place at home, inside a building, or wandering
                 placed = False
@@ -1078,9 +1788,12 @@ class Game:
                 if roll < 0.35 and interior_buildings:
                     bname = random.choice(interior_buildings)
                     interior = INTERIORS[bname]
-                    floor_tiles = [(c, r) for r, row in enumerate(interior["map"])
-                                   for c, tile in enumerate(row)
-                                   if tile == 7 and not is_occupied("interior", bname, c, r)]
+                    floor_tiles = [
+                        (c, r)
+                        for r, row in enumerate(interior["map"])
+                        for c, tile in enumerate(row)
+                        if tile == 7 and not is_occupied("interior", bname, c, r)
+                    ]
                     if floor_tiles:
                         ix, iy = random.choice(floor_tiles)
                         place_npc(npc, "interior", bname, ix, iy, f"inside {bname}")
@@ -1090,24 +1803,37 @@ class Game:
                         pos, area = outdoor_spots[outdoor_idx]
                         outdoor_idx += 1
                         if not is_occupied("outside", None, pos[0], pos[1]):
-                            place_npc(npc, "outside", None, pos[0], pos[1], f"at {area}")
+                            place_npc(
+                                npc, "outside", None, pos[0], pos[1], f"at {area}"
+                            )
                             placed = True
                             break
                 if not placed:
                     spawn = NPC_SPAWNS[npc_idx]
                     if not is_occupied("outside", None, spawn[0], spawn[1]):
-                        place_npc(npc, "outside", None, spawn[0], spawn[1], f"outside {home}")
+                        place_npc(
+                            npc, "outside", None, spawn[0], spawn[1], f"outside {home}"
+                        )
                     else:
                         # Home is taken, find any free outdoor spot
                         while outdoor_idx < len(outdoor_spots):
                             pos, area = outdoor_spots[outdoor_idx]
                             outdoor_idx += 1
                             if not is_occupied("outside", None, pos[0], pos[1]):
-                                place_npc(npc, "outside", None, pos[0], pos[1], f"at {area}")
+                                place_npc(
+                                    npc, "outside", None, pos[0], pos[1], f"at {area}"
+                                )
                                 break
                         else:
                             # Last resort: offset from home
-                            place_npc(npc, "outside", None, spawn[0] + 1, spawn[1], f"outside {home}")
+                            place_npc(
+                                npc,
+                                "outside",
+                                None,
+                                spawn[0] + 1,
+                                spawn[1],
+                                f"outside {home}",
+                            )
 
     def _place_evidence(self):
         """Pick a random subset of search spots to be active, then assign evidence."""
@@ -1147,17 +1873,21 @@ class Game:
         alive_names = [c["name"] for c in self.alive]
         dead_names = [c["name"] for c in self.characters if c not in self.alive]
         history_context = self._build_history_context()
-        clues = getattr(self, 'night_clues', {})
+        clues = getattr(self, "night_clues", {})
 
         for npc in self.alive:
             is_villain = npc["is_villain"]
             npc_idx = self.characters.index(npc)
-            npc_home = BUILDING_NAMES[npc_idx] if npc_idx < len(BUILDING_NAMES) else "their home"
+            npc_home = (
+                BUILDING_NAMES[npc_idx]
+                if npc_idx < len(BUILDING_NAMES)
+                else "their home"
+            )
 
             # Base identity
             npc_location = npc.get("location_desc", f"outside {npc_home}")
             system = (
-                f"You are {npc['name']}, a resident of a small town in a murder mystery. "
+                f"You are {npc['name']}, a resident of a small town in a QUANTUM Blood. "
                 f"You live and work at {npc_home}. "
                 f"Right now you are {npc_location}. "
                 f"Personality: {npc['personality']}. Originally from: {npc['hometown']}. "
@@ -1180,7 +1910,9 @@ class Game:
                     continue
                 rel = self.get_relationship(npc["name"], other["name"])
                 if rel:
-                    rel_parts.append(f"{rel['type'].replace('_', ' ')} with {other['name']}")
+                    rel_parts.append(
+                        f"{rel['type'].replace('_', ' ')} with {other['name']}"
+                    )
             if rel_parts:
                 system += f"Your relationships: {'; '.join(rel_parts)}. "
 
@@ -1208,7 +1940,11 @@ class Game:
                     system += "You are nervous and on edge. "
 
             # Accusation awareness
-            past_accusations = [e for e in self.history if e["type"] == "accusation" and not e["correct"]]
+            past_accusations = [
+                e
+                for e in self.history
+                if e["type"] == "accusation" and not e["correct"]
+            ]
             if past_accusations:
                 if is_villain:
                     names = [e["accused"] for e in past_accusations]
@@ -1231,7 +1967,9 @@ class Game:
                 else:
                     system += (
                         "No one has been killed yet, but rumors of danger have everyone on edge. "
-                        "Share something about your daily life at " + npc_home + ", mention your neighbors, "
+                        "Share something about your daily life at "
+                        + npc_home
+                        + ", mention your neighbors, "
                         "or express worry about the rumors. Be specific — mention a location or person by name. "
                         "Keep responses to 2-3 sentences."
                     )
@@ -1257,7 +1995,9 @@ class Game:
                     other_locations = []
                     for other in self.alive:
                         if other["name"] != npc["name"]:
-                            other_locations.append(f"{other['name']} is {other.get('location_desc', 'in town')}")
+                            other_locations.append(
+                                f"{other['name']} is {other.get('location_desc', 'in town')}"
+                            )
                     motive = clues.get("motive_hint", "")
                     motive_line = f"Motive to consider: {motive} " if motive else ""
                     system += (
@@ -1291,30 +2031,40 @@ class Game:
                 f"You accused {character['name']}...\n"
                 f"They WERE the villain! The town is saved!"
             )
-            self.history.append({
-                "type": "accusation", "day": self.night_num,
-                "accused": character["name"], "correct": True,
-                "description": (
-                    f"On day {self.night_num}, the detective correctly identified "
-                    f"{character['name']} as the villain. The town is saved."
-                ),
-            })
+            self.history.append(
+                {
+                    "type": "accusation",
+                    "day": self.night_num,
+                    "accused": character["name"],
+                    "correct": True,
+                    "description": (
+                        f"On day {self.night_num}, the detective correctly identified "
+                        f"{character['name']} as the villain. The town is saved."
+                    ),
+                }
+            )
         else:
             self.wrong_guesses += 1
             self.accuse_result_correct = False
-            self.history.append({
-                "type": "accusation", "day": self.night_num,
-                "accused": character["name"], "correct": False,
-                "description": (
-                    f"On day {self.night_num}, the detective accused {character['name']}, "
-                    f"but they were innocent. The town was shocked and the real killer is still at large."
-                ),
-            })
+            self.history.append(
+                {
+                    "type": "accusation",
+                    "day": self.night_num,
+                    "accused": character["name"],
+                    "correct": False,
+                    "description": (
+                        f"On day {self.night_num}, the detective accused {character['name']}, "
+                        f"but they were innocent. The town was shocked and the real killer is still at large."
+                    ),
+                }
+            )
             # Record accusation in NPC memories
             for npc in self.alive:
                 name = npc["name"]
                 if name in self.npc_memory:
-                    self.npc_memory[name].append(f"Day {self.night_num}: Detective wrongly accused {character['name']}.")
+                    self.npc_memory[name].append(
+                        f"Day {self.night_num}: Detective wrongly accused {character['name']}."
+                    )
             # Villain becomes more desperate
             villain_npc = next((c for c in self.alive if c["is_villain"]), None)
             if villain_npc and villain_npc["name"] in self.npc_emotional_state:
@@ -1346,17 +2096,21 @@ class Game:
         key = f"npc_{npc['name']}_{self.night_num}"
         result = llm_get_result(key)
         if result and result != "NOT_STARTED" and result is not None:
-            text = re.sub(r'<think>.*?</think>', '', result, flags=re.DOTALL).strip()
+            text = re.sub(r"<think>.*?</think>", "", result, flags=re.DOTALL).strip()
             self.dialogue_text = text if text else result.strip()
             self.dialogue_loading = False
             # Record memory and suspicion log
             if npc["name"] in self.npc_memory:
-                self.npc_memory[npc["name"]].append(f"Day {self.night_num}: Spoke to the detective.")
-            self.suspicion_log.append({
-                "day": self.night_num,
-                "source": npc["name"],
-                "text": self.dialogue_text[:150],
-            })
+                self.npc_memory[npc["name"]].append(
+                    f"Day {self.night_num}: Spoke to the detective."
+                )
+            self.suspicion_log.append(
+                {
+                    "day": self.night_num,
+                    "source": npc["name"],
+                    "text": self.dialogue_text[:150],
+                }
+            )
         else:
             # Still generating, show loading
             self.dialogue_text = ""
@@ -1386,7 +2140,9 @@ class Game:
                     return False
 
                 if key in self.searched_spots:
-                    self.show_search_result(f"You've already searched {spot['name']} today.")
+                    self.show_search_result(
+                        f"You've already searched {spot['name']} today."
+                    )
                     return True
 
                 self.searched_spots.add(key)
@@ -1396,21 +2152,28 @@ class Game:
                     ev = self.evidence_placements[key]
                     self.evidence_found.append(ev)
                     self.show_search_result(f"EVIDENCE FOUND: {ev['description']}")
-                    self.history.append({
-                        "type": "evidence", "day": self.night_num,
-                        "description": f"The detective found {ev['name']} at {spot['name']}.",
-                    })
-                    self.suspicion_log.append({
-                        "day": self.night_num,
-                        "source": "Investigation",
-                        "text": f"Found {ev['name']} at {spot['name']}.",
-                    })
+                    self.history.append(
+                        {
+                            "type": "evidence",
+                            "day": self.night_num,
+                            "description": f"The detective found {ev['name']} at {spot['name']}.",
+                        }
+                    )
+                    self.suspicion_log.append(
+                        {
+                            "day": self.night_num,
+                            "source": "Investigation",
+                            "text": f"Found {ev['name']} at {spot['name']}.",
+                        }
+                    )
                 else:
-                    flavor = random.choice([
-                        f"You search {spot['name']} carefully but find nothing useful.",
-                        f"Nothing of interest at {spot['name']}.",
-                        f"You examine {spot['name']} — just dust and shadows.",
-                    ])
+                    flavor = random.choice(
+                        [
+                            f"You search {spot['name']} carefully but find nothing useful.",
+                            f"Nothing of interest at {spot['name']}.",
+                            f"You examine {spot['name']} — just dust and shadows.",
+                        ]
+                    )
                     self.show_search_result(flavor)
                 return True
         return False
@@ -1489,6 +2252,7 @@ class Game:
 game = Game()
 music_start_menu()
 
+
 # ── Helpers ─────────────────────────────────────────────────────
 def is_wall(px, py, w, h):
     if game.current_interior:
@@ -1519,16 +2283,18 @@ def is_wall(px, py, w, h):
                     return True
         return False
 
+
 def player_near(npc):
     pcx = game.player_x + (TILE_SIZE - 4) / 2
     pcy = game.player_y + (TILE_SIZE - 4) / 2
     ncx = npc["x"] + (TILE_SIZE - 4) / 2
     ncy = npc["y"] + (TILE_SIZE - 4) / 2
-    return ((pcx - ncx)**2 + (pcy - ncy)**2) ** 0.5 < INTERACT_DIST
+    return ((pcx - ncx) ** 2 + (pcy - ncy) ** 2) ** 0.5 < INTERACT_DIST
+
 
 def draw_text_wrapped(surface, text, font, color, rect, line_spacing=4):
     """Draw word-wrapped text inside a rect."""
-    words = text.split(' ')
+    words = text.split(" ")
     lines = []
     current = ""
     for word in words:
@@ -1550,21 +2316,26 @@ def draw_text_wrapped(surface, text, font, color, rect, line_spacing=4):
         surface.blit(surf, (rect.x + 8, y))
         y += font.get_height() + line_spacing
 
+
 def blit_clamped(surface, surf, x, y):
     """Blit a surface clamped within screen bounds."""
     x = max(4, min(x, SCREEN_W - surf.get_width() - 4))
     y = max(48, min(y, SCREEN_H - surf.get_height() - 4))
     surface.blit(surf, (x, y))
 
+
 def draw_centered_text(surface, text, font, color, y):
     surf = font.render(text, True, color)
     surface.blit(surf, (SCREEN_W // 2 - surf.get_width() // 2, y))
 
-def draw_centered_text_wrapped(surface, text, font, color, y, max_width=None, line_spacing=8):
+
+def draw_centered_text_wrapped(
+    surface, text, font, color, y, max_width=None, line_spacing=8
+):
     """Draw word-wrapped, centered text. Returns the y position after the last line."""
     if max_width is None:
         max_width = SCREEN_W - 80
-    words = text.split(' ')
+    words = text.split(" ")
     lines = []
     current = ""
     for word in words:
@@ -1626,7 +2397,11 @@ while running:
             if game.state == "MENU" and event.key == pygame.K_s and not game.fading:
                 game.state = "SETTINGS"
 
-            if game.state == "MENU" and event.key == pygame.K_RETURN and not game.fading:
+            if (
+                game.state == "MENU"
+                and event.key == pygame.K_RETURN
+                and not game.fading
+            ):
                 game.start_fade(lambda: game.new_game())
 
             # Night — skip with any key after timer
@@ -1650,11 +2425,17 @@ while running:
                     elif game.showing_evidence_log:
                         game.showing_evidence_log = False
                     # Try exit interior
-                    elif game.current_interior and game.is_on_exit() and not game.fading:
+                    elif (
+                        game.current_interior and game.is_on_exit() and not game.fading
+                    ):
                         sfx_door.play()
                         game.start_fade(lambda: game.try_exit_interior())
                     # Try enter building
-                    elif not game.current_interior and game.is_on_door() and not game.fading:
+                    elif (
+                        not game.current_interior
+                        and game.is_on_door()
+                        and not game.fading
+                    ):
                         sfx_door.play()
                         game.start_fade(lambda: game.try_enter_building())
                     # Try talk to NPC or search (works in town and interiors)
@@ -1663,7 +2444,11 @@ while running:
                         for npc in game.alive:
                             # Only interact with NPCs in the same map
                             if game.current_interior:
-                                if npc.get("location_type") != "interior" or npc.get("location_building") != game.current_interior:
+                                if (
+                                    npc.get("location_type") != "interior"
+                                    or npc.get("location_building")
+                                    != game.current_interior
+                                ):
                                     continue
                             else:
                                 if npc.get("location_type") == "interior":
@@ -1696,7 +2481,12 @@ while running:
                     game.showing_clue_tracker = False
                     game.journal_page = 0
 
-                if event.key == pygame.K_TAB and not game.showing_evidence_log and not game.showing_clue_tracker and not game.showing_journal:
+                if (
+                    event.key == pygame.K_TAB
+                    and not game.showing_evidence_log
+                    and not game.showing_clue_tracker
+                    and not game.showing_journal
+                ):
                     sfx_pop.play()
                     game.open_accuse()
 
@@ -1713,13 +2503,21 @@ while running:
                         game.clue_tracker_scroll += 1
                 if game.showing_journal:
                     if event.key == pygame.K_LEFT:
-                        game.journal_page = (game.journal_page - 1) % len(game.characters)
+                        game.journal_page = (game.journal_page - 1) % len(
+                            game.characters
+                        )
                     if event.key == pygame.K_RIGHT:
-                        game.journal_page = (game.journal_page + 1) % len(game.characters)
+                        game.journal_page = (game.journal_page + 1) % len(
+                            game.characters
+                        )
 
             # Accuse menu
             elif game.state == "ACCUSE":
-                suspects = [c for c in game.alive if not (game.killed_tonight and c is game.killed_tonight)]
+                suspects = [
+                    c
+                    for c in game.alive
+                    if not (game.killed_tonight and c is game.killed_tonight)
+                ]
                 if event.key == pygame.K_UP:
                     game.accuse_selection = (game.accuse_selection - 1) % len(suspects)
                 if event.key == pygame.K_DOWN:
@@ -1730,7 +2528,9 @@ while running:
 
             # Accuse result — wrong guess, continue to next night
             elif game.state == "ACCUSE_RESULT":
-                if (event.key == pygame.K_RETURN or event.key == pygame.K_SPACE) and not game.fading:
+                if (
+                    event.key == pygame.K_RETURN or event.key == pygame.K_SPACE
+                ) and not game.fading:
                     game.start_fade(lambda: game.start_night())
 
             # Settings
@@ -1742,18 +2542,24 @@ while running:
                 elif event.key in (pygame.K_LEFT, pygame.K_RIGHT):
                     delta = 0.1 if event.key == pygame.K_RIGHT else -0.1
                     if game.settings_selection == 0:
-                        master_volume = round(max(0.0, min(1.0, master_volume + delta)), 1)
+                        master_volume = round(
+                            max(0.0, min(1.0, master_volume + delta)), 1
+                        )
                         apply_master_volume()
                     else:
-                        music_volume = round(max(0.0, min(1.0, music_volume + delta)), 1)
+                        music_volume = round(
+                            max(0.0, min(1.0, music_volume + delta)), 1
+                        )
                         apply_music_volume()
 
             # Win/Lose
             elif game.state in ("WIN", "LOSE"):
                 if event.key == pygame.K_RETURN and not game.fading:
+
                     def _to_menu():
                         game.state = "MENU"
                         music_start_menu()
+
                     game.start_fade(_to_menu)
 
     # ── Update ──────────────────────────────────────────────────
@@ -1778,25 +2584,42 @@ while running:
     if game.state == "NIGHT":
         game.night_timer -= dt
 
-    if game.state == "DAY" and not game.showing_journal and not game.showing_evidence_log and not game.showing_clue_tracker:
+    if (
+        game.state == "DAY"
+        and not game.showing_journal
+        and not game.showing_evidence_log
+        and not game.showing_clue_tracker
+    ):
         # Movement
         keys = pygame.key.get_pressed()
         dx, dy = 0, 0
-        if keys[pygame.K_w] or keys[pygame.K_UP]: dy -= 1
-        if keys[pygame.K_s] or keys[pygame.K_DOWN]: dy += 1
-        if keys[pygame.K_a] or keys[pygame.K_LEFT]: dx -= 1
-        if keys[pygame.K_d] or keys[pygame.K_RIGHT]: dx += 1
+        if keys[pygame.K_w] or keys[pygame.K_UP]:
+            dy -= 1
+        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+            dy += 1
+        if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+            dx -= 1
+        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+            dx += 1
 
         # Update facing direction
         if dx != 0 or dy != 0:
-            if dx == 0 and dy == -1: player_facing = "north"
-            elif dx == 0 and dy == 1: player_facing = "south"
-            elif dx == -1 and dy == 0: player_facing = "west"
-            elif dx == 1 and dy == 0: player_facing = "east"
-            elif dx == 1 and dy == -1: player_facing = "north-east"
-            elif dx == -1 and dy == -1: player_facing = "north-west"
-            elif dx == 1 and dy == 1: player_facing = "south-east"
-            elif dx == -1 and dy == 1: player_facing = "south-west"
+            if dx == 0 and dy == -1:
+                player_facing = "north"
+            elif dx == 0 and dy == 1:
+                player_facing = "south"
+            elif dx == -1 and dy == 0:
+                player_facing = "west"
+            elif dx == 1 and dy == 0:
+                player_facing = "east"
+            elif dx == 1 and dy == -1:
+                player_facing = "north-east"
+            elif dx == -1 and dy == -1:
+                player_facing = "north-west"
+            elif dx == 1 and dy == 1:
+                player_facing = "south-east"
+            elif dx == -1 and dy == 1:
+                player_facing = "south-west"
 
         pw, ph = TILE_SIZE - 4, TILE_SIZE - 4
         speed = 200
@@ -1822,10 +2645,18 @@ while running:
                     pty = int((game.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
                     if game.current_interior:
                         imap = INTERIORS[game.current_interior]["map"]
-                        tile = imap[pty][ptx] if 0 <= pty < len(imap) and 0 <= ptx < len(imap[0]) else 7
+                        tile = (
+                            imap[pty][ptx]
+                            if 0 <= pty < len(imap) and 0 <= ptx < len(imap[0])
+                            else 7
+                        )
                         play_footstep("stone" if tile in (7, 8) else "grass")
                     else:
-                        tile = tilemap[pty][ptx] if 0 <= pty < MAP_H and 0 <= ptx < MAP_W else 0
+                        tile = (
+                            tilemap[pty][ptx]
+                            if 0 <= pty < MAP_H and 0 <= ptx < MAP_W
+                            else 0
+                        )
                         play_footstep("stone" if tile == 2 else "grass")
         else:
             player_walking = False
@@ -1844,7 +2675,9 @@ while running:
             result = llm_get_result(key)
             if result is not None and result != "NOT_STARTED":
                 # Strip <think>...</think> blocks (qwen3.5 outputs these)
-                text = re.sub(r'<think>.*?</think>', '', result, flags=re.DOTALL).strip()
+                text = re.sub(
+                    r"<think>.*?</think>", "", result, flags=re.DOTALL
+                ).strip()
                 if not text:
                     text = result.strip()
                 game.dialogue_text = text
@@ -1860,21 +2693,50 @@ while running:
             menu_bg_timer -= 1.0 / MENU_BG_FPS
             menu_bg_frame_idx = (menu_bg_frame_idx + 1) % len(menu_bg_frames)
         screen.blit(menu_bg_frames[menu_bg_frame_idx], (0, 0))
-        draw_centered_text(screen, "MURDER MYSTERY", font_title, BLOOD_RED, 180)
-        draw_centered_text(screen, "A villain hides among the townspeople.", font_md, (200, 200, 200), 270)
-        draw_centered_text(screen, "Find them before it's too late.", font_md, (200, 200, 200), 310)
-        draw_centered_text(screen, "Press ENTER to begin", font_md, (255, 255, 255), 420)
-        draw_centered_text(screen, "Press S for Settings", font_sm, (180, 180, 180), 460)
-        draw_centered_text(screen, "[WASD] Move  [E] Interact  [B] Journal  [L] Log  [J] Clues  [TAB] Accuse", font_sm, (150, 150, 150), 500)
+        _menu_overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
+        _menu_overlay.fill((0, 0, 0, 140))
+        screen.blit(_menu_overlay, (0, 0))
+        _shadow_surf = font_title.render("QUANTUM Blood", True, (0, 0, 0))
+        screen.blit(
+            _shadow_surf, (SCREEN_W // 2 - _shadow_surf.get_width() // 2 + 3, 183)
+        )
+        draw_centered_text(screen, "QUANTUM Blood", font_title, BLOOD_RED, 180)
+        draw_centered_text(
+            screen,
+            "A villain hides among the townspeople.",
+            font_md,
+            (200, 200, 200),
+            270,
+        )
+        draw_centered_text(
+            screen, "Find them before it's too late.", font_md, (200, 200, 200), 310
+        )
+        draw_centered_text(
+            screen, "Press ENTER to begin", font_md, (255, 255, 255), 420
+        )
+        draw_centered_text(
+            screen, "Press S for Settings", font_sm, (180, 180, 180), 460
+        )
+        draw_centered_text(
+            screen,
+            "[WASD] Move  [E] Interact  [B] Journal  [L] Log  [J] Clues  [TAB] Accuse",
+            font_sm,
+            (150, 150, 150),
+            500,
+        )
 
     elif game.state == "NIGHT":
         screen.fill(NIGHT_OVERLAY)
         cur_y = 200
         for line in game.storyteller_text.split("\n"):
-            cur_y = draw_centered_text_wrapped(screen, line, font_lg, (220, 220, 255), cur_y)
+            cur_y = draw_centered_text_wrapped(
+                screen, line, font_lg, (220, 220, 255), cur_y
+            )
             cur_y += 10  # extra gap between paragraphs
         if game.night_timer <= 0:
-            draw_centered_text(screen, "Press ENTER to continue", font_md, (150, 150, 180), 500)
+            draw_centered_text(
+                screen, "Press ENTER to continue", font_md, (150, 150, 180), 500
+            )
 
     elif game.state in ("DAY", "ACCUSE"):
         pw, ph = TILE_SIZE - 4, TILE_SIZE - 4
@@ -1885,7 +2747,14 @@ while running:
             # ── Draw interior map with visual polish ──
             imap = INTERIORS[game.current_interior]["map"]
             ih, iw = len(imap), len(imap[0])
-            style = INTERIOR_STYLES.get(game.current_interior, {"floor": INTERIOR_FLOOR_COLOR, "accent": (150, 100, 50), "style": "office"})
+            style = INTERIOR_STYLES.get(
+                game.current_interior,
+                {
+                    "floor": INTERIOR_FLOOR_COLOR,
+                    "accent": (150, 100, 50),
+                    "style": "office",
+                },
+            )
             floor_col = style["floor"]
             floor_col_alt = (floor_col[0] - 10, floor_col[1] - 10, floor_col[2] - 10)
             accent_col = style["accent"]
@@ -1897,7 +2766,8 @@ while running:
                     rect = pygame.Rect(
                         col * TILE_SIZE - cam_x,
                         row * TILE_SIZE - cam_y,
-                        TILE_SIZE, TILE_SIZE,
+                        TILE_SIZE,
+                        TILE_SIZE,
                     )
 
                     if tile == 7:  # Floor — wood plank effect
@@ -1905,44 +2775,83 @@ while running:
                         pygame.draw.rect(screen, base, rect)
                         # Plank lines
                         for py in range(0, TILE_SIZE, 12):
-                            pygame.draw.line(screen, (base[0] - 15, base[1] - 15, base[2] - 15),
-                                (rect.x, rect.y + py), (rect.x + TILE_SIZE, rect.y + py), 1)
+                            pygame.draw.line(
+                                screen,
+                                (base[0] - 15, base[1] - 15, base[2] - 15),
+                                (rect.x, rect.y + py),
+                                (rect.x + TILE_SIZE, rect.y + py),
+                                1,
+                            )
                     elif tile == 8:  # Wall — with baseboard and trim
                         pygame.draw.rect(screen, INTERIOR_WALL_COLOR, rect)
                         # Lighter trim at top
-                        pygame.draw.rect(screen, (80, 70, 60), (rect.x, rect.y, TILE_SIZE, 4))
+                        pygame.draw.rect(
+                            screen, (80, 70, 60), (rect.x, rect.y, TILE_SIZE, 4)
+                        )
                         # Darker baseboard at bottom
-                        pygame.draw.rect(screen, (40, 35, 30), (rect.x, rect.y + TILE_SIZE - 5, TILE_SIZE, 5))
+                        pygame.draw.rect(
+                            screen,
+                            (40, 35, 30),
+                            (rect.x, rect.y + TILE_SIZE - 5, TILE_SIZE, 5),
+                        )
                     elif tile == 9:  # Furniture — styled per building
                         pygame.draw.rect(screen, FURNITURE_COLOR, rect)
                         inner = rect.inflate(-8, -8)
                         if bld_style == "forge":
                             # Orange glow for anvil/forge
                             pygame.draw.rect(screen, accent_col, inner)
-                            glow = pygame.Surface((inner.width, inner.height), pygame.SRCALPHA)
+                            glow = pygame.Surface(
+                                (inner.width, inner.height), pygame.SRCALPHA
+                            )
                             glow.fill((255, 120, 20, 60))
                             screen.blit(glow, inner)
                         elif bld_style == "tavern":
                             # Barrel/keg shapes
                             pygame.draw.rect(screen, accent_col, inner)
-                            pygame.draw.ellipse(screen, (accent_col[0] + 20, accent_col[1] + 20, accent_col[2] + 10), inner.inflate(-4, -12))
+                            pygame.draw.ellipse(
+                                screen,
+                                (
+                                    accent_col[0] + 20,
+                                    accent_col[1] + 20,
+                                    accent_col[2] + 10,
+                                ),
+                                inner.inflate(-4, -12),
+                            )
                         elif bld_style == "books":
                             # Book spines — vertical lines (deterministic colors by position)
-                            book_colors = [(180, 60, 50), (50, 80, 140), (60, 130, 70), (160, 140, 50)]
+                            book_colors = [
+                                (180, 60, 50),
+                                (50, 80, 140),
+                                (60, 130, 70),
+                                (160, 140, 50),
+                            ]
                             pygame.draw.rect(screen, accent_col, inner)
                             bi = 0
                             for bx in range(inner.x + 3, inner.x + inner.width - 3, 5):
-                                pygame.draw.line(screen, book_colors[(bi + col) % len(book_colors)],
-                                    (bx, inner.y + 2), (bx, inner.y + inner.height - 2), 3)
+                                pygame.draw.line(
+                                    screen,
+                                    book_colors[(bi + col) % len(book_colors)],
+                                    (bx, inner.y + 2),
+                                    (bx, inner.y + inner.height - 2),
+                                    3,
+                                )
                                 bi += 1
                         elif bld_style == "potions":
                             # Vial circles (deterministic colors by position)
-                            vial_colors = [(100, 200, 100), (200, 80, 200), (80, 150, 220)]
+                            vial_colors = [
+                                (100, 200, 100),
+                                (200, 80, 200),
+                                (80, 150, 220),
+                            ]
                             pygame.draw.rect(screen, accent_col, inner)
                             vi = 0
                             for vx in range(inner.x + 8, inner.x + inner.width - 4, 12):
-                                pygame.draw.circle(screen, vial_colors[(vi + row) % len(vial_colors)],
-                                    (vx, inner.centery), 4)
+                                pygame.draw.circle(
+                                    screen,
+                                    vial_colors[(vi + row) % len(vial_colors)],
+                                    (vx, inner.centery),
+                                    4,
+                                )
                                 vi += 1
                         elif bld_style == "office":
                             # Desk with paper
@@ -1957,7 +2866,12 @@ while running:
                         door_inner.y += 3
                         pygame.draw.rect(screen, DOOR_COLOR, door_inner)
                         # Handle
-                        pygame.draw.circle(screen, (200, 180, 100), (door_inner.x + door_inner.width - 8, door_inner.centery), 3)
+                        pygame.draw.circle(
+                            screen,
+                            (200, 180, 100),
+                            (door_inner.x + door_inner.width - 8, door_inner.centery),
+                            3,
+                        )
                     else:
                         pygame.draw.rect(screen, TILE_COLORS.get(tile, BG_COLOR), rect)
 
@@ -1982,7 +2896,10 @@ while running:
             # Draw NPCs that are inside this building
             npc_off = (NPC_SPRITE_SIZE[0] - TILE_SIZE) // 2
             for npc in game.alive:
-                if npc.get("location_type") == "interior" and npc.get("location_building") == game.current_interior:
+                if (
+                    npc.get("location_type") == "interior"
+                    and npc.get("location_building") == game.current_interior
+                ):
                     sx = npc["x"] - cam_x
                     sy = npc["y"] - cam_y
                     idx = game.characters.index(npc) if npc in game.characters else -1
@@ -1990,12 +2907,19 @@ while running:
                     if sprite:
                         screen.blit(sprite, (sx - npc_off, sy - npc_off))
                     else:
-                        pygame.draw.rect(screen, npc["color"], (sx, sy, TILE_SIZE - 4, TILE_SIZE - 4))
+                        pygame.draw.rect(
+                            screen, npc["color"], (sx, sy, TILE_SIZE - 4, TILE_SIZE - 4)
+                        )
                     name_surf = font_sm.render(npc["name"], True, (255, 255, 255))
-                    screen.blit(name_surf, (sx + TILE_SIZE / 2 - name_surf.get_width() / 2, sy - 22))
+                    screen.blit(
+                        name_surf,
+                        (sx + TILE_SIZE / 2 - name_surf.get_width() / 2, sy - 22),
+                    )
                     if player_near(npc) and not game.dialogue_target:
                         if npc["name"] in game.talked_to:
-                            hint = font_sm.render("(already spoke)", True, (150, 150, 150))
+                            hint = font_sm.render(
+                                "(already spoke)", True, (150, 150, 150)
+                            )
                         else:
                             hint = font_sm.render("[E] Talk", True, (255, 255, 200))
                         blit_clamped(screen, hint, sx - 5, sy - 38)
@@ -2010,7 +2934,8 @@ while running:
                         rect = pygame.Rect(
                             col * TILE_SIZE - cam_x,
                             row * TILE_SIZE - cam_y,
-                            TILE_SIZE, TILE_SIZE,
+                            TILE_SIZE,
+                            TILE_SIZE,
                         )
                         pygame.draw.rect(screen, TILE_COLORS[tilemap[row][col]], rect)
 
@@ -2020,8 +2945,12 @@ while running:
                     label = font_sm.render(BUILDING_NAMES[i], True, (255, 255, 220))
                     lsx = lx * TILE_SIZE - cam_x + TILE_SIZE * 2 - label.get_width() / 2
                     lsy = ly * TILE_SIZE - cam_y + 4
-                    bg_rect = pygame.Rect(lsx - 4, lsy - 2, label.get_width() + 8, label.get_height() + 4)
-                    bg_surf = pygame.Surface((bg_rect.width, bg_rect.height), pygame.SRCALPHA)
+                    bg_rect = pygame.Rect(
+                        lsx - 4, lsy - 2, label.get_width() + 8, label.get_height() + 4
+                    )
+                    bg_surf = pygame.Surface(
+                        (bg_rect.width, bg_rect.height), pygame.SRCALPHA
+                    )
                     bg_surf.fill((0, 0, 0, 160))
                     screen.blit(bg_surf, bg_rect)
                     screen.blit(label, (lsx, lsy))
@@ -2032,8 +2961,12 @@ while running:
                 label = font_sm.render(area["name"], True, (200, 255, 200))
                 lsx = lx * TILE_SIZE - cam_x + TILE_SIZE * 2 - label.get_width() / 2
                 lsy = ly * TILE_SIZE - cam_y + 4
-                bg_rect = pygame.Rect(lsx - 4, lsy - 2, label.get_width() + 8, label.get_height() + 4)
-                bg_surf = pygame.Surface((bg_rect.width, bg_rect.height), pygame.SRCALPHA)
+                bg_rect = pygame.Rect(
+                    lsx - 4, lsy - 2, label.get_width() + 8, label.get_height() + 4
+                )
+                bg_surf = pygame.Surface(
+                    (bg_rect.width, bg_rect.height), pygame.SRCALPHA
+                )
                 bg_surf.fill((0, 0, 0, 160))
                 screen.blit(bg_surf, bg_rect)
                 screen.blit(label, (lsx, lsy))
@@ -2066,9 +2999,13 @@ while running:
                 if sprite:
                     screen.blit(sprite, (sx - npc_off, sy - npc_off))
                 else:
-                    pygame.draw.rect(screen, npc["color"], (sx, sy, TILE_SIZE - 4, TILE_SIZE - 4))
+                    pygame.draw.rect(
+                        screen, npc["color"], (sx, sy, TILE_SIZE - 4, TILE_SIZE - 4)
+                    )
                 name_surf = font_sm.render(npc["name"], True, (255, 255, 255))
-                screen.blit(name_surf, (sx + TILE_SIZE / 2 - name_surf.get_width() / 2, sy - 22))
+                screen.blit(
+                    name_surf, (sx + TILE_SIZE / 2 - name_surf.get_width() / 2, sy - 22)
+                )
 
                 # Interaction hint
                 if player_near(npc) and not game.dialogue_target:
@@ -2081,8 +3018,15 @@ while running:
             # Door enter hint
             door_building = game.is_on_door()
             if door_building and not game.dialogue_target:
-                hint = font_sm.render(f"[E] Enter {door_building}", True, (255, 255, 200))
-                blit_clamped(screen, hint, game.player_x - cam_x - hint.get_width() // 2 + pw // 2, game.player_y - cam_y - 25)
+                hint = font_sm.render(
+                    f"[E] Enter {door_building}", True, (255, 255, 200)
+                )
+                blit_clamped(
+                    screen,
+                    hint,
+                    game.player_x - cam_x - hint.get_width() // 2 + pw // 2,
+                    game.player_y - cam_y - 25,
+                )
 
         # Draw player (both town and interior)
         if player_walking:
@@ -2092,9 +3036,13 @@ while running:
             p_sprite = player_idle_sprites.get(player_facing)
         p_off = (PLAYER_SPRITE_SIZE[0] - TILE_SIZE) // 2
         if p_sprite:
-            screen.blit(p_sprite, (game.player_x - cam_x - p_off, game.player_y - cam_y - p_off))
+            screen.blit(
+                p_sprite, (game.player_x - cam_x - p_off, game.player_y - cam_y - p_off)
+            )
         else:
-            screen.blit(player_img_fallback, (game.player_x - cam_x, game.player_y - cam_y))
+            screen.blit(
+                player_img_fallback, (game.player_x - cam_x, game.player_y - cam_y)
+            )
 
         # Search spot hint (both maps)
         nearby_spot = game.get_nearby_search_spot()
@@ -2104,13 +3052,25 @@ while running:
             if key in game.searched_spots:
                 hint = font_sm.render(f"(searched)", True, (150, 150, 150))
             else:
-                hint = font_sm.render(f"[E] Search {nearby_spot['name']}", True, (255, 255, 200))
-            blit_clamped(screen, hint, game.player_x - cam_x - hint.get_width() // 2 + pw // 2, game.player_y - cam_y - 25)
+                hint = font_sm.render(
+                    f"[E] Search {nearby_spot['name']}", True, (255, 255, 200)
+                )
+            blit_clamped(
+                screen,
+                hint,
+                game.player_x - cam_x - hint.get_width() // 2 + pw // 2,
+                game.player_y - cam_y - 25,
+            )
 
         # Exit hint in interior
         if game.current_interior and game.is_on_exit():
             hint = font_sm.render("[E] Exit", True, (255, 255, 200))
-            blit_clamped(screen, hint, game.player_x - cam_x - hint.get_width() // 2 + pw // 2, game.player_y - cam_y - 25)
+            blit_clamped(
+                screen,
+                hint,
+                game.player_x - cam_x - hint.get_width() // 2 + pw // 2,
+                game.player_y - cam_y - 25,
+            )
 
         # HUD — split left/right to prevent overflow
         hud_y = 10
@@ -2120,24 +3080,42 @@ while running:
             hud_h = 65  # extra row for location
         pygame.draw.rect(screen, (0, 0, 0, 180), (0, 0, SCREEN_W, hud_h))
 
-        hud_left = font_md.render(f"Day {game.night_num}  |  Guesses: {3 - game.wrong_guesses}  |  Evidence: {ev_count}", True, (255, 255, 255))
-        hud_right = font_sm.render("[TAB] Accuse  [L] Log  [J] Clues  [B] Journal", True, (180, 180, 180))
+        hud_left = font_md.render(
+            f"Day {game.night_num}  |  Guesses: {3 - game.wrong_guesses}  |  Evidence: {ev_count}",
+            True,
+            (255, 255, 255),
+        )
+        hud_right = font_sm.render(
+            "[TAB] Accuse  [L] Log  [J] Clues  [B] Journal", True, (180, 180, 180)
+        )
         screen.blit(hud_left, (15, hud_y))
         screen.blit(hud_right, (SCREEN_W - hud_right.get_width() - 15, hud_y + 5))
 
         if game.current_interior:
-            loc_surf = font_sm.render(f"Inside {game.current_interior}  |  [ESC] Exit", True, (200, 200, 150))
-            screen.blit(loc_surf, (SCREEN_W // 2 - loc_surf.get_width() // 2, hud_y + 32))
+            loc_surf = font_sm.render(
+                f"Inside {game.current_interior}  |  [ESC] Exit", True, (200, 200, 150)
+            )
+            screen.blit(
+                loc_surf, (SCREEN_W // 2 - loc_surf.get_width() // 2, hud_y + 32)
+            )
 
         # Journal side button
-        if not game.showing_journal and not game.showing_evidence_log and not game.showing_clue_tracker:
+        if (
+            not game.showing_journal
+            and not game.showing_evidence_log
+            and not game.showing_clue_tracker
+        ):
             jbtn = pygame.Rect(SCREEN_W - 85, SCREEN_H // 2 - 30, 75, 60)
             pygame.draw.rect(screen, (55, 40, 28), jbtn, border_radius=5)
             pygame.draw.rect(screen, (100, 80, 50), jbtn, 2, border_radius=5)
             jtext = font_sm.render("Journal", True, (200, 190, 150))
-            screen.blit(jtext, (jbtn.x + jbtn.width // 2 - jtext.get_width() // 2, jbtn.y + 8))
+            screen.blit(
+                jtext, (jbtn.x + jbtn.width // 2 - jtext.get_width() // 2, jbtn.y + 8)
+            )
             jkey = font_sm.render("[B]", True, (150, 140, 110))
-            screen.blit(jkey, (jbtn.x + jbtn.width // 2 - jkey.get_width() // 2, jbtn.y + 32))
+            screen.blit(
+                jkey, (jbtn.x + jbtn.width // 2 - jkey.get_width() // 2, jbtn.y + 32)
+            )
 
         # Dialogue box
         if game.dialogue_target:
@@ -2146,16 +3124,38 @@ while running:
             pygame.draw.rect(screen, (20, 20, 30), box_rect, border_radius=8)
             pygame.draw.rect(screen, (100, 100, 120), box_rect, 2, border_radius=8)
 
-            name_surf = font_md.render(game.dialogue_target["name"], True, game.dialogue_target["color"])
+            name_surf = font_md.render(
+                game.dialogue_target["name"], True, game.dialogue_target["color"]
+            )
             screen.blit(name_surf, (box_rect.x + 12, box_rect.y + 8))
 
             if game.dialogue_loading:
                 dots = "." * (int(game.loading_dot_timer / 0.4) % 3 + 1)
-                draw_text_wrapped(screen, f"Thinking{dots}", font_sm, (160, 160, 180),
-                    pygame.Rect(box_rect.x, box_rect.y + 40, box_rect.width, box_rect.height - 40))
+                draw_text_wrapped(
+                    screen,
+                    f"Thinking{dots}",
+                    font_sm,
+                    (160, 160, 180),
+                    pygame.Rect(
+                        box_rect.x,
+                        box_rect.y + 40,
+                        box_rect.width,
+                        box_rect.height - 40,
+                    ),
+                )
             else:
-                draw_text_wrapped(screen, game.dialogue_text, font_sm, (220, 220, 220),
-                    pygame.Rect(box_rect.x, box_rect.y + 40, box_rect.width, box_rect.height - 40))
+                draw_text_wrapped(
+                    screen,
+                    game.dialogue_text,
+                    font_sm,
+                    (220, 220, 220),
+                    pygame.Rect(
+                        box_rect.x,
+                        box_rect.y + 40,
+                        box_rect.width,
+                        box_rect.height - 40,
+                    ),
+                )
 
         # Search result box
         if game.search_result_text and game.search_result_timer > 0:
@@ -2172,9 +3172,20 @@ while running:
             header_surf = font_md.render(header, True, header_col)
             screen.blit(header_surf, (box_rect.x + 12, box_rect.y + 8))
 
-            display_text = game.search_result_text.replace("EVIDENCE FOUND: ", "") if is_evidence else game.search_result_text
-            draw_text_wrapped(screen, display_text, font_sm, (220, 220, 220),
-                pygame.Rect(box_rect.x, box_rect.y + 36, box_rect.width, box_rect.height - 36))
+            display_text = (
+                game.search_result_text.replace("EVIDENCE FOUND: ", "")
+                if is_evidence
+                else game.search_result_text
+            )
+            draw_text_wrapped(
+                screen,
+                display_text,
+                font_sm,
+                (220, 220, 220),
+                pygame.Rect(
+                    box_rect.x, box_rect.y + 36, box_rect.width, box_rect.height - 36
+                ),
+            )
 
         # Evidence log overlay
         if game.showing_evidence_log:
@@ -2183,10 +3194,14 @@ while running:
             screen.blit(overlay, (0, 0))
 
             draw_centered_text(screen, "EVIDENCE LOG", font_lg, (255, 220, 60), 40)
-            draw_centered_text(screen, "[UP/DOWN] Scroll  [L/ESC] Close", font_sm, (180, 180, 180), 85)
+            draw_centered_text(
+                screen, "[UP/DOWN] Scroll  [L/ESC] Close", font_sm, (180, 180, 180), 85
+            )
 
             if not game.evidence_found:
-                draw_centered_text(screen, "No evidence collected yet.", font_md, (150, 150, 150), 200)
+                draw_centered_text(
+                    screen, "No evidence collected yet.", font_md, (150, 150, 150), 200
+                )
             else:
                 # Group evidence by day
                 by_day = {}
@@ -2198,11 +3213,19 @@ while running:
                 for day in sorted(by_day.keys()):
                     log_lines.append((f"Day {day}:", (220, 180, 40), font_md))
                     for ev in by_day[day]:
-                        log_lines.append((f"  - {ev['name']}: {ev['description']}", (200, 200, 200), font_sm))
+                        log_lines.append(
+                            (
+                                f"  - {ev['name']}: {ev['description']}",
+                                (200, 200, 200),
+                                font_sm,
+                            )
+                        )
 
                 visible_start = game.evidence_log_scroll
                 visible_end = min(visible_start + 12, len(log_lines))
-                game.evidence_log_scroll = min(game.evidence_log_scroll, max(0, len(log_lines) - 12))
+                game.evidence_log_scroll = min(
+                    game.evidence_log_scroll, max(0, len(log_lines) - 12)
+                )
 
                 # Scroll indicators
                 if visible_start > 0:
@@ -2210,10 +3233,19 @@ while running:
                 y_pos = 120
                 for i in range(visible_start, visible_end):
                     line_text, line_col, line_font = log_lines[i]
-                    y_pos = draw_centered_text_wrapped(screen, line_text, line_font, line_col, y_pos, max_width=SCREEN_W - 100)
+                    y_pos = draw_centered_text_wrapped(
+                        screen,
+                        line_text,
+                        line_font,
+                        line_col,
+                        y_pos,
+                        max_width=SCREEN_W - 100,
+                    )
                     y_pos += 4
                 if visible_end < len(log_lines):
-                    draw_centered_text(screen, "▼", font_md, (180, 180, 180), SCREEN_H - 40)
+                    draw_centered_text(
+                        screen, "▼", font_md, (180, 180, 180), SCREEN_H - 40
+                    )
 
         # Clue tracker overlay
         if game.showing_clue_tracker:
@@ -2222,10 +3254,18 @@ while running:
             screen.blit(overlay, (0, 0))
 
             draw_centered_text(screen, "CLUE TRACKER", font_lg, (100, 200, 255), 40)
-            draw_centered_text(screen, "[UP/DOWN] Scroll  [J/ESC] Close", font_sm, (180, 180, 180), 85)
+            draw_centered_text(
+                screen, "[UP/DOWN] Scroll  [J/ESC] Close", font_sm, (180, 180, 180), 85
+            )
 
             if not game.suspicion_log:
-                draw_centered_text(screen, "No clues collected yet. Talk to people and search.", font_md, (150, 150, 150), 200)
+                draw_centered_text(
+                    screen,
+                    "No clues collected yet. Talk to people and search.",
+                    font_md,
+                    (150, 150, 150),
+                    200,
+                )
             else:
                 # Group by day
                 by_day = {}
@@ -2243,17 +3283,28 @@ while running:
 
                 visible_start = game.clue_tracker_scroll
                 visible_end = min(visible_start + 12, len(log_lines))
-                game.clue_tracker_scroll = min(game.clue_tracker_scroll, max(0, len(log_lines) - 12))
+                game.clue_tracker_scroll = min(
+                    game.clue_tracker_scroll, max(0, len(log_lines) - 12)
+                )
 
                 if visible_start > 0:
                     draw_centered_text(screen, "▲", font_md, (180, 180, 180), 105)
                 y_pos = 120
                 for i in range(visible_start, visible_end):
                     line_text, line_col, line_font = log_lines[i]
-                    y_pos = draw_centered_text_wrapped(screen, line_text, line_font, line_col, y_pos, max_width=SCREEN_W - 100)
+                    y_pos = draw_centered_text_wrapped(
+                        screen,
+                        line_text,
+                        line_font,
+                        line_col,
+                        y_pos,
+                        max_width=SCREEN_W - 100,
+                    )
                     y_pos += 4
                 if visible_end < len(log_lines):
-                    draw_centered_text(screen, "▼", font_md, (180, 180, 180), SCREEN_H - 40)
+                    draw_centered_text(
+                        screen, "▼", font_md, (180, 180, 180), SCREEN_H - 40
+                    )
 
         # Journal overlay
         if game.showing_journal and game.characters:
@@ -2265,8 +3316,13 @@ while running:
             book = pygame.Rect(60, 30, SCREEN_W - 120, SCREEN_H - 60)
             pygame.draw.rect(screen, (45, 35, 25), book, border_radius=6)
             pygame.draw.rect(screen, (90, 70, 45), book, 3, border_radius=6)
-            pygame.draw.line(screen, (70, 55, 35),
-                (book.centerx, book.y + 10), (book.centerx, book.y + book.height - 10), 2)
+            pygame.draw.line(
+                screen,
+                (70, 55, 35),
+                (book.centerx, book.y + 10),
+                (book.centerx, book.y + book.height - 10),
+                2,
+            )
 
             pg = game.journal_page
             total = len(game.characters)
@@ -2275,15 +3331,30 @@ while running:
             status_col = (100, 200, 100) if alive else BLOOD_RED
 
             # Navigation
-            draw_centered_text(screen, f"< {pg + 1} / {total} >", font_sm, (160, 150, 120), book.y + book.height - 30)
-            draw_centered_text(screen, "[LEFT/RIGHT] Turn Page  [B/ESC] Close", font_sm, (120, 110, 90), book.y + book.height - 12)
+            draw_centered_text(
+                screen,
+                f"< {pg + 1} / {total} >",
+                font_sm,
+                (160, 150, 120),
+                book.y + book.height - 30,
+            )
+            draw_centered_text(
+                screen,
+                "[LEFT/RIGHT] Turn Page  [B/ESC] Close",
+                font_sm,
+                (120, 110, 90),
+                book.y + book.height - 12,
+            )
 
             # ── Left page: portrait + identity ──
             lx, ly = book.x + 30, book.y + 20
             name_surf = font_lg.render(c["name"], True, (220, 210, 180))
             screen.blit(name_surf, (lx, ly))
             ly += 55
-            screen.blit(font_md.render("ALIVE" if alive else "DECEASED", True, status_col), (lx, ly))
+            screen.blit(
+                font_md.render("ALIVE" if alive else "DECEASED", True, status_col),
+                (lx, ly),
+            )
             ly += 40
 
             # Portrait
@@ -2297,12 +3368,22 @@ while running:
             ly += 95
 
             left_w = book.width // 2 - 50
-            draw_text_wrapped(screen, f"Residence: {c.get('home', '?')}", font_sm, (180, 170, 140),
-                pygame.Rect(lx, ly, left_w, 30))
+            draw_text_wrapped(
+                screen,
+                f"Residence: {c.get('home', '?')}",
+                font_sm,
+                (180, 170, 140),
+                pygame.Rect(lx, ly, left_w, 30),
+            )
             ly += 28
             if alive:
-                draw_text_wrapped(screen, f"Last seen: {c.get('location_desc', '?')}", font_sm, (180, 170, 140),
-                    pygame.Rect(lx, ly, left_w, 30))
+                draw_text_wrapped(
+                    screen,
+                    f"Last seen: {c.get('location_desc', '?')}",
+                    font_sm,
+                    (180, 170, 140),
+                    pygame.Rect(lx, ly, left_w, 30),
+                )
 
             # ── Right page: details + relationships ──
             rx, ry = book.centerx + 20, book.y + 25
@@ -2315,14 +3396,23 @@ while running:
                 ("Power", c.get("power", "?")),
                 ("Type", "Human" if c.get("isHuman") else "Non-Human"),
             ]:
-                screen.blit(font_sm.render(f"{label}:", True, (160, 140, 100)), (rx, ry))
+                screen.blit(
+                    font_sm.render(f"{label}:", True, (160, 140, 100)), (rx, ry)
+                )
                 ry += 22
-                draw_text_wrapped(screen, value, font_md, (220, 210, 180),
-                    pygame.Rect(rx + 10, ry, right_w, 40))
+                draw_text_wrapped(
+                    screen,
+                    value,
+                    font_md,
+                    (220, 210, 180),
+                    pygame.Rect(rx + 10, ry, right_w, 40),
+                )
                 ry += 38
 
             ry += 5
-            screen.blit(font_sm.render("Relationships:", True, (160, 140, 100)), (rx, ry))
+            screen.blit(
+                font_sm.render("Relationships:", True, (160, 140, 100)), (rx, ry)
+            )
             ry += 24
             has_rel = False
             for other in game.characters:
@@ -2330,16 +3420,25 @@ while running:
                     continue
                 rel = game.get_relationship(c["name"], other["name"])
                 if rel:
-                    draw_text_wrapped(screen,
+                    draw_text_wrapped(
+                        screen,
                         f"- {rel['type'].replace('_', ' ').title()} with {other['name']}",
-                        font_sm, (200, 190, 160), pygame.Rect(rx + 5, ry, right_w, 25))
+                        font_sm,
+                        (200, 190, 160),
+                        pygame.Rect(rx + 5, ry, right_w, 25),
+                    )
                     ry += 22
                     has_rel = True
                     if ry > book.y + book.height - 60:
                         break
             if not has_rel:
-                draw_text_wrapped(screen, "No known relationships.", font_sm, (140, 130, 110),
-                    pygame.Rect(rx + 5, ry, right_w, 25))
+                draw_text_wrapped(
+                    screen,
+                    "No known relationships.",
+                    font_sm,
+                    (140, 130, 110),
+                    pygame.Rect(rx + 5, ry, right_w, 25),
+                )
 
         # Accusation overlay
         if game.state == "ACCUSE":
@@ -2348,41 +3447,65 @@ while running:
             screen.blit(overlay, (0, 0))
 
             draw_centered_text(screen, "Who do you accuse?", font_lg, BLOOD_RED, 80)
-            draw_centered_text(screen, "[UP/DOWN] Select  [ENTER] Confirm  [ESC] Cancel", font_sm, (180, 180, 180), 130)
+            draw_centered_text(
+                screen,
+                "[UP/DOWN] Select  [ENTER] Confirm  [ESC] Cancel",
+                font_sm,
+                (180, 180, 180),
+                130,
+            )
 
             suspects = [c for c in game.alive]
             for i, c in enumerate(suspects):
                 y_pos = 180 + i * 50
                 col = (255, 255, 100) if i == game.accuse_selection else (200, 200, 200)
                 prefix = "> " if i == game.accuse_selection else "  "
-                text = f"{prefix}{c['name']}  ({c['personality']}, from {c['hometown']})"
+                text = (
+                    f"{prefix}{c['name']}  ({c['personality']}, from {c['hometown']})"
+                )
                 draw_centered_text(screen, text, font_md, col, y_pos)
 
     elif game.state == "ACCUSE_RESULT":
         screen.fill((40, 30, 10))
         cur_y = 220
         for line in game.storyteller_text.split("\n"):
-            cur_y = draw_centered_text_wrapped(screen, line, font_lg, (255, 200, 80), cur_y)
-        draw_centered_text(screen, "Press ENTER to continue", font_md, (200, 200, 180), 500)
+            cur_y = draw_centered_text_wrapped(
+                screen, line, font_lg, (255, 200, 80), cur_y
+            )
+        draw_centered_text(
+            screen, "Press ENTER to continue", font_md, (200, 200, 180), 500
+        )
 
     elif game.state == "WIN":
         screen.fill((10, 40, 10))
         cur_y = 200
         for line in game.storyteller_text.split("\n"):
-            cur_y = draw_centered_text_wrapped(screen, line, font_lg, (100, 255, 100), cur_y)
-        draw_centered_text(screen, "Press ENTER for main menu", font_md, (180, 255, 180), 500)
+            cur_y = draw_centered_text_wrapped(
+                screen, line, font_lg, (100, 255, 100), cur_y
+            )
+        draw_centered_text(
+            screen, "Press ENTER for main menu", font_md, (180, 255, 180), 500
+        )
 
     elif game.state == "LOSE":
         screen.fill((40, 10, 10))
         cur_y = 160
         for line in game.storyteller_text.split("\n"):
             cur_y = draw_centered_text_wrapped(screen, line, font_lg, BLOOD_RED, cur_y)
-        draw_centered_text(screen, "Press ENTER for main menu", font_md, (255, 180, 180), 500)
+        draw_centered_text(
+            screen, "Press ENTER for main menu", font_md, (255, 180, 180), 500
+        )
 
     elif game.state == "SETTINGS":
         screen.fill((20, 20, 30))
         draw_centered_text(screen, "SETTINGS", font_lg, (220, 220, 255), 140)
-        draw_centered_text(screen, "[UP/DOWN] Select   [LEFT/RIGHT] Adjust   [ESC] Back", font_sm, (150, 150, 180), 200)
+        draw_centered_text(
+            screen,
+            "[UP/DOWN] Select   [LEFT/RIGHT] Adjust   [ESC] Back",
+            font_sm,
+            (150, 150, 180),
+            200,
+        )
 
         labels = ["Master Volume", "Music Volume"]
         values = [master_volume, music_volume]
@@ -2392,7 +3515,9 @@ while running:
             prefix = "> " if i == game.settings_selection else "  "
             bar_filled = int(val * 10)
             bar = "[" + "#" * bar_filled + "-" * (10 - bar_filled) + "]"
-            draw_centered_text(screen, f"{prefix}{label}  {bar}  {int(val * 100)}%", font_md, col, y)
+            draw_centered_text(
+                screen, f"{prefix}{label}  {bar}  {int(val * 100)}%", font_md, col, y
+            )
 
     # Fade overlay (drawn over everything)
     if game.fade_alpha > 0:
