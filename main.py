@@ -16,7 +16,10 @@ TILE_SIZE = 48
 SCREEN_W, SCREEN_H = 900, 700
 FPS = 60
 
-screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
+# Render to a fixed-size surface, then scale to display (handles fullscreen properly)
+display = pygame.display.set_mode((SCREEN_W, SCREEN_H), pygame.RESIZABLE)
+screen = pygame.Surface((SCREEN_W, SCREEN_H))
+is_fullscreen = False
 pygame.display.set_caption("Murder Mystery")
 clock = pygame.time.Clock()
 
@@ -196,14 +199,14 @@ tilemap = [
     [1,0,3,3,3,3,0,0,0,0,3,3,3,3,0,0,0,0,3,3,3,3,0,0,3,3,3,3,0,1],
     [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,1,1,1,1,0,1],
     [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,1,1,1,1,0,1],
-    [1,0,1,4,1,1,0,0,0,0,1,1,4,1,0,0,0,0,1,4,1,1,0,0,1,1,4,1,0,1],
+    [1,0,4,4,4,4,0,0,0,0,4,4,4,4,0,0,0,0,4,4,4,4,0,0,4,4,4,4,0,1],
     [1,0,0,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,1],
     [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
-    [1,0,0,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,1],
     [1,0,3,3,3,3,0,0,0,0,3,3,3,3,0,0,0,0,3,3,3,3,0,2,5,5,0,5,0,1],
     [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,2,5,0,6,0,5,1],
     [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,2,0,5,0,5,0,1],
-    [1,0,1,1,4,1,0,0,0,0,1,4,1,1,0,0,0,0,1,1,4,1,0,2,5,0,0,6,5,1],
+    [1,0,4,4,4,4,0,0,0,0,4,4,4,4,0,0,0,0,4,4,4,4,0,2,5,0,0,6,5,1],
     [1,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,0,2,5,5,0,5,0,1],
     [1,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,0,2,0,0,6,0,0,1],
     [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
@@ -267,6 +270,34 @@ menu_bg_frames = _load_gif_frames("bg_village.gif", (SCREEN_W, SCREEN_H))
 menu_bg_frame_idx = 0
 menu_bg_timer = 0.0
 MENU_BG_FPS = 15  # playback speed
+
+# Building sprites — each covers a 4x4 tile area (192x192px)
+BUILDING_SPRITE_SIZE = (TILE_SIZE * 4, TILE_SIZE * 4)
+_building_sprite_files = {
+    "the Blacksmith":    "assets/buildings/blacksmith.png",
+    "the Tavern":        "assets/buildings/tavern.png",
+    "the Apothecary":    "assets/buildings/apothecary.png",
+    "the Church":        "assets/buildings/church.png",
+    "the General Store": "assets/buildings/general_store.png",
+    "Town Hall":         "assets/buildings/town_hall.png",
+    "the Library":       "assets/buildings/library.png",
+}
+building_sprites = {}
+for _bname, _bpath in _building_sprite_files.items():
+    _bsprite = load_sprite(_bpath, BUILDING_SPRITE_SIZE)
+    if _bsprite:
+        building_sprites[_bname] = _bsprite
+
+# Building top-left tile positions (where to draw the sprite)
+BUILDING_SPRITE_POS = {
+    "the Blacksmith":    (2, 2),
+    "the Tavern":        (10, 2),
+    "the Apothecary":    (18, 2),
+    "the Church":        (24, 2),
+    "the General Store": (2, 9),
+    "Town Hall":         (10, 9),
+    "the Library":       (18, 9),
+}
 
 player_facing = "south"
 player_walking = False
@@ -1752,6 +1783,12 @@ while running:
             running = False
 
         if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F11:
+                is_fullscreen = not is_fullscreen
+                if is_fullscreen:
+                    display = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                else:
+                    display = pygame.display.set_mode((SCREEN_W, SCREEN_H), pygame.RESIZABLE)
             if event.key == pygame.K_ESCAPE:
                 if game.state in ("DAY", "ACCUSE"):
                     if game.state == "ACCUSE":
@@ -2156,12 +2193,26 @@ while running:
             # ── Draw town map with detailed tiles ──
             for row in range(MAP_H):
                 for col in range(MAP_W):
+                    tile = tilemap[row][col]
+                    # Skip building tiles that will be covered by sprites
+                    if (col, row) in BUILDING_TILE_MAP and tile in (1, 3, 4):
+                        # Draw grass underneath so there's no black gap
+                        rect = pygame.Rect(col * TILE_SIZE - cam_x, row * TILE_SIZE - cam_y, TILE_SIZE, TILE_SIZE)
+                        draw_town_tile(screen, 0, rect, row, col)
+                        continue
                     rect = pygame.Rect(
                         col * TILE_SIZE - cam_x,
                         row * TILE_SIZE - cam_y,
                         TILE_SIZE, TILE_SIZE,
                     )
-                    draw_town_tile(screen, tilemap[row][col], rect, row, col)
+                    draw_town_tile(screen, tile, rect, row, col)
+
+            # Draw building sprites on top
+            for bname, (bx, by) in BUILDING_SPRITE_POS.items():
+                if bname in building_sprites:
+                    sx = bx * TILE_SIZE - cam_x
+                    sy = by * TILE_SIZE - cam_y
+                    screen.blit(building_sprites[bname], (sx, sy))
 
             # Draw building name labels
             for i, (lx, ly) in enumerate(BUILDING_LABEL_POS):
@@ -2585,6 +2636,13 @@ while running:
         fade_surf.fill((0, 0, 0, int(game.fade_alpha)))
         screen.blit(fade_surf, (0, 0))
 
+    # Scale render surface to display (handles fullscreen + window resize)
+    dw, dh = display.get_size()
+    scale = min(dw / SCREEN_W, dh / SCREEN_H)
+    sw, sh = int(SCREEN_W * scale), int(SCREEN_H * scale)
+    ox, oy = (dw - sw) // 2, (dh - sh) // 2
+    display.fill((0, 0, 0))
+    display.blit(pygame.transform.smoothscale(screen, (sw, sh)), (ox, oy))
     pygame.display.flip()
 
 pygame.quit()
