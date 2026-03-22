@@ -31,7 +31,7 @@ class NPC(AnimatedSprite):
         # self.draw_ray_cast()
 
     def check_wall(self, x, y):
-        return (x, y) not in self.game.map.world_map
+        return (x, y) not in self.game.map.world_map or self.game.map.world_map[(x, y)] in {0, 2}
 
     def check_wall_collision(self, dx, dy):
         if self.check_wall(int(self.x + dx * self.size), int(self.y)):
@@ -142,7 +142,7 @@ class NPC(AnimatedSprite):
             if tile_hor == self.map_pos:
                 player_dist_h = depth_hor
                 break
-            if tile_hor in self.game.map.world_map:
+            if tile_hor in self.game.map.world_map and self.game.map.world_map[tile_hor] not in {0, 2}:
                 wall_dist_h = depth_hor
                 break
             x_hor += dx
@@ -163,7 +163,7 @@ class NPC(AnimatedSprite):
             if tile_vert == self.map_pos:
                 player_dist_v = depth_vert
                 break
-            if tile_vert in self.game.map.world_map:
+            if tile_vert in self.game.map.world_map and self.game.map.world_map[tile_vert] not in {0, 2}:
                 wall_dist_v = depth_vert
                 break
             x_vert += dx
