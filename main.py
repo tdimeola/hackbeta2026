@@ -13,7 +13,7 @@ pygame.init()
 pygame.mixer.init(frequency=44100, size=-16, channels=1, buffer=512)
 
 TILE_SIZE = 48
-SCREEN_W, SCREEN_H = 854, 480
+SCREEN_W, SCREEN_H = 800, 700
 FPS = 60
 
 screen = pygame.display.set_mode((SCREEN_W, SCREEN_H), pygame.SCALED)
