@@ -119,6 +119,7 @@ def play_footstep(kind="stone"):
 
 MENU_MUSIC = "sounds/The_Crimson_Manor.mp3"
 DAY_MUSIC = "sounds/in-game-sound-track.mp3"
+CREDITS_MUSIC = "sounds/credits.mp3"
 
 # Sound effects
 sfx_door = pygame.mixer.Sound("sounds/opening_door.mp3")
@@ -745,6 +746,8 @@ class Game:
         self.tutorial_step = 0  # 0=not started, 1=talk hint, 2=journal hint, 3=accuse hint, 4=done
         # Recap
         self.recap_scroll = 0
+        # Credits
+        self.credits_scroll_y = SCREEN_H  # starts below screen, scrolls up
 
     def start_fade(self, callback=None):
         """Start a fade-to-black transition. Callback fires at peak darkness."""
@@ -2005,6 +2008,15 @@ while running:
             # Menu
             if game.state == "MENU" and event.key == pygame.K_RETURN and not game.fading:
                 game.start_fade(lambda: game.new_game())
+            if game.state == "MENU" and event.key == pygame.K_c and not game.fading:
+                def _start_credits():
+                    game.state = "CREDITS"
+                    game.credits_scroll_y = SCREEN_H
+                    music_stop(fade_ms=500)
+                    pygame.mixer.music.load(CREDITS_MUSIC)
+                    pygame.mixer.music.set_volume(0.7)
+                    pygame.mixer.music.play()
+                game.start_fade(_start_credits)
 
             # Night — skip with any key after timer
             if game.state == "NIGHT" and game.night_timer <= 0 and not game.fading:
@@ -2132,7 +2144,23 @@ while running:
             # Recap
             elif game.state == "RECAP":
                 if event.key == pygame.K_RETURN and not game.fading:
-                    def _to_menu():
+                    def _to_credits():
+                        game.state = "CREDITS"
+                        game.credits_scroll_y = SCREEN_H
+                        music_stop(fade_ms=500)
+                        pygame.mixer.music.load(CREDITS_MUSIC)
+                        pygame.mixer.music.set_volume(0.7)
+                        pygame.mixer.music.play()
+                    game.start_fade(_to_credits)
+                if event.key == pygame.K_UP:
+                    game.recap_scroll = max(0, game.recap_scroll - 1)
+                if event.key == pygame.K_DOWN:
+                    game.recap_scroll += 1
+
+            # Credits
+            elif game.state == "CREDITS":
+                if event.key in (pygame.K_RETURN, pygame.K_ESCAPE, pygame.K_SPACE) and not game.fading:
+                    def _credits_to_menu():
                         global menu_clip_idx, menu_frame_idx, menu_frame_timer, menu_transition_timer
                         game.state = "MENU"
                         menu_clip_idx = 0
@@ -2140,11 +2168,7 @@ while running:
                         menu_frame_timer = 0.0
                         menu_transition_timer = 0.0
                         music_start_menu()
-                    game.start_fade(_to_menu)
-                if event.key == pygame.K_UP:
-                    game.recap_scroll = max(0, game.recap_scroll - 1)
-                if event.key == pygame.K_DOWN:
-                    game.recap_scroll += 1
+                    game.start_fade(_credits_to_menu)
 
             # Win/Lose
             elif game.state in ("WIN", "LOSE"):
@@ -2160,6 +2184,21 @@ while running:
                     game.start_fade(_to_menu)
 
     # ── Update ──────────────────────────────────────────────────
+    # Credits auto-scroll
+    if game.state == "CREDITS":
+        game.credits_scroll_y -= 40 * dt  # scroll speed in pixels/sec
+        # Auto-return to menu when credits finish scrolling
+        if game.credits_scroll_y < -800 and not game.fading:
+            def _credits_done():
+                global menu_clip_idx, menu_frame_idx, menu_frame_timer, menu_transition_timer
+                game.state = "MENU"
+                menu_clip_idx = 0
+                menu_frame_idx = 0
+                menu_frame_timer = 0.0
+                menu_transition_timer = 0.0
+                music_start_menu()
+            game.start_fade(_credits_done)
+
     # Fade transition
     if game.fade_direction == 1:
         game.fade_alpha += game.fade_speed * dt
@@ -2369,7 +2408,7 @@ while running:
 
         # Controls — brighter
         draw_centered_text(screen, "[WASD] Move   [E] Interact   [B] Journal   [TAB] Accuse", font_sm, (170, 165, 155), 520)
-        draw_centered_text(screen, "[L] Evidence Log   [J] Clue Tracker   [F11] Fullscreen", font_sm, (170, 165, 155), 545)
+        draw_centered_text(screen, "[L] Evidence Log   [J] Clue Tracker   [C] Credits   [F11] Fullscreen", font_sm, (170, 165, 155), 545)
 
     elif game.state == "NIGHT":
         screen.fill(NIGHT_OVERLAY)
@@ -3113,6 +3152,61 @@ while running:
         if visible_end < len(recap_lines):
             draw_centered_text(screen, "▼", font_md, (180, 180, 180), SCREEN_H - 60)
         draw_centered_text(screen, "Press ENTER to return to menu", font_md, (150, 150, 130), SCREEN_H - 35)
+
+    elif game.state == "CREDITS":
+        screen.fill((5, 3, 8))
+        cy = game.credits_scroll_y
+        credits_content = [
+            ("QUANTUM BLOOD", font_title, (180, 20, 20)),
+            ("", font_sm, (0, 0, 0)),
+            ("A Murder Mystery Game", font_lg, (200, 190, 160)),
+            ("", font_sm, (0, 0, 0)),
+            ("", font_sm, (0, 0, 0)),
+            ("— Development —", font_md, (160, 140, 100)),
+            ("", font_sm, (0, 0, 0)),
+            ("Game Design & Programming", font_sm, (140, 130, 110)),
+            ("Garrett Bradham", font_md, (220, 210, 180)),
+            ("", font_sm, (0, 0, 0)),
+            ("AI Integration", font_sm, (140, 130, 110)),
+            ("Powered by Ollama + Llama 3.1", font_md, (220, 210, 180)),
+            ("", font_sm, (0, 0, 0)),
+            ("", font_sm, (0, 0, 0)),
+            ("— Art & Assets —", font_md, (160, 140, 100)),
+            ("", font_sm, (0, 0, 0)),
+            ("Character Sprites", font_sm, (140, 130, 110)),
+            ("Pixel Art Generation", font_md, (220, 210, 180)),
+            ("", font_sm, (0, 0, 0)),
+            ("Building Design", font_sm, (140, 130, 110)),
+            ("Procedural Generation", font_md, (220, 210, 180)),
+            ("", font_sm, (0, 0, 0)),
+            ("", font_sm, (0, 0, 0)),
+            ("— Audio —", font_md, (160, 140, 100)),
+            ("", font_sm, (0, 0, 0)),
+            ("Music & Sound Effects", font_sm, (140, 130, 110)),
+            ("Original Compositions", font_md, (220, 210, 180)),
+            ("", font_sm, (0, 0, 0)),
+            ("", font_sm, (0, 0, 0)),
+            ("— Special Thanks —", font_md, (160, 140, 100)),
+            ("", font_sm, (0, 0, 0)),
+            ("Claude Code", font_md, (220, 210, 180)),
+            ("Development Assistant", font_sm, (140, 130, 110)),
+            ("", font_sm, (0, 0, 0)),
+            ("The Pygame Community", font_md, (220, 210, 180)),
+            ("", font_sm, (0, 0, 0)),
+            ("", font_sm, (0, 0, 0)),
+            ("", font_sm, (0, 0, 0)),
+            ("Thank you for playing!", font_lg, (180, 20, 20)),
+            ("", font_sm, (0, 0, 0)),
+            ("", font_sm, (0, 0, 0)),
+            ("Press ENTER to return to menu", font_sm, (100, 95, 85)),
+        ]
+        for text, fnt, col in credits_content:
+            if text:
+                surf = fnt.render(text, True, col)
+                screen.blit(surf, (SCREEN_W // 2 - surf.get_width() // 2, int(cy)))
+                cy += surf.get_height() + 8
+            else:
+                cy += 20  # spacer
 
     # Fade overlay (drawn over everything)
     if game.fade_alpha > 0:
