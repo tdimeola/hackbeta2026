@@ -2028,7 +2028,7 @@ class Game:
         if character["is_villain"]:
             music_stop(fade_ms=1500)
             REVEAL_SOUND.play()
-            self.state = "WIN"
+            self.state = "CHASE"
             self.storyteller_text = (
                 f"You accused {character['name']}...\n"
                 f"They WERE the villain! The town is saved!"
@@ -2571,9 +2571,7 @@ def quantum_blood_game_loop():
                         apply_music_volume()
 
             # Win/Lose
-            elif game.state == "WIN":
-                return running, "doom"
-            elif game.state == "LOSE":
+            elif game.state in {"WIN", "LOSE"}:
                 if event.key == pygame.K_RETURN and not game.fading:
 
                     def _to_menu():
@@ -3510,7 +3508,10 @@ def quantum_blood_game_loop():
         draw_centered_text(
             screen, "Press ENTER to continue", font_md, (200, 200, 180), 500
         )
-
+    elif game.state == "CHASE":
+        game.state = "WIN"
+        doom_game.new_game()
+        return running, "doom"
     elif game.state == "WIN":
         screen.fill((10, 40, 10))
         cur_y = 200
@@ -3570,7 +3571,7 @@ while running:
     if state == "quantum":
         running, state = quantum_blood_game_loop()
     if state == "doom":
-        doom_game.loop()
+        running, state = doom_game.loop()
 
 
 pygame.quit()

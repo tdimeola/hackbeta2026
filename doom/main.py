@@ -17,7 +17,7 @@ class Game:
         pg.init()
         pg.mouse.set_visible(False)
         self.screen = pg.display.set_mode((0, 0), pg.FULLSCREEN)
-        pg.event.set_grab(True)
+        # pg.event.set_grab(True)
         self.clock = pg.time.Clock()
         self.delta_time = 1
         self.global_trigger = False
@@ -63,11 +63,13 @@ class Game:
             self.player.single_fire_event(event)
 
     def loop(self):
-        if self.player.health < 1:
+        try:
+            self.check_events()
+            self.update()
+            self.draw()
+            return True, "doom"
+        except GameOver:
             return True, "quantum"
-        self.check_events()
-        self.update()
-        self.draw()
 
     def run(self):
         while True:

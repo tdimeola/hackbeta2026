@@ -1,6 +1,10 @@
 import pygame as pg
 from .settings import *
 
+def draw_centered_text(surface, text, font, color, y):
+    surf = font.render(text, True, color)
+    surface.blit(surf, (HALF_WIDTH - surf.get_width() // 2, y))
+
 
 class ObjectRenderer:
     def __init__(self, game):
@@ -21,18 +25,31 @@ class ObjectRenderer:
         self.draw_background()
         self.render_game_objects()
         self.draw_player_health()
+        self.draw_messages()
 
     def win(self):
         self.screen.blit(self.win_image, (0, 0))
 
     def game_over(self):
-        self.screen.blit(self.game_over_image, (0, 0))
+        self.screen.fill((255, 0, 0))
 
     def draw_player_health(self):
-        health = str(self.game.player.health)
+        health = str(self.game.player.health if self.game.player.health > 0 else 0)
         for i, char in enumerate(health):
             self.screen.blit(self.digits[char], (i * self.digit_size, 0))
         self.screen.blit(self.digits['10'], ((i + 1) * self.digit_size, 0))
+
+    def draw_messages(self):
+        font_lg = pg.font.SysFont(None, 48)
+
+        draw_centered_text(
+            self.screen,
+            "The townspeople have discovered you. Run.",
+            font_lg,
+            (255, 0, 0),
+            500,
+        )
+
 
     def player_damage(self):
         self.screen.blit(self.blood_screen, (0, 0))
