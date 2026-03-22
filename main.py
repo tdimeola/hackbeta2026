@@ -46,70 +46,72 @@ def _lowpass(signal, cutoff_hz, sample_rate):
     return out
 
 def _make_footstep(sample_rate=44100, kind="stone"):
-    """Generate a layered, realistic footstep sound as a pygame Sound."""
+    """Generate a subtle, natural footstep sound."""
     rng = np.random.default_rng()
 
     if kind == "stone":
-        # Stone/cobblestone: heel click + sole slap + low body thud
-        n = int(sample_rate * 0.18)
-        t = np.linspace(0, 0.18, n, endpoint=False)
+        # Short, crisp tap — like a shoe on cobblestone
+        n = int(sample_rate * 0.08)
+        t = np.linspace(0, 0.08, n, endpoint=False)
         noise = rng.uniform(-1, 1, n)
+        # Quick filtered tap
+        tap = _bandpass(noise, 800, 3000, sample_rate)
+        tap *= np.exp(-t * 80)
+        # Subtle low impact
+        impact = _lowpass(rng.uniform(-1, 1, n), 400, sample_rate)
+        impact *= np.exp(-t * 60) * 0.3
+        wave = tap * 0.5 + impact
 
-        # Layer 1: sharp heel click — high frequencies, very fast decay
-        click = _bandpass(noise, 2000, 7000, sample_rate)
-        click *= np.exp(-t * 120)
-        click *= 0.55
-
-        # Layer 2: sole slap — mid frequencies, medium decay
-        slap = _bandpass(noise, 300, 1200, sample_rate)
-        slap *= np.exp(-t * 45)
-        slap *= 0.7
-
-        # Layer 3: body thud — low sine sweep, slow decay
-        thud = np.sin(2 * np.pi * (100 - 40 * t) * t) * np.exp(-t * 30)
-        thud *= 0.9
-
-        wave = click + slap + thud
-
-    else:  # grass — soft compression underfoot: rustle + muffled thud
-        n = int(sample_rate * 0.22)
-        t = np.linspace(0, 0.22, n, endpoint=False)
+    elif kind == "wood":
+        # Hollow, warm tap — like stepping on a wooden floor
+        n = int(sample_rate * 0.1)
+        t = np.linspace(0, 0.1, n, endpoint=False)
         noise = rng.uniform(-1, 1, n)
+        # Mid-range knock
+        knock = _bandpass(noise, 300, 1500, sample_rate)
+        knock *= np.exp(-t * 50)
+        # Subtle hollow resonance
+        res_freq = rng.uniform(180, 280)
+        resonance = np.sin(2 * np.pi * res_freq * t) * np.exp(-t * 35) * 0.15
+        wave = knock * 0.4 + resonance
 
-        # Layer 1: high rustle — grass blades, moderate decay
-        rustle = _bandpass(noise, 800, 4000, sample_rate)
-        rustle *= np.exp(-t * 35) * (1 - np.exp(-t * 80))  # soft attack
-        rustle *= 0.45
+    else:  # grass
+        # Very soft, muffled — like stepping on soft earth
+        n = int(sample_rate * 0.1)
+        t = np.linspace(0, 0.1, n, endpoint=False)
+        noise = rng.uniform(-1, 1, n)
+        # Soft filtered noise — no sharp attack
+        soft = _lowpass(noise, 1200, sample_rate)
+        soft *= np.exp(-t * 40) * (1 - np.exp(-t * 100))
+        wave = soft * 0.35
 
-        # Layer 2: muffled thud — very low, heavily filtered
-        thud_noise = rng.uniform(-1, 1, n)
-        thud = _lowpass(thud_noise, 180, sample_rate)
-        thud *= np.exp(-t * 50)
-        thud *= 0.6
-
-        wave = rustle + thud
-
-    # Normalize and add slight random pitch variation for naturalness
+    # Normalize gently and add variation
     peak = np.max(np.abs(wave))
     if peak > 0:
         wave /= peak
-    wave *= 0.75 + rng.uniform(-0.1, 0.1)
+    wave *= 0.3 + rng.uniform(-0.05, 0.05)  # much quieter overall
 
     wave = (wave * 32767).clip(-32767, 32767).astype(np.int16)
     if pygame.mixer.get_init()[2] == 2:  # stereo
         wave = np.column_stack([wave, wave])
     sound = pygame.sndarray.make_sound(wave)
-    sound.set_volume(0.55)
+    sound.set_volume(0.25)
     return sound
 
 # Pre-generate a small pool of variations so no two steps sound identical
 _stone_pool = [_make_footstep(kind="stone") for _ in range(4)]
 _grass_pool = [_make_footstep(kind="grass") for _ in range(4)]
+_wood_pool = [_make_footstep(kind="wood") for _ in range(4)]
 _step_index = 0
 
 def play_footstep(kind="stone"):
     global _step_index
-    pool = _stone_pool if kind == "stone" else _grass_pool
+    if kind == "wood":
+        pool = _wood_pool
+    elif kind == "stone":
+        pool = _stone_pool
+    else:
+        pool = _grass_pool
     pool[_step_index % len(pool)].play()
     _step_index += 1
 
@@ -2011,12 +2013,16 @@ while running:
                     ptx = int((game.player_x + (TILE_SIZE - 4) / 2) // TILE_SIZE)
                     pty = int((game.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
                     if game.current_interior:
-                        imap = INTERIORS[game.current_interior]["map"]
-                        tile = imap[pty][ptx] if 0 <= pty < len(imap) and 0 <= ptx < len(imap[0]) else 7
-                        play_footstep("stone" if tile in (7, 8) else "grass")
+                        # Interior: wood floors
+                        play_footstep("wood")
                     else:
                         tile = tilemap[pty][ptx] if 0 <= pty < MAP_H and 0 <= ptx < MAP_W else 0
-                        play_footstep("stone" if tile == 2 else "grass")
+                        if tile == 2:
+                            play_footstep("stone")   # cobblestone paths
+                        elif tile == 4:
+                            play_footstep("wood")    # door threshold
+                        else:
+                            play_footstep("grass")   # grass, forest, etc.
         else:
             player_walking = False
             player_anim_timer = 0.0
