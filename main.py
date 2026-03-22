@@ -710,6 +710,13 @@ class Game:
         # Journal
         self.showing_journal = False
         self.journal_page = 0  # index into self.characters
+        # Crime scene
+        self.crime_scene_building = None
+        self.crime_scene_seen = False  # has player entered the crime scene this day
+        # Tutorial
+        self.tutorial_step = 0  # 0=not started, 1=talk hint, 2=journal hint, 3=accuse hint, 4=done
+        # Recap
+        self.recap_scroll = 0
 
     def start_fade(self, callback=None):
         """Start a fade-to-black transition. Callback fires at peak darkness."""
@@ -734,10 +741,15 @@ class Game:
         self.night_num = 0
         self.wrong_guesses = 0
         self.killed_tonight = None
+        self.storyteller_text = ""
         self.dialogue_target = None
         self.dialogue_text = ""
         self.dialogue_loading = False
+        self.accuse_selection = 0
+        self.accuse_result_correct = False
+        self.talked_to = set()
         self.history = []
+        self.night_clues = {}
         self.current_interior = None
         self.evidence_found = []
         self.searched_spots = set()
@@ -750,6 +762,27 @@ class Game:
         self.suspicion_log = []
         self.showing_clue_tracker = False
         self.clue_tracker_scroll = 0
+        # Reveal state
+        self.reveal_timer = 0.0
+        self.reveal_target_state = ""
+        self.reveal_accused = None
+        self.reveal_correct = False
+        self.reveal_done = False
+        # Crime scene
+        self.crime_scene_building = None
+        self.crime_scene_seen = False
+        # Tutorial
+        self.tutorial_step = 0
+        # Recap
+        self.recap_scroll = 0
+        # Journal
+        self.showing_journal = False
+        self.journal_page = 0
+        # Fade
+        self.fade_alpha = 0
+        self.fade_direction = 0
+        self.fade_callback = None
+        self.loading_dot_timer = 0.0
 
         # Place NPCs and assign home buildings
         for i, c in enumerate(self.characters):
@@ -864,9 +897,12 @@ class Game:
         self.searched_spots = set()
         self.evidence_placements = {}
         self.current_interior = None
+        # Reset player to town center so they don't spawn inside a building
+        self.player_x = 14.0 * TILE_SIZE
+        self.player_y = 7.0 * TILE_SIZE
 
         if self.night_num == 1:
-            self.storyteller_text = "Night falls on the town...\nA villain lurks among you."
+            self.storyteller_text = "Night falls on the town...\nA villain lurks among the townspeople.\nSpeak to the residents and uncover the truth."
             self.killed_tonight = None
             self.history.append({"type": "night", "day": 1, "victim": None,
                                   "description": "The first night fell. No one was killed, but there are rumors of a murderer among the townspeople."})
@@ -881,6 +917,8 @@ class Game:
                 # Generate rich murder details
                 villain = next(c for c in self.alive if c["is_villain"])
                 self.night_clues = self._generate_night_clues(victim, villain)
+                self.crime_scene_building = self.night_clues.get("murder_location")
+                self.crime_scene_seen = False
 
                 self.storyteller_text = (
                     f"Night {self.night_num}...\n"
@@ -1063,6 +1101,8 @@ class Game:
         self.talked_to = set()  # track who we've talked to this day
         self.search_result_text = ""
         self.search_result_timer = 0.0
+        if self.night_num == 1:
+            self.tutorial_step = 1
         music_start_day()
         self._place_npcs_for_day()
         self._place_evidence()
@@ -1191,11 +1231,25 @@ class Game:
         active_count = max(3, int(len(all_spots) * random.uniform(0.4, 0.6)))
         self.active_spots = set(all_spots[:active_count])
 
-        # Place evidence at active spots only
+        # Place evidence at active spots — force weapon at crime scene building
         evidence_list = self.night_clues.get("physical_evidence", [])
-        active_list = list(self.active_spots)
-        random.shuffle(active_list)
         self.evidence_placements = {}
+
+        # Force weapon evidence into a crime scene building search spot
+        crime_bld = self.crime_scene_building
+        if crime_bld and crime_bld in INTERIORS:
+            crime_spots = [(crime_bld, s["name"]) for s in INTERIORS[crime_bld]["search_spots"]]
+            for ev in evidence_list:
+                if ev.get("type") == "weapon" and crime_spots:
+                    key = crime_spots[0]
+                    self.active_spots.add(key)
+                    self.evidence_placements[key] = ev
+                    evidence_list = [e for e in evidence_list if e is not ev]
+                    break
+
+        # Place remaining evidence at random active spots
+        active_list = [s for s in self.active_spots if s not in self.evidence_placements]
+        random.shuffle(active_list)
         for i, ev in enumerate(evidence_list):
             if i < len(active_list):
                 self.evidence_placements[active_list[i]] = ev
@@ -1393,9 +1447,8 @@ class Game:
     def _advance_from_reveal(self):
         """Called when player presses ENTER on the reveal screen."""
         if self.reveal_correct or self.wrong_guesses >= 3:
-            # Game over — go straight to menu
-            self.state = "MENU"
-            music_start_menu()
+            self.state = "RECAP"
+            self.recap_scroll = 0
         else:
             self.start_night()
 
@@ -1420,6 +1473,8 @@ class Game:
                 "source": npc["name"],
                 "text": self.dialogue_text[:150],
             })
+            if self.tutorial_step == 1:
+                self.tutorial_step = 2
         else:
             # Still generating, show loading
             self.dialogue_text = ""
@@ -1828,6 +1883,10 @@ while running:
 
             # Day
             if game.state == "DAY":
+                # Tutorial step 3: dismiss on any key
+                if game.tutorial_step == 3 and event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_e):
+                    game.tutorial_step = 4
+
                 if event.key == pygame.K_e:
                     # Dismiss search result
                     if game.search_result_timer > 0:
@@ -1887,6 +1946,8 @@ while running:
                     game.showing_evidence_log = False
                     game.showing_clue_tracker = False
                     game.journal_page = 0
+                    if game.tutorial_step == 2:
+                        game.tutorial_step = 3
 
                 if event.key == pygame.K_TAB and not game.showing_evidence_log and not game.showing_clue_tracker and not game.showing_journal:
                     sfx_pop.play()
@@ -1929,6 +1990,18 @@ while running:
             elif game.state == "ACCUSE_RESULT":
                 if (event.key == pygame.K_RETURN or event.key == pygame.K_SPACE) and not game.fading:
                     game.start_fade(lambda: game.start_night())
+
+            # Recap
+            elif game.state == "RECAP":
+                if event.key == pygame.K_RETURN and not game.fading:
+                    def _to_menu():
+                        game.state = "MENU"
+                        music_start_menu()
+                    game.start_fade(_to_menu)
+                if event.key == pygame.K_UP:
+                    game.recap_scroll = max(0, game.recap_scroll - 1)
+                if event.key == pygame.K_DOWN:
+                    game.recap_scroll += 1
 
             # Win/Lose
             elif game.state in ("WIN", "LOSE"):
@@ -2156,6 +2229,44 @@ while running:
                     else:
                         pygame.draw.rect(screen, TILE_COLORS.get(tile, BG_COLOR), rect)
 
+            # Crime scene details inside building
+            if game.current_interior == game.crime_scene_building:
+                for ci, (cr, cc) in enumerate([(2, 2), (3, 3), (4, 2)]):
+                    if cr < ih and cc < iw and imap[cr][cc] == 7:
+                        fx = cc * TILE_SIZE - cam_x
+                        fy = cr * TILE_SIZE - cam_y
+                        # Blood splatters
+                        splat = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+                        for si in range(3 + ci):
+                            sx2 = 8 + ((ci * 17 + si * 11) % (TILE_SIZE - 16))
+                            sy2 = 8 + ((ci * 13 + si * 7) % (TILE_SIZE - 16))
+                            pygame.draw.circle(splat, (160, 20, 20, 120), (sx2, sy2), 3 + si % 3)
+                        screen.blit(splat, (fx, fy))
+                # Body outline on tile (2, 3)
+                if 3 < ih and 2 < iw and imap[3][2] == 7:
+                    ox2 = 2 * TILE_SIZE - cam_x
+                    oy2 = 3 * TILE_SIZE - cam_y
+                    # Simple chalk outline
+                    outline_col = (220, 220, 200, 150)
+                    os2 = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+                    # Head
+                    pygame.draw.circle(os2, outline_col, (24, 10), 6, 1)
+                    # Body
+                    pygame.draw.line(os2, outline_col, (24, 16), (24, 32), 1)
+                    # Arms
+                    pygame.draw.line(os2, outline_col, (24, 22), (14, 28), 1)
+                    pygame.draw.line(os2, outline_col, (24, 22), (34, 28), 1)
+                    # Legs
+                    pygame.draw.line(os2, outline_col, (24, 32), (16, 44), 1)
+                    pygame.draw.line(os2, outline_col, (24, 32), (32, 44), 1)
+                    screen.blit(os2, (ox2, oy2))
+                # Crime scene description popup (first visit)
+                if not game.crime_scene_seen:
+                    game.crime_scene_seen = True
+                    scene_desc = game.night_clues.get("scene_evidence", "")
+                    if scene_desc:
+                        game.show_search_result(f"CRIME SCENE: {scene_desc}")
+
             # Draw subtle glint on active search spots in interior
             interior = INTERIORS[game.current_interior]
             t = pygame.time.get_ticks()
@@ -2219,6 +2330,15 @@ while running:
                     sx = bx * TILE_SIZE - cam_x
                     sy = by * TILE_SIZE - cam_y
                     screen.blit(building_sprites[bname], (sx, sy))
+                    # Crime scene red tint
+                    if bname == game.crime_scene_building:
+                        tint = pygame.Surface(BUILDING_SPRITE_SIZE, pygame.SRCALPHA)
+                        tint.fill((200, 20, 20, 40))
+                        screen.blit(tint, (sx, sy))
+                        # "!" marker near door
+                        mark = font_md.render("!", True, (255, 60, 60))
+                        screen.blit(mark, (sx + BUILDING_SPRITE_SIZE[0] // 2 - mark.get_width() // 2,
+                                           sy + BUILDING_SPRITE_SIZE[1] + 2))
 
             # Draw building name labels
             for i, (lx, ly) in enumerate(BUILDING_LABEL_POS):
@@ -2344,6 +2464,70 @@ while running:
             screen.blit(jtext, (jbtn.x + jbtn.width // 2 - jtext.get_width() // 2, jbtn.y + 8))
             jkey = font_sm.render("[B]", True, (150, 140, 110))
             screen.blit(jkey, (jbtn.x + jbtn.width // 2 - jkey.get_width() // 2, jbtn.y + 32))
+
+        # Mini-map (town map only, no overlays)
+        if not game.current_interior and not game.dialogue_target and not game.showing_journal and not game.showing_evidence_log and not game.showing_clue_tracker and game.tutorial_step >= 4:
+            mm_w, mm_h = 150, 90
+            mm_x, mm_y = SCREEN_W - mm_w - 10, SCREEN_H - mm_h - 190
+            mm_sx = mm_w / (MAP_W * TILE_SIZE)
+            mm_sy = mm_h / (MAP_H * TILE_SIZE)
+            # Background
+            mm_bg = pygame.Surface((mm_w, mm_h), pygame.SRCALPHA)
+            mm_bg.fill((0, 0, 0, 140))
+            screen.blit(mm_bg, (mm_x, mm_y))
+            # Buildings
+            for bname, (bx, by) in BUILDING_SPRITE_POS.items():
+                bstyle = BUILDING_EXTERIOR_STYLES.get(bname)
+                bc = bstyle["wall"] if bstyle else (100, 80, 60)
+                br = pygame.Rect(mm_x + bx * TILE_SIZE * mm_sx, mm_y + by * TILE_SIZE * mm_sy,
+                                 4 * TILE_SIZE * mm_sx, 4 * TILE_SIZE * mm_sy)
+                pygame.draw.rect(screen, bc, br)
+                # Crime scene marker
+                if bname == game.crime_scene_building:
+                    pygame.draw.rect(screen, (255, 50, 50), br, 1)
+            # Paths (simplified — draw the two horizontal road rows)
+            for pr in [7, 15]:
+                py2 = mm_y + pr * TILE_SIZE * mm_sy
+                pygame.draw.line(screen, (150, 135, 100), (mm_x, int(py2)), (mm_x + mm_w, int(py2)), 1)
+            # Forest
+            pygame.draw.rect(screen, (30, 80, 20),
+                (mm_x + 24 * TILE_SIZE * mm_sx, mm_y + 9 * TILE_SIZE * mm_sy,
+                 5 * TILE_SIZE * mm_sx, 6 * TILE_SIZE * mm_sy))
+            # NPC dots
+            for npc in game.alive:
+                if npc.get("location_type") == "interior":
+                    continue
+                nx = mm_x + npc["x"] * mm_sx
+                ny = mm_y + npc["y"] * mm_sy
+                pygame.draw.circle(screen, npc["color"], (int(nx), int(ny)), 2)
+            # Player dot (pulsing white)
+            pp = 0.6 + 0.4 * math.sin(pygame.time.get_ticks() * 0.005)
+            px2 = mm_x + game.player_x * mm_sx
+            py2 = mm_y + game.player_y * mm_sy
+            pygame.draw.circle(screen, (int(255 * pp), int(255 * pp), int(255 * pp)), (int(px2), int(py2)), 3)
+            # Border
+            pygame.draw.rect(screen, (100, 100, 100), (mm_x, mm_y, mm_w, mm_h), 1)
+
+        # Tutorial messages (Day 1 only)
+        if game.tutorial_step in (1, 2, 3):
+            tut_msgs = {
+                1: "Press [E] near a townsperson to speak with them.",
+                2: "Press [B] to open your Journal and learn about the residents.",
+                3: "Press [TAB] when ready to accuse. Good luck, detective!",
+            }
+            tut_text = tut_msgs.get(game.tutorial_step, "")
+            if tut_text:
+                tw = SCREEN_W - 100
+                tut_surf = font_md.render(tut_text, True, (255, 255, 220))
+                tbg_w = min(tut_surf.get_width() + 30, tw)
+                tbg_h = 40
+                tbg_x = SCREEN_W // 2 - tbg_w // 2
+                tbg_y = hud_h + 8
+                tbg = pygame.Surface((tbg_w, tbg_h), pygame.SRCALPHA)
+                tbg.fill((20, 15, 40, 200))
+                screen.blit(tbg, (tbg_x, tbg_y))
+                pygame.draw.rect(screen, (100, 80, 180), (tbg_x, tbg_y, tbg_w, tbg_h), 1, border_radius=4)
+                screen.blit(tut_surf, (SCREEN_W // 2 - tut_surf.get_width() // 2, tbg_y + 8))
 
         # Dialogue box
         if game.dialogue_target:
@@ -2635,6 +2819,67 @@ while running:
         for line in game.storyteller_text.split("\n"):
             cur_y = draw_centered_text_wrapped(screen, line, font_lg, BLOOD_RED, cur_y)
         draw_centered_text(screen, "Press ENTER for main menu", font_md, (255, 180, 180), 500)
+
+    elif game.state == "RECAP":
+        screen.fill((15, 12, 8))
+        # Build recap lines
+        recap_lines = []
+        won = game.reveal_correct
+        if won:
+            recap_lines.append(("CASE CLOSED", (255, 220, 60), font_title))
+            recap_lines.append(("", (0, 0, 0), font_sm))  # spacer
+        else:
+            recap_lines.append(("CASE UNSOLVED", BLOOD_RED, font_title))
+            recap_lines.append(("", (0, 0, 0), font_sm))
+
+        # The villain
+        villain_c = next((c for c in game.characters if c["is_villain"]), None)
+        if villain_c:
+            recap_lines.append(("The Villain:", (200, 180, 100), font_md))
+            recap_lines.append((f"  {villain_c['name']} — {villain_c['personality']}, from {villain_c['hometown']}", (220, 210, 180), font_sm))
+            recap_lines.append(("", (0, 0, 0), font_sm))
+
+        # Motives
+        victims = [e for e in game.history if e["type"] == "night" and e.get("victim")]
+        if victims and villain_c:
+            recap_lines.append(("Motives:", (200, 180, 100), font_md))
+            for ev in victims:
+                vname = ev["victim"]
+                rel = game.get_relationship(villain_c["name"], vname)
+                if rel:
+                    recap_lines.append((f"  {vname}: {rel['detail']}", (220, 210, 180), font_sm))
+                else:
+                    recap_lines.append((f"  {vname}: No known motive", (180, 170, 150), font_sm))
+            recap_lines.append(("", (0, 0, 0), font_sm))
+
+        # Victims timeline
+        recap_lines.append(("Timeline:", (200, 180, 100), font_md))
+        for ev in game.history:
+            recap_lines.append((f"  {ev['description']}", (200, 195, 170), font_sm))
+        recap_lines.append(("", (0, 0, 0), font_sm))
+
+        # Evidence found
+        if game.evidence_found:
+            recap_lines.append(("Evidence Collected:", (200, 180, 100), font_md))
+            for ef in game.evidence_found:
+                recap_lines.append((f"  - {ef['name']}", (200, 195, 170), font_sm))
+
+        # Render with scrolling
+        visible_start = game.recap_scroll
+        visible_end = min(visible_start + 16, len(recap_lines))
+        game.recap_scroll = min(game.recap_scroll, max(0, len(recap_lines) - 16))
+
+        if visible_start > 0:
+            draw_centered_text(screen, "▲", font_md, (180, 180, 180), 25)
+        y_pos = 40
+        for i in range(visible_start, visible_end):
+            txt, col, fnt = recap_lines[i]
+            if txt:
+                y_pos = draw_centered_text_wrapped(screen, txt, fnt, col, y_pos, max_width=SCREEN_W - 100)
+            y_pos += 6
+        if visible_end < len(recap_lines):
+            draw_centered_text(screen, "▼", font_md, (180, 180, 180), SCREEN_H - 60)
+        draw_centered_text(screen, "Press ENTER to return to menu", font_md, (150, 150, 130), SCREEN_H - 35)
 
     # Fade overlay (drawn over everything)
     if game.fade_alpha > 0:
