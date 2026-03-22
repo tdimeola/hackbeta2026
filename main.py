@@ -2007,10 +2007,15 @@ def draw_centered_text_wrapped(surface, text, font, color, y, max_width=None, li
 
 
 def quantum_blood_game_loop():
+    global display
+    global is_fullscreen
     global master_volume
     global music_volume
     global menu_bg_timer
     global menu_bg_frame_idx
+    global menu_clip_idx
+    global menu_frame_idx
+    global menu_frame_timer
     global player_facing
     global player_walking
     global player_anim_timer
