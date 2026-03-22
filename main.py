@@ -285,28 +285,37 @@ BUILDING_SPRITE_POS = {
     "the Library":       (18, 9),
 }
 
-# Menu background GIF — plays once then holds last frame
-def _load_gif_frames(path, target_size):
-    from PIL import Image
-    try:
-        pil_img = Image.open(path)
-        frames = []
-        for i in range(pil_img.n_frames):
-            pil_img.seek(i)
-            frame = pil_img.convert("RGBA")
-            raw = frame.tobytes()
-            surf = pygame.image.frombytes(raw, frame.size, "RGBA").convert_alpha()
-            surf = pygame.transform.smoothscale(surf, target_size)
-            frames.append(surf)
-        return frames
-    except Exception as e:
-        print(f"Could not load GIF: {e}")
-        return []
+# Menu background — video clips as pre-extracted frame sequences
+def _load_video_frames(folder):
+    """Load numbered PNG frames from a folder."""
+    import os
+    frames = []
+    i = 1
+    while True:
+        path = os.path.join(folder, f"frame_{i:03d}.png")
+        if not os.path.exists(path):
+            break
+        try:
+            img = pygame.image.load(path).convert()
+            frames.append(img)
+        except Exception:
+            break
+        i += 1
+    print(f"Loaded {len(frames)} frames from {folder}")
+    return frames
 
-menu_bg_frames = _load_gif_frames("bg_village.gif", (SCREEN_W, SCREEN_H))
-menu_bg_frame_idx = 0
-menu_bg_timer = 0.0
-MENU_BG_FPS = 15
+MENU_VIDEO_CLIPS = [
+    _load_video_frames("assets/videos/frames_1"),
+    _load_video_frames("assets/videos/frames_2"),
+    _load_video_frames("assets/videos/frames_3"),
+]
+MENU_VIDEO_CLIPS = [c for c in MENU_VIDEO_CLIPS if c]  # remove empty
+menu_clip_idx = 0      # which video clip is playing
+menu_frame_idx = 0     # frame within current clip
+menu_frame_timer = 0.0
+menu_transition_timer = 0.0  # >0 means fading between clips
+MENU_VIDEO_FPS = 15
+MENU_TRANSITION_DUR = 1.0  # 1 second fade between clips
 
 player_facing = "south"
 player_walking = False
@@ -985,9 +994,6 @@ class Game:
             ("in the storeroom of the General Store", "the General Store"),
             ("on the floor of Town Hall", "Town Hall"),
             ("among the shelves of the Library", "the Library"),
-            ("in the alley behind the Tavern", "the Tavern"),
-            ("near the old well by Town Hall", "Town Hall"),
-            ("in the courtyard behind the General Store", "the General Store"),
         ]
         # How they were killed
         cause_of_death = [
@@ -1167,47 +1173,48 @@ class Game:
             npc["tile_y"] = ty
             mark_occupied(loc_type, building, tx, ty)
 
-        for npc in self.alive:
+        # Shuffle placement order so no NPC consistently gets first/last pick of spots
+        placement_order = list(self.alive)
+        random.shuffle(placement_order)
+
+        for npc in placement_order:
             npc_idx = self.characters.index(npc)
             home = BUILDING_NAMES[npc_idx] if npc_idx < len(BUILDING_NAMES) else "their home"
 
-            if True:
-                # All NPCs (including villain): randomly place at home, inside a building, or wandering
-                placed = False
-                roll = random.random()
-                if roll < 0.35 and interior_buildings:
-                    bname = random.choice(interior_buildings)
-                    interior = INTERIORS[bname]
-                    floor_tiles = [(c, r) for r, row in enumerate(interior["map"])
-                                   for c, tile in enumerate(row)
-                                   if tile == 7 and not is_occupied("interior", bname, c, r)]
-                    if floor_tiles:
-                        ix, iy = random.choice(floor_tiles)
-                        place_npc(npc, "interior", bname, ix, iy, f"inside {bname}")
+            # Randomly place at home, inside a building, or wandering
+            placed = False
+            roll = random.random()
+            if roll < 0.35 and interior_buildings:
+                bname = random.choice(interior_buildings)
+                interior = INTERIORS[bname]
+                floor_tiles = [(c, r) for r, row in enumerate(interior["map"])
+                               for c, tile in enumerate(row)
+                               if tile == 7 and not is_occupied("interior", bname, c, r)]
+                if floor_tiles:
+                    ix, iy = random.choice(floor_tiles)
+                    place_npc(npc, "interior", bname, ix, iy, f"inside {bname}")
+                    placed = True
+            if not placed and roll < 0.65:
+                while outdoor_idx < len(outdoor_spots):
+                    pos, area = outdoor_spots[outdoor_idx]
+                    outdoor_idx += 1
+                    if not is_occupied("outside", None, pos[0], pos[1]):
+                        place_npc(npc, "outside", None, pos[0], pos[1], f"at {area}")
                         placed = True
-                if not placed and roll < 0.65:
+                        break
+            if not placed:
+                spawn = NPC_SPAWNS[npc_idx]
+                if not is_occupied("outside", None, spawn[0], spawn[1]):
+                    place_npc(npc, "outside", None, spawn[0], spawn[1], f"outside {home}")
+                else:
                     while outdoor_idx < len(outdoor_spots):
                         pos, area = outdoor_spots[outdoor_idx]
                         outdoor_idx += 1
                         if not is_occupied("outside", None, pos[0], pos[1]):
                             place_npc(npc, "outside", None, pos[0], pos[1], f"at {area}")
-                            placed = True
                             break
-                if not placed:
-                    spawn = NPC_SPAWNS[npc_idx]
-                    if not is_occupied("outside", None, spawn[0], spawn[1]):
-                        place_npc(npc, "outside", None, spawn[0], spawn[1], f"outside {home}")
                     else:
-                        # Home is taken, find any free outdoor spot
-                        while outdoor_idx < len(outdoor_spots):
-                            pos, area = outdoor_spots[outdoor_idx]
-                            outdoor_idx += 1
-                            if not is_occupied("outside", None, pos[0], pos[1]):
-                                place_npc(npc, "outside", None, pos[0], pos[1], f"at {area}")
-                                break
-                        else:
-                            # Last resort: offset from home
-                            place_npc(npc, "outside", None, spawn[0] + 1, spawn[1], f"outside {home}")
+                        place_npc(npc, "outside", None, spawn[0] + 1, spawn[1], f"outside {home}")
 
     def _place_evidence(self):
         """Pick a random subset of search spots to be active, then assign evidence."""
@@ -2123,10 +2130,12 @@ while running:
             elif game.state == "RECAP":
                 if event.key == pygame.K_RETURN and not game.fading:
                     def _to_menu():
-                        global menu_bg_frame_idx, menu_bg_timer
+                        global menu_clip_idx, menu_frame_idx, menu_frame_timer, menu_transition_timer
                         game.state = "MENU"
-                        menu_bg_frame_idx = 0
-                        menu_bg_timer = 0.0
+                        menu_clip_idx = 0
+                        menu_frame_idx = 0
+                        menu_frame_timer = 0.0
+                        menu_transition_timer = 0.0
                         music_start_menu()
                     game.start_fade(_to_menu)
                 if event.key == pygame.K_UP:
@@ -2138,10 +2147,12 @@ while running:
             elif game.state in ("WIN", "LOSE"):
                 if event.key == pygame.K_RETURN and not game.fading:
                     def _to_menu():
-                        global menu_bg_frame_idx, menu_bg_timer
+                        global menu_clip_idx, menu_frame_idx, menu_frame_timer, menu_transition_timer
                         game.state = "MENU"
-                        menu_bg_frame_idx = 0
-                        menu_bg_timer = 0.0
+                        menu_clip_idx = 0
+                        menu_frame_idx = 0
+                        menu_frame_timer = 0.0
+                        menu_transition_timer = 0.0
                         music_start_menu()
                     game.start_fade(_to_menu)
 
@@ -2262,20 +2273,57 @@ while running:
     if game.state == "MENU":
         t = pygame.time.get_ticks() / 1000.0
 
-        # GIF background — plays once, holds on last frame
-        if menu_bg_frames:
-            if menu_bg_frame_idx < len(menu_bg_frames) - 1:
-                menu_bg_timer += dt
-                if menu_bg_timer >= 1.0 / MENU_BG_FPS:
-                    menu_bg_timer -= 1.0 / MENU_BG_FPS
-                    menu_bg_frame_idx += 1
-            screen.blit(menu_bg_frames[menu_bg_frame_idx], (0, 0))
-            # Dark overlay for readability
+        # Video background — loops clips with fade transitions
+        if MENU_VIDEO_CLIPS:
+            clip = MENU_VIDEO_CLIPS[menu_clip_idx % len(MENU_VIDEO_CLIPS)]
+
+            if menu_transition_timer > 0:
+                # Fading between clips
+                menu_transition_timer -= dt
+                fade_progress = menu_transition_timer / MENU_TRANSITION_DUR  # 1→0
+
+                if fade_progress > 0.5:
+                    # First half: fade out old clip (show last frame of previous clip going to black)
+                    prev_clip_idx = (menu_clip_idx - 1) % len(MENU_VIDEO_CLIPS)
+                    prev_clip = MENU_VIDEO_CLIPS[prev_clip_idx]
+                    screen.blit(prev_clip[-1], (0, 0))
+                    alpha = int(255 * (1.0 - (fade_progress - 0.5) * 2))  # 0→255
+                    fade_s = pygame.Surface((SCREEN_W, SCREEN_H))
+                    fade_s.fill((0, 0, 0))
+                    fade_s.set_alpha(alpha)
+                    screen.blit(fade_s, (0, 0))
+                else:
+                    # Second half: fade in new clip (first frame emerging from black)
+                    screen.blit(clip[0], (0, 0))
+                    alpha = int(255 * fade_progress * 2)  # 255→0
+                    fade_s = pygame.Surface((SCREEN_W, SCREEN_H))
+                    fade_s.fill((0, 0, 0))
+                    fade_s.set_alpha(alpha)
+                    screen.blit(fade_s, (0, 0))
+            else:
+                # Playing current clip
+                menu_frame_timer += dt
+                if menu_frame_timer >= 1.0 / MENU_VIDEO_FPS:
+                    menu_frame_timer -= 1.0 / MENU_VIDEO_FPS
+                    menu_frame_idx += 1
+
+                if menu_frame_idx >= len(clip):
+                    # Clip finished — start transition to next
+                    menu_clip_idx = (menu_clip_idx + 1) % len(MENU_VIDEO_CLIPS)
+                    menu_frame_idx = 0
+                    menu_frame_timer = 0.0
+                    menu_transition_timer = MENU_TRANSITION_DUR
+                    # Show last frame of finished clip during transition start
+                    screen.blit(clip[-1], (0, 0))
+                else:
+                    screen.blit(clip[menu_frame_idx], (0, 0))
+
+            # Dark overlay for text readability
             _menu_ov = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
-            _menu_ov.fill((0, 0, 0, 140))
+            _menu_ov.fill((0, 0, 0, 120))
             screen.blit(_menu_ov, (0, 0))
         else:
-            # Fallback dark gradient if GIF not found
+            # Fallback dark gradient if no videos found
             for y_line in range(SCREEN_H):
                 frac = y_line / SCREEN_H
                 pygame.draw.line(screen, (int(8 + 15 * frac), int(5 + 8 * frac), int(18 + 12 * (1 - frac))),
