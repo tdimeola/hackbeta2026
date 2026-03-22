@@ -2364,6 +2364,10 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+        # if event.type == pygame.KEYDOWN:
+        # if event.key == pygame.K_F11:
+        # pygame.display.toggle_fullscreen()
+
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_F11:
                 pygame.display.toggle_fullscreen()
@@ -2691,9 +2695,17 @@ while running:
     if game.state == "MENU":
         # Animate GIF background
         menu_bg_timer += dt
+
         if menu_bg_timer >= 1.0 / MENU_BG_FPS:
             menu_bg_timer -= 1.0 / MENU_BG_FPS
-            menu_bg_frame_idx = (menu_bg_frame_idx + 1) % len(menu_bg_frames)
+
+            if menu_bg_frame_idx < len(menu_bg_frames) - 1:
+                menu_bg_frame_idx += 1
+
+            # menu_bg_frame_idx = (menu_bg_frame_idx + 1) % len(menu_bg_frames)
+            # if menu_bg_frame_idx < 0:
+            # menu_bg_frame_idx = 0
+
         screen.blit(menu_bg_frames[menu_bg_frame_idx], (0, 0))
         _menu_overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
         _menu_overlay.fill((0, 0, 0, 140))
