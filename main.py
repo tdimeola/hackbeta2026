@@ -9,6 +9,8 @@ import threading
 import ollama
 import numpy as np
 
+from doom.main import Game as DoomGame
+
 pygame.init()
 pygame.mixer.init(frequency=44100, size=-16, channels=1, buffer=512)
 
@@ -2250,6 +2252,7 @@ class Game:
 
 
 game = Game()
+doom_game = DoomGame()
 music_start_menu()
 
 
@@ -2568,7 +2571,9 @@ def quantum_blood_game_loop():
                         apply_music_volume()
 
             # Win/Lose
-            elif game.state in ("WIN", "LOSE"):
+            elif game.state == "WIN":
+                return running, "doom"
+            elif game.state == "LOSE":
                 if event.key == pygame.K_RETURN and not game.fading:
 
                     def _to_menu():
@@ -3556,13 +3561,16 @@ def quantum_blood_game_loop():
         screen.blit(fade_surf, (0, 0))
 
     pygame.display.flip()
-    return running
+    return running, "quantum"
 
 
 # ── Main Loop ───────────────────────────────────────────────────
-running = True
+running, state = True, "quantum"
 while running:
-    running = quantum_blood_game_loop()
+    if state == "quantum":
+        running, state = quantum_blood_game_loop()
+    if state == "doom":
+        doom_game.loop()
 
 
 pygame.quit()
