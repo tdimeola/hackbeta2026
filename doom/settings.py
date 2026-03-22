@@ -1,8 +1,11 @@
 import math
+import pygame as pg
 
-# game settings
-RES = WIDTH, HEIGHT = 2560, 1600
-# RES = WIDTH, HEIGHT = 1920, 1080
+# game settings — detect actual screen resolution
+pg.init()
+_info = pg.display.Info()
+WIDTH, HEIGHT = _info.current_w, _info.current_h
+RES = WIDTH, HEIGHT
 HALF_WIDTH = WIDTH // 2
 HALF_HEIGHT = HEIGHT // 2
 FPS = 0
