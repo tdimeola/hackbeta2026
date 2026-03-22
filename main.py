@@ -2273,50 +2273,43 @@ while running:
     if game.state == "MENU":
         t = pygame.time.get_ticks() / 1000.0
 
-        # Video background — loops clips with fade transitions
+        # Video background — loops clips with crossfade
         if MENU_VIDEO_CLIPS:
             clip = MENU_VIDEO_CLIPS[menu_clip_idx % len(MENU_VIDEO_CLIPS)]
+            fade_frames = int(MENU_VIDEO_FPS * 0.5)  # frames for fade (0.5s)
 
-            if menu_transition_timer > 0:
-                # Fading between clips
-                menu_transition_timer -= dt
-                fade_progress = menu_transition_timer / MENU_TRANSITION_DUR  # 1→0
+            # Advance frame
+            menu_frame_timer += dt
+            if menu_frame_timer >= 1.0 / MENU_VIDEO_FPS:
+                menu_frame_timer -= 1.0 / MENU_VIDEO_FPS
+                menu_frame_idx += 1
 
-                if fade_progress > 0.5:
-                    # First half: fade out old clip (show last frame of previous clip going to black)
-                    prev_clip_idx = (menu_clip_idx - 1) % len(MENU_VIDEO_CLIPS)
-                    prev_clip = MENU_VIDEO_CLIPS[prev_clip_idx]
-                    screen.blit(prev_clip[-1], (0, 0))
-                    alpha = int(255 * (1.0 - (fade_progress - 0.5) * 2))  # 0→255
-                    fade_s = pygame.Surface((SCREEN_W, SCREEN_H))
-                    fade_s.fill((0, 0, 0))
-                    fade_s.set_alpha(alpha)
-                    screen.blit(fade_s, (0, 0))
-                else:
-                    # Second half: fade in new clip (first frame emerging from black)
-                    screen.blit(clip[0], (0, 0))
-                    alpha = int(255 * fade_progress * 2)  # 255→0
-                    fade_s = pygame.Surface((SCREEN_W, SCREEN_H))
-                    fade_s.fill((0, 0, 0))
-                    fade_s.set_alpha(alpha)
-                    screen.blit(fade_s, (0, 0))
-            else:
-                # Playing current clip
-                menu_frame_timer += dt
-                if menu_frame_timer >= 1.0 / MENU_VIDEO_FPS:
-                    menu_frame_timer -= 1.0 / MENU_VIDEO_FPS
-                    menu_frame_idx += 1
+            if menu_frame_idx >= len(clip):
+                menu_clip_idx = (menu_clip_idx + 1) % len(MENU_VIDEO_CLIPS)
+                menu_frame_idx = 0
+                menu_frame_timer = 0.0
+                clip = MENU_VIDEO_CLIPS[menu_clip_idx]
 
-                if menu_frame_idx >= len(clip):
-                    # Clip finished — start transition to next
-                    menu_clip_idx = (menu_clip_idx + 1) % len(MENU_VIDEO_CLIPS)
-                    menu_frame_idx = 0
-                    menu_frame_timer = 0.0
-                    menu_transition_timer = MENU_TRANSITION_DUR
-                    # Show last frame of finished clip during transition start
-                    screen.blit(clip[-1], (0, 0))
-                else:
-                    screen.blit(clip[menu_frame_idx], (0, 0))
+            # Draw current frame
+            frame_idx = min(menu_frame_idx, len(clip) - 1)
+            screen.blit(clip[frame_idx], (0, 0))
+
+            # Fade in at start of clip
+            if menu_frame_idx < fade_frames:
+                alpha = int(255 * (1.0 - menu_frame_idx / fade_frames))
+                fade_s = pygame.Surface((SCREEN_W, SCREEN_H))
+                fade_s.fill((0, 0, 0))
+                fade_s.set_alpha(alpha)
+                screen.blit(fade_s, (0, 0))
+
+            # Fade out at end of clip
+            frames_left = len(clip) - menu_frame_idx
+            if frames_left <= fade_frames:
+                alpha = int(255 * (1.0 - frames_left / fade_frames))
+                fade_s = pygame.Surface((SCREEN_W, SCREEN_H))
+                fade_s.fill((0, 0, 0))
+                fade_s.set_alpha(alpha)
+                screen.blit(fade_s, (0, 0))
 
             # Dark overlay for text readability
             _menu_ov = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
