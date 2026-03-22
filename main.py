@@ -123,8 +123,10 @@ DAY_MUSIC = "sounds/in-game-sound-track.mp3"
 # Sound effects
 sfx_door = pygame.mixer.Sound("sounds/opening_door.mp3")
 sfx_door.set_volume(0.7)
-sfx_pop = pygame.mixer.Sound("sounds/pop.mp3")
+sfx_pop = pygame.mixer.Sound("sounds/speech.mp3")
 sfx_pop.set_volume(0.6)
+sfx_speech = pygame.mixer.Sound("sounds/speech.mp3")
+sfx_speech.set_volume(1)
 EVIDENCE_SOUND = pygame.mixer.Sound("sounds/evidence_sounds.mp3")
 EVIDENCE_SOUND.set_volume(0.9)
 REVEAL_SOUND = pygame.mixer.Sound("sounds/reveal.mp3")
@@ -1562,6 +1564,7 @@ class Game:
     def talk_to_npc(self, npc):
         if self.dialogue_loading:
             return
+        sfx_speech.play()
         self.dialogue_target = npc
         self.talked_to.add(npc["name"])
         npc["talking"] = True
