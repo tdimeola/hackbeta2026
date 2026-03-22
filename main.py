@@ -748,6 +748,7 @@ class Game:
         self.recap_scroll = 0
         # Credits
         self.credits_scroll_y = SCREEN_H  # starts below screen, scrolls up
+        self.credits_timer = 0.0
 
     def start_fade(self, callback=None):
         """Start a fade-to-black transition. Callback fires at peak darkness."""
@@ -2012,6 +2013,7 @@ while running:
                 def _start_credits():
                     game.state = "CREDITS"
                     game.credits_scroll_y = SCREEN_H
+                    game.credits_timer = 0.0
                     music_stop(fade_ms=500)
                     pygame.mixer.music.load(CREDITS_MUSIC)
                     pygame.mixer.music.set_volume(0.7)
@@ -2147,6 +2149,7 @@ while running:
                     def _to_credits():
                         game.state = "CREDITS"
                         game.credits_scroll_y = SCREEN_H
+                        game.credits_timer = 0.0
                         music_stop(fade_ms=500)
                         pygame.mixer.music.load(CREDITS_MUSIC)
                         pygame.mixer.music.set_volume(0.7)
@@ -2184,11 +2187,16 @@ while running:
                     game.start_fade(_to_menu)
 
     # ── Update ──────────────────────────────────────────────────
-    # Credits auto-scroll
+    # Credits auto-scroll + 30s fade-out to menu
     if game.state == "CREDITS":
-        game.credits_scroll_y -= 40 * dt  # scroll speed in pixels/sec
-        # Auto-return to menu when credits finish scrolling
-        if game.credits_scroll_y < -800 and not game.fading:
+        game.credits_scroll_y -= 40 * dt
+        game.credits_timer += dt
+        # Fade music out during last 5 seconds
+        if game.credits_timer > 25.0:
+            vol = max(0.0, 0.7 * (1.0 - (game.credits_timer - 25.0) / 5.0))
+            pygame.mixer.music.set_volume(vol)
+        # Return to menu at 30s
+        if game.credits_timer >= 30.0 and not game.fading:
             def _credits_done():
                 global menu_clip_idx, menu_frame_idx, menu_frame_timer, menu_transition_timer
                 game.state = "MENU"
@@ -2411,13 +2419,55 @@ while running:
         draw_centered_text(screen, "[L] Evidence Log   [J] Clue Tracker   [C] Credits   [F11] Fullscreen", font_sm, (170, 165, 155), 545)
 
     elif game.state == "NIGHT":
-        screen.fill(NIGHT_OVERLAY)
-        cur_y = 200
+        t = pygame.time.get_ticks() / 1000.0
+
+        # Dark sky gradient
+        for y_line in range(SCREEN_H):
+            frac = y_line / SCREEN_H
+            r = int(5 + 8 * frac)
+            g = int(5 + 6 * frac)
+            b = int(25 + 20 * (1 - frac))
+            pygame.draw.line(screen, (r, g, b), (0, y_line), (SCREEN_W, y_line))
+
+        # Stars
+        for i in range(60):
+            sx = (i * 97 + 31) % SCREEN_W
+            sy = (i * 53 + 17) % (SCREEN_H - 100) + 10
+            twinkle = 80 + int(100 * max(0, math.sin(t * 1.2 + i * 0.9)))
+            size = 1 if i % 3 != 0 else 2
+            pygame.draw.circle(screen, (twinkle, twinkle, twinkle + 30), (sx, sy), size)
+
+        # Moon with glow
+        moon_x, moon_y = 150, 80
+        # Outer glow
+        for gr in range(50, 15, -5):
+            glow_s = pygame.Surface((gr * 2, gr * 2), pygame.SRCALPHA)
+            pygame.draw.circle(glow_s, (180, 180, 200, 6), (gr, gr), gr)
+            screen.blit(glow_s, (moon_x - gr, moon_y - gr))
+        # Moon body
+        pygame.draw.circle(screen, (220, 218, 200), (moon_x, moon_y), 25)
+        pygame.draw.circle(screen, (200, 198, 180), (moon_x - 6, moon_y - 4), 22)
+        # Craters
+        pygame.draw.circle(screen, (195, 192, 175), (moon_x + 8, moon_y - 5), 4)
+        pygame.draw.circle(screen, (195, 192, 175), (moon_x - 3, moon_y + 8), 3)
+
+        # Subtle clouds drifting
+        for i in range(5):
+            cx = (int(t * 8 + i * 200) % (SCREEN_W + 200)) - 100
+            cy = 50 + i * 120 + int(math.sin(t * 0.3 + i) * 10)
+            cloud = pygame.Surface((120 + i * 20, 20), pygame.SRCALPHA)
+            cloud.fill((40, 40, 60, 12 + i * 3))
+            screen.blit(cloud, (cx, cy))
+
+        # Storyteller text
+        cur_y = 220
         for line in game.storyteller_text.split("\n"):
             cur_y = draw_centered_text_wrapped(screen, line, font_lg, (220, 220, 255), cur_y)
-            cur_y += 10  # extra gap between paragraphs
+            cur_y += 10
         if game.night_timer <= 0:
-            draw_centered_text(screen, "Press ENTER to continue", font_md, (150, 150, 180), 500)
+            enter_a = 150 + int(80 * math.sin(t * 3))
+            enter_surf = font_md.render("Press ENTER to continue", True, (enter_a, enter_a, min(255, int(enter_a * 1.2))))
+            screen.blit(enter_surf, (SCREEN_W // 2 - enter_surf.get_width() // 2, 520))
 
     elif game.state in ("DAY", "ACCUSE"):
         pw, ph = TILE_SIZE - 4, TILE_SIZE - 4
@@ -3166,6 +3216,9 @@ while running:
             ("", font_sm, (0, 0, 0)),
             ("Game Design & Programming", font_sm, (140, 130, 110)),
             ("Garrett Bradham", font_md, (220, 210, 180)),
+            ("Will", font_md, (220, 210, 180)),
+            ("Taz", font_md, (220, 210, 180)),
+            ("Teresa", font_md, (220, 210, 180)),
             ("", font_sm, (0, 0, 0)),
             ("AI Integration", font_sm, (140, 130, 110)),
             ("Powered by Ollama + Llama 3.1", font_md, (220, 210, 180)),
@@ -3184,15 +3237,6 @@ while running:
             ("", font_sm, (0, 0, 0)),
             ("Music & Sound Effects", font_sm, (140, 130, 110)),
             ("Original Compositions", font_md, (220, 210, 180)),
-            ("", font_sm, (0, 0, 0)),
-            ("", font_sm, (0, 0, 0)),
-            ("— Special Thanks —", font_md, (160, 140, 100)),
-            ("", font_sm, (0, 0, 0)),
-            ("Claude Code", font_md, (220, 210, 180)),
-            ("Development Assistant", font_sm, (140, 130, 110)),
-            ("", font_sm, (0, 0, 0)),
-            ("The Pygame Community", font_md, (220, 210, 180)),
-            ("", font_sm, (0, 0, 0)),
             ("", font_sm, (0, 0, 0)),
             ("", font_sm, (0, 0, 0)),
             ("Thank you for playing!", font_lg, (180, 20, 20)),
