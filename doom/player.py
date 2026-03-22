@@ -2,6 +2,8 @@ from .settings import *
 import pygame as pg
 import math
 
+class GameOver(Exception):
+    pass
 
 class Player:
     def __init__(self, game):
@@ -17,8 +19,8 @@ class Player:
         self.diag_move_corr = 1 / math.sqrt(2)
 
     def recover_health(self):
-        if self.check_health_recovery_delay() and self.health < PLAYER_MAX_HEALTH:
-            self.health += 1
+        if self.check_health_recovery_delay():
+            self.health -= 1
 
     def check_health_recovery_delay(self):
         time_now = pg.time.get_ticks()
@@ -31,7 +33,7 @@ class Player:
             self.game.object_renderer.game_over()
             pg.display.flip()
             pg.time.delay(1500)
-            self.game.new_game()
+            raise GameOver()
 
     def get_damage(self, damage):
         self.health -= damage
