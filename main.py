@@ -121,21 +121,25 @@ MENU_MUSIC = "sounds/The_Crimson_Manor.mp3"
 DAY_MUSIC = "sounds/in-game-sound-track.mp3"
 CREDITS_MUSIC = "sounds/credits.mp3"
 
-# Sound effects
-sfx_door = pygame.mixer.Sound("sounds/opening_door.mp3")
-sfx_door.set_volume(0.7)
-sfx_pop = pygame.mixer.Sound("sounds/speech.mp3")
-sfx_pop.set_volume(0.6)
-sfx_speech = pygame.mixer.Sound("sounds/speech.mp3")
-sfx_speech.set_volume(1)
-EVIDENCE_SOUND = pygame.mixer.Sound("sounds/evidence_sounds.mp3")
-EVIDENCE_SOUND.set_volume(0.9)
-REVEAL_SOUND = pygame.mixer.Sound("sounds/reveal.mp3")
-REVEAL_SOUND.set_volume(0.9)
-sfx_reverb_drum = pygame.mixer.Sound("sounds/reverb_drum.mp3")
-sfx_reverb_drum.set_volume(0.8)
-NIGHT_SOUND = pygame.mixer.Sound("sounds/night_time.mp3")
-NIGHT_SOUND.set_volume(0.8)
+# Sound effects - load with fallback so missing files don't crash the game
+def _load_sfx(path, volume=0.8):
+    try:
+        snd = pygame.mixer.Sound(path)
+        snd.set_volume(volume)
+        return snd
+    except (FileNotFoundError, pygame.error):
+        print(f"Warning: sound file not found: {path}")
+        snd = pygame.mixer.Sound(buffer=bytes(44))  # silent stub
+        snd.set_volume(0)
+        return snd
+
+sfx_door = _load_sfx("sounds/opening_door.mp3", 0.7)
+sfx_pop = _load_sfx("sounds/speech.mp3", 0.6)
+sfx_speech = _load_sfx("sounds/speech.mp3", 1.0)
+EVIDENCE_SOUND = _load_sfx("sounds/evidence_sounds.mp3", 0.9)
+REVEAL_SOUND = _load_sfx("sounds/reveal.mp3", 0.9)
+sfx_reverb_drum = _load_sfx("sounds/reverb_drum.mp3", 0.8)
+NIGHT_SOUND = _load_sfx("sounds/night_time.mp3", 0.8)
 
 
 def music_start_menu():
@@ -256,8 +260,12 @@ for d in DIRECTIONS:
     player_walk_frames[d] = frames
 
 # Fallback player image
-player_img_fallback = pygame.image.load("character.jpg").convert()
-player_img_fallback = pygame.transform.scale(player_img_fallback, (TILE_SIZE - 4, TILE_SIZE - 4))
+try:
+    player_img_fallback = pygame.image.load("character.jpg").convert()
+    player_img_fallback = pygame.transform.scale(player_img_fallback, (TILE_SIZE - 4, TILE_SIZE - 4))
+except (FileNotFoundError, pygame.error):
+    player_img_fallback = pygame.Surface((TILE_SIZE - 4, TILE_SIZE - 4))
+    player_img_fallback.fill((60, 120, 200))
 
 # Menu background — load animated GIF frames via Pillow
 # Building sprites — each covers a 4x4 tile area (192x192px)
@@ -532,6 +540,42 @@ INTERIORS = {
             {"tile": (1, 1), "name": "a shelf of potions"},
             {"tile": (5, 1), "name": "a mortar and pestle"},
             {"tile": (2, 3), "name": "a locked cabinet"},
+        ],
+    },
+    "the Church": {
+        "map": [
+            [8,8,8,8,8,8,8,8],
+            [8,7,7,9,9,7,7,8],
+            [8,7,7,7,7,7,7,8],
+            [8,9,7,7,7,7,9,8],
+            [8,7,7,7,7,7,7,8],
+            [8,7,7,4,7,7,7,8],
+        ],
+        "player_start": (3, 4),
+        "exit_tile": (3, 5),
+        "exit_world_pos": (26, 6),
+        "search_spots": [
+            {"tile": (3, 1), "name": "the altar"},
+            {"tile": (1, 3), "name": "a prayer bench"},
+            {"tile": (6, 3), "name": "a confessional"},
+        ],
+    },
+    "the General Store": {
+        "map": [
+            [8,8,8,8,8,8,8,8],
+            [8,9,7,7,9,7,9,8],
+            [8,7,7,7,7,7,7,8],
+            [8,7,7,7,7,9,7,8],
+            [8,7,7,7,7,7,7,8],
+            [8,7,7,4,7,7,7,8],
+        ],
+        "player_start": (3, 4),
+        "exit_tile": (3, 5),
+        "exit_world_pos": (4, 13),
+        "search_spots": [
+            {"tile": (1, 1), "name": "the front counter"},
+            {"tile": (4, 1), "name": "a supply shelf"},
+            {"tile": (5, 3), "name": "a storage crate"},
         ],
     },
     "Town Hall": {
@@ -893,7 +937,9 @@ class Game:
         }
 
         self.relationships = {}
-        villain = next(c for c in self.characters if c["is_villain"])
+        villain = next((c for c in self.characters if c["is_villain"]), None)
+        if villain is None:
+            return
 
         for i, a in enumerate(self.characters):
             for j, b in enumerate(self.characters):
@@ -2767,7 +2813,9 @@ while running:
         hud_h = 45
         if game.current_interior:
             hud_h = 65  # extra row for location
-        pygame.draw.rect(screen, (0, 0, 0, 180), (0, 0, SCREEN_W, hud_h))
+        hud_overlay = pygame.Surface((SCREEN_W, hud_h), pygame.SRCALPHA)
+        hud_overlay.fill((0, 0, 0, 180))
+        screen.blit(hud_overlay, (0, 0))
 
         hud_left = font_md.render(f"Day {game.night_num}  |  Guesses: {3 - game.wrong_guesses}  |  Evidence: {ev_count}", True, (255, 255, 255))
         hud_right = font_sm.render("[TAB] Accuse  [L] Log  [J] Clues  [B] Journal", True, (180, 180, 180))
