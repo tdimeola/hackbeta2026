@@ -288,18 +288,28 @@ player_walking = False
 player_anim_timer = 0.0
 player_anim_frame = 0
 
-# NPC pixel art sprites (south-facing for standing NPCs)
-NPC_SPRITE_SIZE = (TILE_SIZE + 8, TILE_SIZE + 8)  # slightly bigger than a tile
-npc_sprite_files = [
-    "assets/characters/blacksmith_south.png",
-    "assets/characters/villager_south.png",
-    "assets/characters/blacksmith_south.png",
-    "assets/characters/villager_south.png",
-    "assets/characters/blacksmith_south.png",
-    "assets/characters/villager_south.png",
-    "assets/characters/blacksmith_south.png",
-]
-npc_sprites = [load_sprite(f, NPC_SPRITE_SIZE) if f else None for f in npc_sprite_files]
+# NPC animated sprites — townsperson skin for all NPCs
+NPC_SPRITE_SIZE = (TILE_SIZE + 8, TILE_SIZE + 8)
+NPC_WALK_FRAME_COUNT = 6
+NPC_WALK_ANIM_SPEED = 8  # frames per second
+NPC_MOVE_SPEED = 60  # pixels per second (slower than player)
+
+# Load townsperson idle sprites (8 directions)
+npc_idle_sprites = {}
+for d in DIRECTIONS:
+    npc_idle_sprites[d] = load_sprite(f"assets/characters/townsperson/rotations/{d}.png", NPC_SPRITE_SIZE)
+
+# Load townsperson walk animation frames (8 directions x 6 frames)
+npc_walk_frames = {}
+for d in DIRECTIONS:
+    frames = []
+    for i in range(NPC_WALK_FRAME_COUNT):
+        frame = load_sprite(f"assets/characters/townsperson/animations/walk/{d}/frame_{i:03d}.png", NPC_SPRITE_SIZE)
+        frames.append(frame)
+    npc_walk_frames[d] = frames
+
+# Legacy static sprites (kept for fallback)
+npc_sprites = [None] * 7
 
 # NPC spawn positions (outside each building door)
 NPC_SPAWNS = [
@@ -778,6 +788,14 @@ class Game:
             c["location_type"] = "outside"
             c["location_building"] = None
             c["location_desc"] = f"outside {c['home']}"
+            # NPC movement/animation state
+            c["facing"] = "south"
+            c["npc_walking"] = False
+            c["npc_anim_timer"] = 0.0
+            c["npc_anim_frame"] = 0
+            c["move_target"] = None  # (tx, ty) pixel target or None
+            c["move_pause"] = random.uniform(1.0, 4.0)  # seconds to wait before next move
+            c["talking"] = False  # True when player is talking to this NPC
 
         # Init per-NPC memory and emotions
         self.npc_memory = {}
@@ -1434,11 +1452,121 @@ class Game:
         else:
             self.start_night()
 
+    def _update_npcs(self, dt):
+        """Update NPC autonomous movement — they wander around the town."""
+        for npc in self.alive:
+            # Don't move if talking to player — face the detective
+            if npc.get("talking") or self.dialogue_target is npc:
+                npc["npc_walking"] = False
+                dx_p = self.player_x - npc["x"]
+                dy_p = self.player_y - npc["y"]
+                if abs(dx_p) > abs(dy_p):
+                    if dx_p > 0:
+                        npc["facing"] = "east" if abs(dy_p) < abs(dx_p) * 0.5 else ("south-east" if dy_p > 0 else "north-east")
+                    else:
+                        npc["facing"] = "west" if abs(dy_p) < abs(dx_p) * 0.5 else ("south-west" if dy_p > 0 else "north-west")
+                else:
+                    if dy_p > 0:
+                        npc["facing"] = "south" if abs(dx_p) < abs(dy_p) * 0.5 else ("south-east" if dx_p > 0 else "south-west")
+                    else:
+                        npc["facing"] = "north" if abs(dx_p) < abs(dy_p) * 0.5 else ("north-east" if dx_p > 0 else "north-west")
+                continue
+            # Don't move NPCs in interiors (they stay put)
+            if npc.get("location_type") == "interior":
+                npc["npc_walking"] = False
+                continue
+
+            # If no target, count down pause then pick a new destination
+            if npc.get("move_target") is None:
+                npc["npc_walking"] = False
+                npc["move_pause"] = npc.get("move_pause", 2.0) - dt
+                if npc["move_pause"] <= 0:
+                    # Pick a random nearby walkable tile as target
+                    cx = int(npc["x"] // TILE_SIZE)
+                    cy = int(npc["y"] // TILE_SIZE)
+                    attempts = 0
+                    while attempts < 10:
+                        tx = cx + random.randint(-3, 3)
+                        ty = cy + random.randint(-3, 3)
+                        if 0 <= tx < MAP_W and 0 <= ty < MAP_H and tilemap[ty][tx] not in SOLID_TILES:
+                            npc["move_target"] = (tx * TILE_SIZE, ty * TILE_SIZE)
+                            break
+                        attempts += 1
+                    npc["move_pause"] = random.uniform(2.0, 6.0)
+            else:
+                # Move toward target
+                tx, ty = npc["move_target"]
+                dx_npc = tx - npc["x"]
+                dy_npc = ty - npc["y"]
+                dist = max(1, (dx_npc ** 2 + dy_npc ** 2) ** 0.5)
+
+                if dist < 4:
+                    # Arrived
+                    npc["x"] = tx
+                    npc["y"] = ty
+                    npc["move_target"] = None
+                    npc["npc_walking"] = False
+                    npc["move_pause"] = random.uniform(2.0, 6.0)
+                else:
+                    # Move
+                    move_x = (dx_npc / dist) * NPC_MOVE_SPEED * dt
+                    move_y = (dy_npc / dist) * NPC_MOVE_SPEED * dt
+                    new_x = npc["x"] + move_x
+                    new_y = npc["y"] + move_y
+
+                    # Collision check
+                    pw, ph = TILE_SIZE - 4, TILE_SIZE - 4
+                    blocked = False
+                    left = int(new_x) // TILE_SIZE
+                    right = int(new_x + pw - 1) // TILE_SIZE
+                    top = int(new_y) // TILE_SIZE
+                    bottom = int(new_y + ph - 1) // TILE_SIZE
+                    for r in range(top, bottom + 1):
+                        for c_col in range(left, right + 1):
+                            if r < 0 or r >= MAP_H or c_col < 0 or c_col >= MAP_W:
+                                blocked = True
+                            elif tilemap[r][c_col] in SOLID_TILES:
+                                blocked = True
+
+                    if blocked:
+                        npc["move_target"] = None
+                        npc["npc_walking"] = False
+                    else:
+                        npc["x"] = new_x
+                        npc["y"] = new_y
+                        npc["npc_walking"] = True
+
+                        # Update facing direction
+                        if abs(dx_npc) > abs(dy_npc):
+                            if dx_npc > 0:
+                                npc["facing"] = "east" if abs(dy_npc) < abs(dx_npc) * 0.5 else ("south-east" if dy_npc > 0 else "north-east")
+                            else:
+                                npc["facing"] = "west" if abs(dy_npc) < abs(dx_npc) * 0.5 else ("south-west" if dy_npc > 0 else "north-west")
+                        else:
+                            if dy_npc > 0:
+                                npc["facing"] = "south" if abs(dx_npc) < abs(dy_npc) * 0.5 else ("south-east" if dx_npc > 0 else "south-west")
+                            else:
+                                npc["facing"] = "north" if abs(dx_npc) < abs(dy_npc) * 0.5 else ("north-east" if dx_npc > 0 else "north-west")
+
+                # Update walk animation
+                if npc.get("npc_walking"):
+                    npc["npc_anim_timer"] = npc.get("npc_anim_timer", 0) + dt
+                    frame_dur = 1.0 / NPC_WALK_ANIM_SPEED
+                    if npc["npc_anim_timer"] >= frame_dur:
+                        npc["npc_anim_timer"] -= frame_dur
+                        npc["npc_anim_frame"] = (npc.get("npc_anim_frame", 0) + 1) % NPC_WALK_FRAME_COUNT
+                else:
+                    npc["npc_anim_timer"] = 0
+                    npc["npc_anim_frame"] = 0
+
     def talk_to_npc(self, npc):
         if self.dialogue_loading:
             return
         self.dialogue_target = npc
         self.talked_to.add(npc["name"])
+        npc["talking"] = True
+        npc["npc_walking"] = False
+        npc["move_target"] = None
 
         # Check if pre-fetched response is ready
         key = f"npc_{npc['name']}_{self.night_num}"
@@ -1778,6 +1906,16 @@ def draw_town_tile(surface, tile, rect, row, col):
         pygame.draw.rect(surface, TILE_COLORS.get(tile, BG_COLOR), rect)
 
 
+def get_npc_sprite(npc):
+    """Get the current sprite for an NPC based on their movement state."""
+    facing = npc.get("facing", "south")
+    if npc.get("npc_walking"):
+        frames = npc_walk_frames.get(facing)
+        if frames:
+            idx = npc.get("npc_anim_frame", 0) % len(frames)
+            return frames[idx]
+    return npc_idle_sprites.get(facing)
+
 def blit_clamped(surface, surf, x, y):
     """Blit a surface clamped within screen bounds."""
     x = max(4, min(x, SCREEN_W - surf.get_width() - 4))
@@ -1842,13 +1980,20 @@ while running:
                         game.search_result_timer = 0
                         game.search_result_text = ""
                     elif game.dialogue_target:
+                        if game.dialogue_target:
+                            game.dialogue_target["talking"] = False
                         game.dialogue_target = None
                         game.dialogue_text = ""
                         game.dialogue_loading = False
                     elif game.current_interior and not game.fading:
                         sfx_door.play()
-                        # Exit interior back to town with fade
-                        game.start_fade(lambda: game.try_exit_interior())
+                        _esc_interior = INTERIORS[game.current_interior]
+                        _esc_wx, _esc_wy = _esc_interior["exit_world_pos"]
+                        def _do_esc_exit(wx=_esc_wx, wy=_esc_wy):
+                            game.player_x = wx * TILE_SIZE
+                            game.player_y = wy * TILE_SIZE
+                            game.current_interior = None
+                        game.start_fade(_do_esc_exit)
                     else:
                         running = False
                 else:
@@ -1876,6 +2021,7 @@ while running:
                         game.search_result_text = ""
                     # Close dialogue
                     elif game.dialogue_target:
+                        game.dialogue_target["talking"] = False
                         game.dialogue_target = None
                         game.dialogue_text = ""
                         game.dialogue_loading = False
@@ -1885,7 +2031,14 @@ while running:
                     # Try exit interior
                     elif game.current_interior and game.is_on_exit() and not game.fading:
                         sfx_door.play()
-                        game.start_fade(lambda: game.try_exit_interior())
+                        # Capture exit data now so walking off the tile doesn't cancel it
+                        _exit_interior = INTERIORS[game.current_interior]
+                        _exit_wx, _exit_wy = _exit_interior["exit_world_pos"]
+                        def _do_exit(wx=_exit_wx, wy=_exit_wy):
+                            game.player_x = wx * TILE_SIZE
+                            game.player_y = wy * TILE_SIZE
+                            game.current_interior = None
+                        game.start_fade(_do_exit)
                     # Try enter building
                     elif not game.current_interior and game.is_on_door() and not game.fading:
                         sfx_door.play()
@@ -2088,6 +2241,9 @@ while running:
             game.search_result_timer -= dt
             if game.search_result_timer <= 0:
                 game.search_result_text = ""
+
+        # Update NPC movement
+        game._update_npcs(dt)
 
         # Check LLM responses
         if game.dialogue_loading and game.dialogue_target:
@@ -2354,8 +2510,7 @@ while running:
                 if npc.get("location_type") == "interior" and npc.get("location_building") == game.current_interior:
                     sx = npc["x"] - cam_x
                     sy = npc["y"] - cam_y
-                    idx = game.characters.index(npc) if npc in game.characters else -1
-                    sprite = npc_sprites[idx] if 0 <= idx < len(npc_sprites) else None
+                    sprite = get_npc_sprite(npc)
                     if sprite:
                         screen.blit(sprite, (sx - npc_off, sy - npc_off))
                     else:
@@ -2450,8 +2605,7 @@ while running:
                     continue  # Skip NPCs inside buildings
                 sx = npc["x"] - cam_x
                 sy = npc["y"] - cam_y
-                idx = game.characters.index(npc) if npc in game.characters else -1
-                sprite = npc_sprites[idx] if 0 <= idx < len(npc_sprites) else None
+                sprite = get_npc_sprite(npc)
                 if sprite:
                     screen.blit(sprite, (sx - npc_off, sy - npc_off))
                 else:
@@ -2740,10 +2894,9 @@ while running:
             ly += 40
 
             # Portrait
-            idx = game.characters.index(c)
-            sprite = npc_sprites[idx] if 0 <= idx < len(npc_sprites) else None
-            if sprite:
-                portrait = pygame.transform.smoothscale(sprite, (80, 80))
+            portrait_sprite = npc_idle_sprites.get("south")
+            if portrait_sprite:
+                portrait = pygame.transform.smoothscale(portrait_sprite, (80, 80))
                 screen.blit(portrait, (lx, ly))
             else:
                 pygame.draw.rect(screen, c["color"], (lx, ly, 80, 80))
