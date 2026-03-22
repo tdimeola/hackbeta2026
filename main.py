@@ -1171,40 +1171,8 @@ class Game:
             npc_idx = self.characters.index(npc)
             home = BUILDING_NAMES[npc_idx] if npc_idx < len(BUILDING_NAMES) else "their home"
 
-            if npc["is_villain"] and murder_loc and self.night_num > 1:
-                # Villain: place near murder location
-                placed = False
-                if murder_loc in INTERIORS:
-                    interior = INTERIORS[murder_loc]
-                    for r, row in enumerate(interior["map"]):
-                        for c, tile in enumerate(row):
-                            if tile == 7 and not is_occupied("interior", murder_loc, c, r):
-                                place_npc(npc, "interior", murder_loc, c, r, f"inside {murder_loc}")
-                                placed = True
-                                break
-                        if placed:
-                            break
-                if not placed:
-                    for door_pos, bname in DOOR_TO_BUILDING.items():
-                        if bname == murder_loc:
-                            tx, ty = door_pos[0], door_pos[1] + 1
-                            if not is_occupied("outside", None, tx, ty):
-                                place_npc(npc, "outside", None, tx, ty, f"near {murder_loc}")
-                                placed = True
-                                break
-                if not placed:
-                    while outdoor_idx < len(outdoor_spots):
-                        pos, area = outdoor_spots[outdoor_idx]
-                        outdoor_idx += 1
-                        if not is_occupied("outside", None, pos[0], pos[1]):
-                            place_npc(npc, "outside", None, pos[0], pos[1], f"at {area}")
-                            placed = True
-                            break
-                if not placed:
-                    spawn = NPC_SPAWNS[npc_idx]
-                    place_npc(npc, "outside", None, spawn[0], spawn[1], f"outside {home}")
-            else:
-                # Innocent NPCs: randomly place at home, inside a building, or wandering
+            if True:
+                # All NPCs (including villain): randomly place at home, inside a building, or wandering
                 placed = False
                 roll = random.random()
                 if roll < 0.35 and interior_buildings:
