@@ -2355,9 +2355,18 @@ def draw_centered_text_wrapped(
     return y
 
 
-# ── Main Loop ───────────────────────────────────────────────────
-running = True
-while running:
+def quantum_blood_game_loop():
+    global master_volume
+    global music_volume
+    global menu_bg_timer
+    global menu_bg_frame_idx
+    global player_facing
+    global player_walking
+    global player_anim_timer
+    global player_anim_frame
+
+    running = True
+
     dt = clock.tick(FPS) / 1000.0
 
     for event in pygame.event.get():
@@ -3547,6 +3556,14 @@ while running:
         screen.blit(fade_surf, (0, 0))
 
     pygame.display.flip()
+    return running
+
+
+# ── Main Loop ───────────────────────────────────────────────────
+running = True
+while running:
+    running = quantum_blood_game_loop()
+
 
 pygame.quit()
 sys.exit()
