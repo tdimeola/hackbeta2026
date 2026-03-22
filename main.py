@@ -1463,7 +1463,7 @@ class Game:
         self.reveal_correct = character["is_villain"]
         self.reveal_timer = 0.0
         self.reveal_done = False
-        self.state = "CHASE"
+        self.state = "CHASE" if self.reveal_correct else "REVEAL"
         music_stop(fade_ms=1500)
         REVEAL_SOUND.play()
 
