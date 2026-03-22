@@ -9,6 +9,8 @@ import threading
 import ollama
 import numpy as np
 
+from doom.main import Game as DoomGame
+
 pygame.init()
 pygame.mixer.init(frequency=44100, size=-16, channels=1, buffer=512)
 
@@ -16,15 +18,19 @@ TILE_SIZE = 48
 SCREEN_W, SCREEN_H = 800, 700
 FPS = 60
 
-screen = pygame.display.set_mode((SCREEN_W, SCREEN_H), pygame.SCALED)
-pygame.display.set_caption("Q.U.A.N.T.U.M Blood")
+# Render to a fixed-size surface, then scale to display (handles fullscreen properly)
+display = pygame.display.set_mode((SCREEN_W, SCREEN_H), pygame.RESIZABLE)
+screen = pygame.Surface((SCREEN_W, SCREEN_H))
+is_fullscreen = False
+pygame.display.set_caption("Quantum Blood")
 clock = pygame.time.Clock()
 
 font_sm = pygame.font.SysFont(None, 24)
 font_md = pygame.font.SysFont(None, 32)
 font_lg = pygame.font.SysFont(None, 48)
-font_title = pygame.font.SysFont("serif", 72)
-
+font_title = pygame.font.SysFont(None, 72)
+# Menu title font — old-style serif, bigger
+font_menu_title = pygame.font.SysFont("timesnewroman", 100) or pygame.font.SysFont("serif", 100)
 
 # -- Procedural footstep sounds --
 def _bandpass(signal, low_hz, high_hz, sample_rate):
@@ -46,120 +52,101 @@ def _lowpass(signal, cutoff_hz, sample_rate):
 
 
 def _make_footstep(sample_rate=44100, kind="stone"):
-    """Generate a layered, realistic footstep sound as a pygame Sound."""
+    """Generate a subtle, natural footstep sound."""
     rng = np.random.default_rng()
 
     if kind == "stone":
-        # Stone/cobblestone: heel click + sole slap + low body thud
-        n = int(sample_rate * 0.18)
-        t = np.linspace(0, 0.18, n, endpoint=False)
+        # Short, crisp tap — like a shoe on cobblestone
+        n = int(sample_rate * 0.08)
+        t = np.linspace(0, 0.08, n, endpoint=False)
         noise = rng.uniform(-1, 1, n)
+        # Quick filtered tap
+        tap = _bandpass(noise, 800, 3000, sample_rate)
+        tap *= np.exp(-t * 80)
+        # Subtle low impact
+        impact = _lowpass(rng.uniform(-1, 1, n), 400, sample_rate)
+        impact *= np.exp(-t * 60) * 0.3
+        wave = tap * 0.5 + impact
 
-        # Layer 1: sharp heel click — high frequencies, very fast decay
-        click = _bandpass(noise, 2000, 7000, sample_rate)
-        click *= np.exp(-t * 120)
-        click *= 0.55
-
-        # Layer 2: sole slap — mid frequencies, medium decay
-        slap = _bandpass(noise, 300, 1200, sample_rate)
-        slap *= np.exp(-t * 45)
-        slap *= 0.7
-
-        # Layer 3: body thud — low sine sweep, slow decay
-        thud = np.sin(2 * np.pi * (100 - 40 * t) * t) * np.exp(-t * 30)
-        thud *= 0.9
-
-        wave = click + slap + thud
-
-    else:  # grass — soft compression underfoot: rustle + muffled thud
-        n = int(sample_rate * 0.22)
-        t = np.linspace(0, 0.22, n, endpoint=False)
+    elif kind == "wood":
+        # Hollow, warm tap — like stepping on a wooden floor
+        n = int(sample_rate * 0.1)
+        t = np.linspace(0, 0.1, n, endpoint=False)
         noise = rng.uniform(-1, 1, n)
+        # Mid-range knock
+        knock = _bandpass(noise, 300, 1500, sample_rate)
+        knock *= np.exp(-t * 50)
+        # Subtle hollow resonance
+        res_freq = rng.uniform(180, 280)
+        resonance = np.sin(2 * np.pi * res_freq * t) * np.exp(-t * 35) * 0.15
+        wave = knock * 0.4 + resonance
 
-        # Layer 1: high rustle — grass blades, moderate decay
-        rustle = _bandpass(noise, 800, 4000, sample_rate)
-        rustle *= np.exp(-t * 35) * (1 - np.exp(-t * 80))  # soft attack
-        rustle *= 0.45
+    else:  # grass
+        # Very soft, muffled — like stepping on soft earth
+        n = int(sample_rate * 0.1)
+        t = np.linspace(0, 0.1, n, endpoint=False)
+        noise = rng.uniform(-1, 1, n)
+        # Soft filtered noise — no sharp attack
+        soft = _lowpass(noise, 1200, sample_rate)
+        soft *= np.exp(-t * 40) * (1 - np.exp(-t * 100))
+        wave = soft * 0.35
 
-        # Layer 2: muffled thud — very low, heavily filtered
-        thud_noise = rng.uniform(-1, 1, n)
-        thud = _lowpass(thud_noise, 180, sample_rate)
-        thud *= np.exp(-t * 50)
-        thud *= 0.6
-
-        wave = rustle + thud
-
-    # Normalize and add slight random pitch variation for naturalness
+    # Normalize gently and add variation
     peak = np.max(np.abs(wave))
     if peak > 0:
         wave /= peak
-    wave *= 0.75 + rng.uniform(-0.1, 0.1)
+    wave *= 0.3 + rng.uniform(-0.05, 0.05)  # much quieter overall
 
     wave = (wave * 32767).clip(-32767, 32767).astype(np.int16)
     if pygame.mixer.get_init()[2] == 2:  # stereo
         wave = np.column_stack([wave, wave])
     sound = pygame.sndarray.make_sound(wave)
-    sound.set_volume(0.55)
+    sound.set_volume(0.25)
     return sound
 
 
 # Pre-generate a small pool of variations so no two steps sound identical
 _stone_pool = [_make_footstep(kind="stone") for _ in range(4)]
 _grass_pool = [_make_footstep(kind="grass") for _ in range(4)]
+_wood_pool = [_make_footstep(kind="wood") for _ in range(4)]
 _step_index = 0
 
 
 def play_footstep(kind="stone"):
     global _step_index
-    pool = _stone_pool if kind == "stone" else _grass_pool
+    if kind == "wood":
+        pool = _wood_pool
+    elif kind == "stone":
+        pool = _stone_pool
+    else:
+        pool = _grass_pool
     pool[_step_index % len(pool)].play()
     _step_index += 1
 
 
 MENU_MUSIC = "sounds/The_Crimson_Manor.mp3"
 DAY_MUSIC = "sounds/in-game-sound-track.mp3"
+CREDITS_MUSIC = "sounds/credits.mp3"
 
-# Sound effects
-sfx_door = pygame.mixer.Sound("sounds/opening_door.mp3")
-sfx_door.set_volume(0.7)
-sfx_pop = pygame.mixer.Sound("sounds/pop.mp3")
-sfx_pop.set_volume(0.6)
-EVIDENCE_SOUND = pygame.mixer.Sound("sounds/evidence_sounds.mp3")
-EVIDENCE_SOUND.set_volume(0.9)
-REVEAL_SOUND = pygame.mixer.Sound("sounds/reveal.mp3")
-REVEAL_SOUND.set_volume(0.9)
-NIGHT_SOUND = pygame.mixer.Sound("sounds/night_time.mp3")
-NIGHT_SOUND.set_volume(0.8)
-DEATH_COLLAPSE_SOUND = pygame.mixer.Sound("sounds/death-collapse.mp3")
-DEATH_COLLAPSE_SOUND.set_volume(0.9)
-EVIL_LAUGH_SOUND = pygame.mixer.Sound("sounds/evil-laugh.mp3")
-EVIL_LAUGH_SOUND.set_volume(0.9)
+# Sound effects - load with fallback so missing files don't crash the game
+def _load_sfx(path, volume=0.8):
+    try:
+        snd = pygame.mixer.Sound(path)
+        snd.set_volume(volume)
+        return snd
+    except (FileNotFoundError, pygame.error):
+        print(f"Warning: sound file not found: {path}")
+        snd = pygame.mixer.Sound(buffer=bytes(44))  # silent stub
+        snd.set_volume(0)
+        return snd
 
-# Volume settings (0.0 – 1.0)
-master_volume = 1.0
-music_volume = 0.6
-
-# Registry of (Sound, base_volume) for applying master_volume
-_sfx_registry = [
-    (sfx_door, 0.7),
-    (sfx_pop, 0.6),
-    (EVIDENCE_SOUND, 0.9),
-    (REVEAL_SOUND, 0.9),
-    (NIGHT_SOUND, 0.8),
-    (DEATH_COLLAPSE_SOUND, 0.9),
-    (EVIL_LAUGH_SOUND, 0.9),
-]
-
-
-def apply_master_volume():
-    for sound, base_vol in _sfx_registry:
-        sound.set_volume(base_vol * master_volume)
-    for sound in _stone_pool + _grass_pool:
-        sound.set_volume(0.55 * master_volume)
-
-
-def apply_music_volume():
-    pygame.mixer.music.set_volume(music_volume)
+sfx_door = _load_sfx("sounds/opening_door.mp3", 0.7)
+sfx_pop = _load_sfx("sounds/speech.mp3", 0.6)
+sfx_speech = _load_sfx("sounds/speech.mp3", 1.0)
+EVIDENCE_SOUND = _load_sfx("sounds/evidence_sounds.mp3", 0.9)
+REVEAL_SOUND = _load_sfx("sounds/reveal.mp3", 0.9)
+sfx_reverb_drum = _load_sfx("sounds/reverb_drum.mp3", 0.8)
+NIGHT_SOUND = _load_sfx("sounds/night_time.mp3", 0.8)
 
 
 def music_start_menu():
@@ -237,582 +224,24 @@ def load_characters(path, count=7):
 # -- Tile map --
 # Tile legend: 0=grass, 1=wall, 2=path, 3=roof, 4=door, 5=tree, 6=search spot
 tilemap = [
-    [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-    ],
-    [
-        1,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1,
-    ],
-    [
-        1,
-        0,
-        3,
-        3,
-        3,
-        3,
-        0,
-        0,
-        0,
-        0,
-        3,
-        3,
-        3,
-        3,
-        0,
-        0,
-        0,
-        0,
-        3,
-        3,
-        3,
-        3,
-        0,
-        0,
-        3,
-        3,
-        3,
-        3,
-        0,
-        1,
-    ],
-    [
-        1,
-        0,
-        1,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        0,
-        1,
-    ],
-    [
-        1,
-        0,
-        1,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        0,
-        1,
-    ],
-    [
-        1,
-        0,
-        1,
-        4,
-        1,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        4,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        4,
-        1,
-        1,
-        0,
-        0,
-        1,
-        1,
-        4,
-        1,
-        0,
-        1,
-    ],
-    [
-        1,
-        0,
-        0,
-        2,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        2,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        2,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        2,
-        0,
-        0,
-        1,
-    ],
-    [
-        1,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        1,
-    ],
-    [
-        1,
-        0,
-        0,
-        2,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        2,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        2,
-        0,
-        0,
-        0,
-        2,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1,
-    ],
-    [
-        1,
-        0,
-        3,
-        3,
-        3,
-        3,
-        0,
-        0,
-        0,
-        0,
-        3,
-        3,
-        3,
-        3,
-        0,
-        0,
-        0,
-        0,
-        3,
-        3,
-        3,
-        3,
-        0,
-        2,
-        5,
-        5,
-        0,
-        5,
-        0,
-        1,
-    ],
-    [
-        1,
-        0,
-        1,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        0,
-        2,
-        5,
-        0,
-        6,
-        0,
-        5,
-        1,
-    ],
-    [
-        1,
-        0,
-        1,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        0,
-        2,
-        0,
-        5,
-        0,
-        5,
-        0,
-        1,
-    ],
-    [
-        1,
-        0,
-        1,
-        1,
-        4,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        4,
-        1,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        4,
-        1,
-        0,
-        2,
-        5,
-        0,
-        0,
-        6,
-        5,
-        1,
-    ],
-    [
-        1,
-        0,
-        0,
-        0,
-        2,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        2,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        2,
-        0,
-        0,
-        2,
-        5,
-        5,
-        0,
-        5,
-        0,
-        1,
-    ],
-    [
-        1,
-        0,
-        0,
-        0,
-        2,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        2,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        2,
-        0,
-        0,
-        2,
-        0,
-        0,
-        6,
-        0,
-        0,
-        1,
-    ],
-    [
-        1,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        1,
-    ],
-    [
-        1,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1,
-    ],
-    [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-    ],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,3,3,3,3,0,0,0,0,3,3,3,3,0,0,0,0,3,3,3,3,0,0,3,3,3,3,0,1],
+    [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,1,1,1,1,0,1],
+    [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,1,1,1,1,0,1],
+    [1,0,4,4,4,4,0,0,0,0,4,4,4,4,0,0,0,0,4,4,4,4,0,0,4,4,4,4,0,1],
+    [1,0,0,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,1],
+    [1,0,3,3,3,3,0,0,0,0,3,3,3,3,0,0,0,0,3,3,3,3,0,2,5,5,0,5,0,1],
+    [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,2,5,0,6,0,5,1],
+    [1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,2,0,5,0,5,0,1],
+    [1,0,4,4,4,4,0,0,0,0,4,4,4,4,0,0,0,0,4,4,4,4,0,2,5,0,0,6,5,1],
+    [1,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,0,2,5,5,0,5,0,1],
+    [1,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,0,2,0,0,6,0,0,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 ]
 
 MAP_H = len(tilemap)
@@ -866,32 +295,73 @@ for d in DIRECTIONS:
     player_walk_frames[d] = frames
 
 # Fallback player image
-player_img_fallback = pygame.image.load("character.jpg").convert()
-player_img_fallback = pygame.transform.scale(
-    player_img_fallback, (TILE_SIZE - 4, TILE_SIZE - 4)
-)
-
+try:
+    player_img_fallback = pygame.image.load("character.jpg").convert()
+    player_img_fallback = pygame.transform.scale(player_img_fallback, (TILE_SIZE - 4, TILE_SIZE - 4))
+except (FileNotFoundError, pygame.error):
+    player_img_fallback = pygame.Surface((TILE_SIZE - 4, TILE_SIZE - 4))
+    player_img_fallback.fill((60, 120, 200))
 
 # Menu background — load animated GIF frames via Pillow
-def _load_gif_frames(path, target_size):
-    from PIL import Image
+# Building sprites — each covers a 4x4 tile area (192x192px)
+BUILDING_SPRITE_SIZE = (TILE_SIZE * 4, TILE_SIZE * 4)
+_building_sprite_files = {
+    "the Blacksmith":    "assets/buildings/blacksmith.png",
+    "the Tavern":        "assets/buildings/tavern.png",
+    "the Apothecary":    "assets/buildings/apothecary.png",
+    "the Church":        "assets/buildings/church.png",
+    "the General Store": "assets/buildings/general_store.png",
+    "Town Hall":         "assets/buildings/town_hall.png",
+    "the Library":       "assets/buildings/library.png",
+}
+building_sprites = {}
+for _bname, _bpath in _building_sprite_files.items():
+    _bsprite = load_sprite(_bpath, BUILDING_SPRITE_SIZE)
+    if _bsprite:
+        building_sprites[_bname] = _bsprite
 
-    pil_img = Image.open(path)
+# Building top-left tile positions (where to draw the sprite)
+BUILDING_SPRITE_POS = {
+    "the Blacksmith":    (2, 2),
+    "the Tavern":        (10, 2),
+    "the Apothecary":    (18, 2),
+    "the Church":        (24, 2),
+    "the General Store": (2, 9),
+    "Town Hall":         (10, 9),
+    "the Library":       (18, 9),
+}
+
+# Menu background — video clips as pre-extracted frame sequences
+def _load_video_frames(folder):
+    """Load numbered PNG frames from a folder."""
+    import os
     frames = []
-    for i in range(pil_img.n_frames):
-        pil_img.seek(i)
-        frame = pil_img.convert("RGBA")
-        raw = frame.tobytes()
-        surf = pygame.image.frombytes(raw, frame.size, "RGBA").convert_alpha()
-        surf = pygame.transform.smoothscale(surf, target_size)
-        frames.append(surf)
+    i = 1
+    while True:
+        path = os.path.join(folder, f"frame_{i:03d}.png")
+        if not os.path.exists(path):
+            break
+        try:
+            img = pygame.image.load(path).convert()
+            frames.append(img)
+        except Exception:
+            break
+        i += 1
+    print(f"Loaded {len(frames)} frames from {folder}")
     return frames
 
-
-menu_bg_frames = _load_gif_frames("bg_village.gif", (SCREEN_W, SCREEN_H))
-menu_bg_frame_idx = 0
-menu_bg_timer = 0.0
-MENU_BG_FPS = 15  # playback speed
+MENU_VIDEO_CLIPS = [
+    _load_video_frames("assets/videos/frames_1"),
+    _load_video_frames("assets/videos/frames_2"),
+    _load_video_frames("assets/videos/frames_3"),
+]
+MENU_VIDEO_CLIPS = [c for c in MENU_VIDEO_CLIPS if c]  # remove empty
+menu_clip_idx = 0      # which video clip is playing
+menu_frame_idx = 0     # frame within current clip
+menu_frame_timer = 0.0
+menu_transition_timer = 0.0  # >0 means fading between clips
+MENU_VIDEO_FPS = 15
+MENU_TRANSITION_DUR = 1.0  # 1 second fade between clips
 
 
 # Village skin — loaded once, scaled to full map dimensions
@@ -916,18 +386,28 @@ player_walking = False
 player_anim_timer = 0.0
 player_anim_frame = 0
 
-# NPC pixel art sprites (south-facing for standing NPCs)
-NPC_SPRITE_SIZE = (TILE_SIZE + 8, TILE_SIZE + 8)  # slightly bigger than a tile
-npc_sprite_files = [
-    "assets/characters/blacksmith_south.png",
-    "assets/characters/villager_south.png",
-    "assets/characters/blacksmith_south.png",
-    "assets/characters/villager_south.png",
-    "assets/characters/blacksmith_south.png",
-    "assets/characters/villager_south.png",
-    "assets/characters/blacksmith_south.png",
-]
-npc_sprites = [load_sprite(f, NPC_SPRITE_SIZE) if f else None for f in npc_sprite_files]
+# NPC animated sprites — townsperson skin for all NPCs
+NPC_SPRITE_SIZE = (TILE_SIZE + 8, TILE_SIZE + 8)
+NPC_WALK_FRAME_COUNT = 6
+NPC_WALK_ANIM_SPEED = 8  # frames per second
+NPC_MOVE_SPEED = 60  # pixels per second (slower than player)
+
+# Load townsperson idle sprites (8 directions)
+npc_idle_sprites = {}
+for d in DIRECTIONS:
+    npc_idle_sprites[d] = load_sprite(f"assets/characters/townsperson/rotations/{d}.png", NPC_SPRITE_SIZE)
+
+# Load townsperson walk animation frames (8 directions x 6 frames)
+npc_walk_frames = {}
+for d in DIRECTIONS:
+    frames = []
+    for i in range(NPC_WALK_FRAME_COUNT):
+        frame = load_sprite(f"assets/characters/townsperson/animations/walk/{d}/frame_{i:03d}.png", NPC_SPRITE_SIZE)
+        frames.append(frame)
+    npc_walk_frames[d] = frames
+
+# Legacy static sprites (kept for fallback)
+npc_sprites = [None] * 7
 
 # NPC spawn positions (outside each building door)
 NPC_SPAWNS = [
@@ -966,6 +446,77 @@ BUILDING_LABEL_POS = [
 AREA_LABELS = [
     {"name": "the Forest", "tile": (24, 8)},
 ]
+
+# Per-building visual styles for the town map
+BUILDING_EXTERIOR_STYLES = {
+    "the Blacksmith": {
+        "wall": (100, 75, 55),   # warm brown stone
+        "roof": (80, 80, 90),    # dark gray slate
+        "door": (90, 55, 25),    # dark oak
+        "mortar": (75, 60, 40),
+        "accent": (200, 100, 30),  # orange forge glow on walls
+    },
+    "the Tavern": {
+        "wall": (110, 85, 60),   # lighter warm wood
+        "roof": (140, 70, 35),   # warm amber
+        "door": (130, 85, 35),   # golden oak
+        "mortar": (85, 65, 42),
+        "accent": (180, 150, 60),  # lantern yellow
+    },
+    "the Apothecary": {
+        "wall": (85, 95, 80),    # mossy gray-green
+        "roof": (60, 100, 70),   # green tiles
+        "door": (70, 90, 60),    # green-stained
+        "mortar": (65, 75, 60),
+        "accent": (100, 200, 120),  # potion green
+    },
+    "the Church": {
+        "wall": (130, 125, 115), # light stone / limestone
+        "roof": (60, 55, 75),    # deep purple-gray
+        "door": (80, 50, 40),    # dark mahogany
+        "mortar": (105, 100, 90),
+        "accent": (200, 180, 100),  # gold cross
+    },
+    "the General Store": {
+        "wall": (105, 80, 55),   # standard brown
+        "roof": (150, 60, 40),   # classic red
+        "door": (110, 75, 35),   # pine
+        "mortar": (80, 60, 38),
+        "accent": (180, 160, 100),
+    },
+    "Town Hall": {
+        "wall": (120, 110, 95),  # dignified tan stone
+        "roof": (50, 50, 65),    # slate blue-gray
+        "door": (100, 65, 35),   # polished wood
+        "mortar": (95, 85, 70),
+        "accent": (200, 180, 80),  # gold trim
+    },
+    "the Library": {
+        "wall": (95, 75, 65),    # dark warm brick
+        "roof": (110, 50, 40),   # deep red-brown
+        "door": (85, 55, 35),    # aged wood
+        "mortar": (70, 55, 45),
+        "accent": (160, 120, 60),  # leather brown
+    },
+}
+
+# Map each building tile (col, row) to its building name
+# Top row buildings: cols 2-5, 10-13, 18-21, 24-27 | rows 2-5
+# Bottom row buildings: cols 2-5, 10-13, 18-21 | rows 9-12
+BUILDING_TILE_MAP = {}
+_building_bounds = [
+    ("the Blacksmith",    2, 5, 2, 5),   # (name, col_start, col_end, row_start, row_end)
+    ("the Tavern",       10, 13, 2, 5),
+    ("the Apothecary",   18, 21, 2, 5),
+    ("the Church",       24, 27, 2, 5),
+    ("the General Store", 2, 5, 9, 12),
+    ("Town Hall",        10, 13, 9, 12),
+    ("the Library",      18, 21, 9, 12),
+]
+for _bname, _c0, _c1, _r0, _r1 in _building_bounds:
+    for _r in range(_r0, _r1 + 1):
+        for _c in range(_c0, _c1 + 1):
+            BUILDING_TILE_MAP[(_c, _r)] = _bname
 
 # Open areas that can be referenced in clues
 MAP_LANDMARKS = [
@@ -1052,6 +603,42 @@ INTERIORS = {
             {"tile": (1, 1), "name": "a shelf of potions"},
             {"tile": (5, 1), "name": "a mortar and pestle"},
             {"tile": (2, 3), "name": "a locked cabinet"},
+        ],
+    },
+    "the Church": {
+        "map": [
+            [8,8,8,8,8,8,8,8],
+            [8,7,7,9,9,7,7,8],
+            [8,7,7,7,7,7,7,8],
+            [8,9,7,7,7,7,9,8],
+            [8,7,7,7,7,7,7,8],
+            [8,7,7,4,7,7,7,8],
+        ],
+        "player_start": (3, 4),
+        "exit_tile": (3, 5),
+        "exit_world_pos": (26, 6),
+        "search_spots": [
+            {"tile": (3, 1), "name": "the altar"},
+            {"tile": (1, 3), "name": "a prayer bench"},
+            {"tile": (6, 3), "name": "a confessional"},
+        ],
+    },
+    "the General Store": {
+        "map": [
+            [8,8,8,8,8,8,8,8],
+            [8,9,7,7,9,7,9,8],
+            [8,7,7,7,7,7,7,8],
+            [8,7,7,7,7,9,7,8],
+            [8,7,7,7,7,7,7,8],
+            [8,7,7,4,7,7,7,8],
+        ],
+        "player_start": (3, 4),
+        "exit_tile": (3, 5),
+        "exit_world_pos": (4, 13),
+        "search_spots": [
+            {"tile": (1, 1), "name": "the front counter"},
+            {"tile": (4, 1), "name": "a supply shelf"},
+            {"tile": (5, 3), "name": "a storage crate"},
         ],
     },
     "Town Hall": {
@@ -1232,7 +819,14 @@ def llm_get_result(key):
 # ── Game State ──────────────────────────────────────────────────
 class Game:
     def __init__(self):
-        self.state = "MENU"  # MENU, NIGHT, DAY, ACCUSE, ACCUSE_RESULT, WIN, LOSE
+        self.state = "MENU"  # MENU, NIGHT, DAY, ACCUSE, REVEAL, ACCUSE_RESULT, WIN, LOSE
+        # Reveal animation state
+        self.reveal_timer = 0.0
+        self.reveal_duration = 4.35    # total seconds for suspense animation
+        self.reveal_target_state = ""  # WIN, LOSE, or ACCUSE_RESULT
+        self.reveal_accused = None     # character dict being accused
+        self.reveal_correct = False
+        self.reveal_done = False
         self.night_num = 0
         self.wrong_guesses = 0
         self.characters = []
@@ -1281,6 +875,16 @@ class Game:
         # Journal
         self.showing_journal = False
         self.journal_page = 0  # index into self.characters
+        # Crime scene
+        self.crime_scene_building = None
+        self.crime_scene_seen = False  # has player entered the crime scene this day
+        # Tutorial
+        self.tutorial_step = 0  # 0=not started, 1=talk hint, 2=journal hint, 3=accuse hint, 4=done
+        # Recap
+        self.recap_scroll = 0
+        # Credits
+        self.credits_scroll_y = SCREEN_H  # starts below screen, scrolls up
+        self.credits_timer = 0.0
 
     def start_fade(self, callback=None):
         """Start a fade-to-black transition. Callback fires at peak darkness."""
@@ -1305,10 +909,15 @@ class Game:
         self.night_num = 0
         self.wrong_guesses = 0
         self.killed_tonight = None
+        self.storyteller_text = ""
         self.dialogue_target = None
         self.dialogue_text = ""
         self.dialogue_loading = False
+        self.accuse_selection = 0
+        self.accuse_result_correct = False
+        self.talked_to = set()
         self.history = []
+        self.night_clues = {}
         self.current_interior = None
         self.evidence_found = []
         self.searched_spots = set()
@@ -1321,6 +930,27 @@ class Game:
         self.suspicion_log = []
         self.showing_clue_tracker = False
         self.clue_tracker_scroll = 0
+        # Reveal state
+        self.reveal_timer = 0.0
+        self.reveal_target_state = ""
+        self.reveal_accused = None
+        self.reveal_correct = False
+        self.reveal_done = False
+        # Crime scene
+        self.crime_scene_building = None
+        self.crime_scene_seen = False
+        # Tutorial
+        self.tutorial_step = 0
+        # Recap
+        self.recap_scroll = 0
+        # Journal
+        self.showing_journal = False
+        self.journal_page = 0
+        # Fade
+        self.fade_alpha = 0
+        self.fade_direction = 0
+        self.fade_callback = None
+        self.loading_dot_timer = 0.0
 
         # Place NPCs and assign home buildings
         for i, c in enumerate(self.characters):
@@ -1334,6 +964,14 @@ class Game:
             c["location_type"] = "outside"
             c["location_building"] = None
             c["location_desc"] = f"outside {c['home']}"
+            # NPC movement/animation state
+            c["facing"] = "south"
+            c["npc_walking"] = False
+            c["npc_anim_timer"] = 0.0
+            c["npc_anim_frame"] = 0
+            c["move_target"] = None  # (tx, ty) pixel target or None
+            c["move_pause"] = random.uniform(1.0, 4.0)  # seconds to wait before next move
+            c["talking"] = False  # True when player is talking to this NPC
 
         # Init per-NPC memory and emotions
         self.npc_memory = {}
@@ -1395,7 +1033,9 @@ class Game:
         }
 
         self.relationships = {}
-        villain = next(c for c in self.characters if c["is_villain"])
+        villain = next((c for c in self.characters if c["is_villain"]), None)
+        if villain is None:
+            return
 
         for i, a in enumerate(self.characters):
             for j, b in enumerate(self.characters):
@@ -1445,11 +1085,12 @@ class Game:
         self.searched_spots = set()
         self.evidence_placements = {}
         self.current_interior = None
+        # Reset player to town center so they don't spawn inside a building
+        self.player_x = 14.0 * TILE_SIZE
+        self.player_y = 7.0 * TILE_SIZE
 
         if self.night_num == 1:
-            self.storyteller_text = (
-                "Night falls on the town...\nA villain lurks among you."
-            )
+            self.storyteller_text = "Night falls on the town...\nA villain lurks among the townspeople.\nSpeak to the residents and uncover the truth."
             self.killed_tonight = None
             self.history.append(
                 {
@@ -1470,6 +1111,8 @@ class Game:
                 # Generate rich murder details
                 villain = next(c for c in self.alive if c["is_villain"])
                 self.night_clues = self._generate_night_clues(victim, villain)
+                self.crime_scene_building = self.night_clues.get("murder_location")
+                self.crime_scene_seen = False
 
                 self.storyteller_text = (
                     f"Night {self.night_num}...\n"
@@ -1516,9 +1159,6 @@ class Game:
             ("in the storeroom of the General Store", "the General Store"),
             ("on the floor of Town Hall", "Town Hall"),
             ("among the shelves of the Library", "the Library"),
-            ("in the alley behind the Tavern", "the Tavern"),
-            ("near the old well by Town Hall", "Town Hall"),
-            ("in the courtyard behind the General Store", "the General Store"),
         ]
         # How they were killed
         cause_of_death = [
@@ -1687,6 +1327,8 @@ class Game:
         self.talked_to = set()  # track who we've talked to this day
         self.search_result_text = ""
         self.search_result_timer = 0.0
+        if self.night_num == 1:
+            self.tutorial_step = 1
         music_start_day()
         self._place_npcs_for_day()
         self._place_evidence()
@@ -1726,7 +1368,11 @@ class Game:
             npc["tile_y"] = ty
             mark_occupied(loc_type, building, tx, ty)
 
-        for npc in self.alive:
+        # Shuffle placement order so no NPC consistently gets first/last pick of spots
+        placement_order = list(self.alive)
+        random.shuffle(placement_order)
+
+        for npc in placement_order:
             npc_idx = self.characters.index(npc)
             home = (
                 BUILDING_NAMES[npc_idx]
@@ -1734,106 +1380,40 @@ class Game:
                 else "their home"
             )
 
-            if npc["is_villain"] and murder_loc and self.night_num > 1:
-                # Villain: place near murder location
-                placed = False
-                if murder_loc in INTERIORS:
-                    interior = INTERIORS[murder_loc]
-                    for r, row in enumerate(interior["map"]):
-                        for c, tile in enumerate(row):
-                            if tile == 7 and not is_occupied(
-                                "interior", murder_loc, c, r
-                            ):
-                                place_npc(
-                                    npc,
-                                    "interior",
-                                    murder_loc,
-                                    c,
-                                    r,
-                                    f"inside {murder_loc}",
-                                )
-                                placed = True
-                                break
-                        if placed:
-                            break
-                if not placed:
-                    for door_pos, bname in DOOR_TO_BUILDING.items():
-                        if bname == murder_loc:
-                            tx, ty = door_pos[0], door_pos[1] + 1
-                            if not is_occupied("outside", None, tx, ty):
-                                place_npc(
-                                    npc, "outside", None, tx, ty, f"near {murder_loc}"
-                                )
-                                placed = True
-                                break
-                if not placed:
-                    while outdoor_idx < len(outdoor_spots):
-                        pos, area = outdoor_spots[outdoor_idx]
-                        outdoor_idx += 1
-                        if not is_occupied("outside", None, pos[0], pos[1]):
-                            place_npc(
-                                npc, "outside", None, pos[0], pos[1], f"at {area}"
-                            )
-                            placed = True
-                            break
-                if not placed:
-                    spawn = NPC_SPAWNS[npc_idx]
-                    place_npc(
-                        npc, "outside", None, spawn[0], spawn[1], f"outside {home}"
-                    )
-            else:
-                # Innocent NPCs: randomly place at home, inside a building, or wandering
-                placed = False
-                roll = random.random()
-                if roll < 0.35 and interior_buildings:
-                    bname = random.choice(interior_buildings)
-                    interior = INTERIORS[bname]
-                    floor_tiles = [
-                        (c, r)
-                        for r, row in enumerate(interior["map"])
-                        for c, tile in enumerate(row)
-                        if tile == 7 and not is_occupied("interior", bname, c, r)
-                    ]
-                    if floor_tiles:
-                        ix, iy = random.choice(floor_tiles)
-                        place_npc(npc, "interior", bname, ix, iy, f"inside {bname}")
+            # Randomly place at home, inside a building, or wandering
+            placed = False
+            roll = random.random()
+            if roll < 0.35 and interior_buildings:
+                bname = random.choice(interior_buildings)
+                interior = INTERIORS[bname]
+                floor_tiles = [(c, r) for r, row in enumerate(interior["map"])
+                               for c, tile in enumerate(row)
+                               if tile == 7 and not is_occupied("interior", bname, c, r)]
+                if floor_tiles:
+                    ix, iy = random.choice(floor_tiles)
+                    place_npc(npc, "interior", bname, ix, iy, f"inside {bname}")
+                    placed = True
+            if not placed and roll < 0.65:
+                while outdoor_idx < len(outdoor_spots):
+                    pos, area = outdoor_spots[outdoor_idx]
+                    outdoor_idx += 1
+                    if not is_occupied("outside", None, pos[0], pos[1]):
+                        place_npc(npc, "outside", None, pos[0], pos[1], f"at {area}")
                         placed = True
-                if not placed and roll < 0.65:
+                        break
+            if not placed:
+                spawn = NPC_SPAWNS[npc_idx]
+                if not is_occupied("outside", None, spawn[0], spawn[1]):
+                    place_npc(npc, "outside", None, spawn[0], spawn[1], f"outside {home}")
+                else:
                     while outdoor_idx < len(outdoor_spots):
                         pos, area = outdoor_spots[outdoor_idx]
                         outdoor_idx += 1
                         if not is_occupied("outside", None, pos[0], pos[1]):
-                            place_npc(
-                                npc, "outside", None, pos[0], pos[1], f"at {area}"
-                            )
-                            placed = True
+                            place_npc(npc, "outside", None, pos[0], pos[1], f"at {area}")
                             break
-                if not placed:
-                    spawn = NPC_SPAWNS[npc_idx]
-                    if not is_occupied("outside", None, spawn[0], spawn[1]):
-                        place_npc(
-                            npc, "outside", None, spawn[0], spawn[1], f"outside {home}"
-                        )
                     else:
-                        # Home is taken, find any free outdoor spot
-                        while outdoor_idx < len(outdoor_spots):
-                            pos, area = outdoor_spots[outdoor_idx]
-                            outdoor_idx += 1
-                            if not is_occupied("outside", None, pos[0], pos[1]):
-                                place_npc(
-                                    npc, "outside", None, pos[0], pos[1], f"at {area}"
-                                )
-                                break
-                        else:
-                            # Last resort: offset from home
-                            place_npc(
-                                npc,
-                                "outside",
-                                None,
-                                spawn[0] + 1,
-                                spawn[1],
-                                f"outside {home}",
-                            )
+                        place_npc(npc, "outside", None, spawn[0] + 1, spawn[1], f"outside {home}")
 
     def _place_evidence(self):
         """Pick a random subset of search spots to be active, then assign evidence."""
@@ -1850,11 +1430,25 @@ class Game:
         active_count = max(3, int(len(all_spots) * random.uniform(0.4, 0.6)))
         self.active_spots = set(all_spots[:active_count])
 
-        # Place evidence at active spots only
+        # Place evidence at active spots — force weapon at crime scene building
         evidence_list = self.night_clues.get("physical_evidence", [])
-        active_list = list(self.active_spots)
-        random.shuffle(active_list)
         self.evidence_placements = {}
+
+        # Force weapon evidence into a crime scene building search spot
+        crime_bld = self.crime_scene_building
+        if crime_bld and crime_bld in INTERIORS:
+            crime_spots = [(crime_bld, s["name"]) for s in INTERIORS[crime_bld]["search_spots"]]
+            for ev in evidence_list:
+                if ev.get("type") == "weapon" and crime_spots:
+                    key = crime_spots[0]
+                    self.active_spots.add(key)
+                    self.evidence_placements[key] = ev
+                    evidence_list = [e for e in evidence_list if e is not ev]
+                    break
+
+        # Place remaining evidence at random active spots
+        active_list = [s for s in self.active_spots if s not in self.evidence_placements]
+        random.shuffle(active_list)
         for i, ev in enumerate(evidence_list):
             if i < len(active_list):
                 self.evidence_placements[active_list[i]] = ev
@@ -2023,74 +1617,170 @@ class Game:
         self.accuse_selection = 0
 
     def do_accuse(self, character):
-        if character["is_villain"]:
-            music_stop(fade_ms=1500)
-            REVEAL_SOUND.play()
-            self.state = "WIN"
-            self.storyteller_text = (
-                f"You accused {character['name']}...\n"
-                f"They WERE the villain! The town is saved!"
-            )
-            self.history.append(
-                {
-                    "type": "accusation",
-                    "day": self.night_num,
-                    "accused": character["name"],
-                    "correct": True,
-                    "description": (
-                        f"On day {self.night_num}, the detective correctly identified "
-                        f"{character['name']} as the villain. The town is saved."
-                    ),
-                }
-            )
+        # Start reveal animation — actual result resolves when timer ends
+        self.reveal_accused = character
+        self.reveal_correct = character["is_villain"]
+        self.reveal_timer = 0.0
+        self.reveal_done = False
+        self.state = "CHASE" if self.reveal_correct else "REVEAL"
+        music_stop(fade_ms=1500)
+        REVEAL_SOUND.play()
+
+    def _finish_reveal(self):
+        """Called when the reveal animation timer expires. Resolves the accusation but stays on REVEAL screen."""
+        character = self.reveal_accused
+        self.reveal_done = True
+        if self.reveal_correct:
+            self.history.append({
+                "type": "accusation", "day": self.night_num,
+                "accused": character["name"], "correct": True,
+                "description": (
+                    f"On day {self.night_num}, the detective correctly identified "
+                    f"{character['name']} as the villain. The town is saved."
+                ),
+            })
         else:
             self.wrong_guesses += 1
-            self.accuse_result_correct = False
-            self.history.append(
-                {
-                    "type": "accusation",
-                    "day": self.night_num,
-                    "accused": character["name"],
-                    "correct": False,
-                    "description": (
-                        f"On day {self.night_num}, the detective accused {character['name']}, "
-                        f"but they were innocent. The town was shocked and the real killer is still at large."
-                    ),
-                }
-            )
-            # Record accusation in NPC memories
+            self.history.append({
+                "type": "accusation", "day": self.night_num,
+                "accused": character["name"], "correct": False,
+                "description": (
+                    f"On day {self.night_num}, the detective accused {character['name']}, "
+                    f"but they were innocent. The town was shocked and the real killer is still at large."
+                ),
+            })
             for npc in self.alive:
                 name = npc["name"]
                 if name in self.npc_memory:
-                    self.npc_memory[name].append(
-                        f"Day {self.night_num}: Detective wrongly accused {character['name']}."
-                    )
-            # Villain becomes more desperate
+                    self.npc_memory[name].append(f"Day {self.night_num}: Detective wrongly accused {character['name']}.")
             villain_npc = next((c for c in self.alive if c["is_villain"]), None)
             if villain_npc and villain_npc["name"] in self.npc_emotional_state:
                 self.npc_emotional_state[villain_npc["name"]]["desperation"] += 1
-            DEATH_COLLAPSE_SOUND.play()
-            if self.wrong_guesses >= 3:
-                music_stop(fade_ms=1500)
-                EVIL_LAUGH_SOUND.play()
-                self.state = "LOSE"
-                self.storyteller_text = (
-                    f"{character['name']} was innocent!\n"
-                    f"You've run out of guesses.\n"
-                    f"The villain {self.villain_name} wins!"
-                )
+
+    def _advance_from_reveal(self):
+        """Called when player presses ENTER on the reveal screen."""
+        if self.reveal_correct or self.wrong_guesses >= 3:
+            self.state = "RECAP"
+            self.recap_scroll = 0
+        else:
+            self.start_night()
+
+    def _update_npcs(self, dt):
+        """Update NPC autonomous movement — they wander around the town."""
+        for npc in self.alive:
+            # Don't move if talking to player — face the detective
+            if npc.get("talking") or self.dialogue_target is npc:
+                npc["npc_walking"] = False
+                dx_p = self.player_x - npc["x"]
+                dy_p = self.player_y - npc["y"]
+                if abs(dx_p) > abs(dy_p):
+                    if dx_p > 0:
+                        npc["facing"] = "east" if abs(dy_p) < abs(dx_p) * 0.5 else ("south-east" if dy_p > 0 else "north-east")
+                    else:
+                        npc["facing"] = "west" if abs(dy_p) < abs(dx_p) * 0.5 else ("south-west" if dy_p > 0 else "north-west")
+                else:
+                    if dy_p > 0:
+                        npc["facing"] = "south" if abs(dx_p) < abs(dy_p) * 0.5 else ("south-east" if dx_p > 0 else "south-west")
+                    else:
+                        npc["facing"] = "north" if abs(dx_p) < abs(dy_p) * 0.5 else ("north-east" if dx_p > 0 else "north-west")
+                continue
+            # Don't move NPCs in interiors (they stay put)
+            if npc.get("location_type") == "interior":
+                npc["npc_walking"] = False
+                continue
+
+            # If no target, count down pause then pick a new destination
+            if npc.get("move_target") is None:
+                npc["npc_walking"] = False
+                npc["move_pause"] = npc.get("move_pause", 2.0) - dt
+                if npc["move_pause"] <= 0:
+                    # Pick a random nearby walkable tile as target
+                    cx = int(npc["x"] // TILE_SIZE)
+                    cy = int(npc["y"] // TILE_SIZE)
+                    attempts = 0
+                    while attempts < 10:
+                        tx = cx + random.randint(-3, 3)
+                        ty = cy + random.randint(-3, 3)
+                        if 0 <= tx < MAP_W and 0 <= ty < MAP_H and tilemap[ty][tx] not in SOLID_TILES:
+                            npc["move_target"] = (tx * TILE_SIZE, ty * TILE_SIZE)
+                            break
+                        attempts += 1
+                    npc["move_pause"] = random.uniform(2.0, 6.0)
             else:
-                self.state = "ACCUSE_RESULT"
-                self.storyteller_text = (
-                    f"{character['name']} was innocent!\n"
-                    f"Wrong guess! {3 - self.wrong_guesses} guesses remaining."
-                )
+                # Move toward target
+                tx, ty = npc["move_target"]
+                dx_npc = tx - npc["x"]
+                dy_npc = ty - npc["y"]
+                dist = max(1, (dx_npc ** 2 + dy_npc ** 2) ** 0.5)
+
+                if dist < 4:
+                    # Arrived
+                    npc["x"] = tx
+                    npc["y"] = ty
+                    npc["move_target"] = None
+                    npc["npc_walking"] = False
+                    npc["move_pause"] = random.uniform(2.0, 6.0)
+                else:
+                    # Move
+                    move_x = (dx_npc / dist) * NPC_MOVE_SPEED * dt
+                    move_y = (dy_npc / dist) * NPC_MOVE_SPEED * dt
+                    new_x = npc["x"] + move_x
+                    new_y = npc["y"] + move_y
+
+                    # Collision check
+                    pw, ph = TILE_SIZE - 4, TILE_SIZE - 4
+                    blocked = False
+                    left = int(new_x) // TILE_SIZE
+                    right = int(new_x + pw - 1) // TILE_SIZE
+                    top = int(new_y) // TILE_SIZE
+                    bottom = int(new_y + ph - 1) // TILE_SIZE
+                    for r in range(top, bottom + 1):
+                        for c_col in range(left, right + 1):
+                            if r < 0 or r >= MAP_H or c_col < 0 or c_col >= MAP_W:
+                                blocked = True
+                            elif tilemap[r][c_col] in SOLID_TILES:
+                                blocked = True
+
+                    if blocked:
+                        npc["move_target"] = None
+                        npc["npc_walking"] = False
+                    else:
+                        npc["x"] = new_x
+                        npc["y"] = new_y
+                        npc["npc_walking"] = True
+
+                        # Update facing direction
+                        if abs(dx_npc) > abs(dy_npc):
+                            if dx_npc > 0:
+                                npc["facing"] = "east" if abs(dy_npc) < abs(dx_npc) * 0.5 else ("south-east" if dy_npc > 0 else "north-east")
+                            else:
+                                npc["facing"] = "west" if abs(dy_npc) < abs(dx_npc) * 0.5 else ("south-west" if dy_npc > 0 else "north-west")
+                        else:
+                            if dy_npc > 0:
+                                npc["facing"] = "south" if abs(dx_npc) < abs(dy_npc) * 0.5 else ("south-east" if dx_npc > 0 else "south-west")
+                            else:
+                                npc["facing"] = "north" if abs(dx_npc) < abs(dy_npc) * 0.5 else ("north-east" if dx_npc > 0 else "north-west")
+
+                # Update walk animation
+                if npc.get("npc_walking"):
+                    npc["npc_anim_timer"] = npc.get("npc_anim_timer", 0) + dt
+                    frame_dur = 1.0 / NPC_WALK_ANIM_SPEED
+                    if npc["npc_anim_timer"] >= frame_dur:
+                        npc["npc_anim_timer"] -= frame_dur
+                        npc["npc_anim_frame"] = (npc.get("npc_anim_frame", 0) + 1) % NPC_WALK_FRAME_COUNT
+                else:
+                    npc["npc_anim_timer"] = 0
+                    npc["npc_anim_frame"] = 0
 
     def talk_to_npc(self, npc):
         if self.dialogue_loading:
             return
+        sfx_speech.play()
         self.dialogue_target = npc
         self.talked_to.add(npc["name"])
+        npc["talking"] = True
+        npc["npc_walking"] = False
+        npc["move_target"] = None
 
         # Check if pre-fetched response is ready
         key = f"npc_{npc['name']}_{self.night_num}"
@@ -2101,16 +1791,14 @@ class Game:
             self.dialogue_loading = False
             # Record memory and suspicion log
             if npc["name"] in self.npc_memory:
-                self.npc_memory[npc["name"]].append(
-                    f"Day {self.night_num}: Spoke to the detective."
-                )
-            self.suspicion_log.append(
-                {
-                    "day": self.night_num,
-                    "source": npc["name"],
-                    "text": self.dialogue_text[:150],
-                }
-            )
+                self.npc_memory[npc["name"]].append(f"Day {self.night_num}: Spoke to the detective.")
+            self.suspicion_log.append({
+                "day": self.night_num,
+                "source": npc["name"],
+                "text": self.dialogue_text[:150],
+            })
+            if self.tutorial_step == 1:
+                self.tutorial_step = 2
         else:
             # Still generating, show loading
             self.dialogue_text = ""
@@ -2250,6 +1938,7 @@ class Game:
 
 
 game = Game()
+doom_game = DoomGame()
 music_start_menu()
 
 
@@ -2316,6 +2005,143 @@ def draw_text_wrapped(surface, text, font, color, rect, line_spacing=4):
         surface.blit(surf, (rect.x + 8, y))
         y += font.get_height() + line_spacing
 
+def draw_town_tile(surface, tile, rect, row, col):
+    """Draw a detailed town map tile with per-building unique styles."""
+    x, y, w, h = rect.x, rect.y, rect.width, rect.height
+    seed = row * 31 + col * 17
+
+    # Look up building ownership for this tile
+    bld = BUILDING_TILE_MAP.get((col, row))
+    bstyle = BUILDING_EXTERIOR_STYLES.get(bld) if bld else None
+
+    if tile == 0 or tile == 6:  # Grass
+        base = (72, 148, 0) if (row + col) % 2 == 0 else (80, 158, 5)
+        pygame.draw.rect(surface, base, rect)
+        tuft_col = (55, 120, 0)
+        for i in range(3):
+            tx = x + ((seed + i * 13) % (w - 6)) + 3
+            ty = y + ((seed + i * 7 + 5) % (h - 6)) + 3
+            pygame.draw.line(surface, tuft_col, (tx, ty + 4), (tx, ty), 1)
+            pygame.draw.line(surface, tuft_col, (tx + 2, ty + 4), (tx + 3, ty + 1), 1)
+        if tile == 6:
+            cs = pygame.Surface((12, 12), pygame.SRCALPHA)
+            cs.fill((255, 255, 200, 25))
+            surface.blit(cs, (x + w // 2 - 6, y + h // 2 - 6))
+
+    elif tile == 1:  # Wall — unique per building
+        base = bstyle["wall"] if bstyle else WALL_COLOR
+        mortar = bstyle["mortar"] if bstyle else (70, 55, 38)
+        accent = bstyle["accent"] if bstyle else None
+        pygame.draw.rect(surface, base, rect)
+        # Stone block mortar pattern
+        for ly in range(0, h, 12):
+            pygame.draw.line(surface, mortar, (x, y + ly), (x + w, y + ly), 1)
+        v_offset = 0 if (row % 2 == 0) else w // 4
+        for lx in range(v_offset, w, w // 2):
+            for ry in range(0, h, 12):
+                pygame.draw.line(surface, mortar, (x + lx, y + ry), (x + lx, y + ry + 12), 1)
+        # Block color variation
+        for by in range(0, h, 12):
+            for bx in range(0, w, w // 2):
+                boff = ((row + by // 12) * 7 + (col + bx // (w // 2)) * 3) % 5
+                if boff > 2:
+                    hl = pygame.Surface((w // 2 - 1, 11), pygame.SRCALPHA)
+                    hl.fill((255, 255, 255, 10))
+                    surface.blit(hl, (x + bx + 1, y + by + 1))
+        # Accent detail (e.g., forge glow for blacksmith)
+        if accent and bld:
+            # Small accent mark on certain wall tiles
+            if (row + col) % 5 == 0:
+                ag = pygame.Surface((w, h), pygame.SRCALPHA)
+                ag.fill((accent[0], accent[1], accent[2], 20))
+                surface.blit(ag, (x, y))
+        # Shadow at bottom
+        shadow = (max(base[0] - 30, 0), max(base[1] - 25, 0), max(base[2] - 20, 0))
+        pygame.draw.line(surface, shadow, (x, y + h - 1), (x + w, y + h - 1), 2)
+
+    elif tile == 2:  # Path — cobblestone
+        base = (170, 150, 110)
+        pygame.draw.rect(surface, base, rect)
+        mortar = (140, 125, 90)
+        stone_w, stone_h = 10, 10
+        offset_x = (row % 2) * (stone_w // 2)
+        for sy in range(0, h, stone_h + 2):
+            for sx in range(0, w, stone_w + 2):
+                actual_x = sx + offset_x
+                if actual_x >= w:
+                    actual_x -= w
+                sv = ((row * 3 + sy // stone_h) * 7 + (col * 5 + sx // stone_w) * 11) % 3
+                shade = [(175, 155, 115), (165, 145, 105), (180, 162, 122)][sv]
+                sr = pygame.Rect(x + actual_x, y + sy, stone_w, stone_h)
+                pygame.draw.rect(surface, shade, sr, border_radius=2)
+        for sy in range(0, h, stone_h + 2):
+            pygame.draw.line(surface, mortar, (x, y + sy + stone_h), (x + w, y + sy + stone_h), 1)
+        for sx in range(0, w, stone_w + 2):
+            pygame.draw.line(surface, mortar, (x + sx + offset_x, y), (x + sx + offset_x, y + h), 1)
+
+    elif tile == 3:  # Roof — unique per building
+        base = bstyle["roof"] if bstyle else ROOF_COLOR
+        pygame.draw.rect(surface, base, rect)
+        shingle_h = 8
+        line_col = (max(base[0] - 20, 0), max(base[1] - 15, 0), max(base[2] - 12, 0))
+        for sy in range(0, h, shingle_h):
+            row_off = (shingle_h // 2) if ((row * 4 + sy // shingle_h) % 2 == 1) else 0
+            pygame.draw.line(surface, line_col, (x, y + sy), (x + w, y + sy), 1)
+            for sx in range(row_off, w, 16):
+                pygame.draw.line(surface, line_col, (x + sx, y + sy), (x + sx, y + sy + shingle_h), 1)
+        # Ridge highlight at top
+        ridge = (min(base[0] + 20, 255), min(base[1] + 15, 255), min(base[2] + 15, 255))
+        pygame.draw.line(surface, ridge, (x, y + 1), (x + w, y + 1), 1)
+        # Overhang shadow at bottom
+        overhang = (max(base[0] - 40, 0), max(base[1] - 30, 0), max(base[2] - 25, 0))
+        pygame.draw.rect(surface, overhang, (x, y + h - 3, w, 3))
+
+    elif tile == 4:  # Door — unique per building
+        door_col = bstyle["door"] if bstyle else DOOR_COLOR
+        frame_col = (max(door_col[0] - 30, 0), max(door_col[1] - 25, 0), max(door_col[2] - 15, 0))
+        # Frame
+        pygame.draw.rect(surface, frame_col, rect)
+        # Inner panel
+        di = rect.inflate(-10, -6)
+        di.y += 3
+        pygame.draw.rect(surface, door_col, di)
+        # Panel lines
+        ph = di.height // 2 - 3
+        panel_line = (min(door_col[0] + 20, 255), min(door_col[1] + 15, 255), min(door_col[2] + 10, 255))
+        pygame.draw.rect(surface, panel_line, (di.x + 4, di.y + 3, di.width - 8, ph), 1)
+        pygame.draw.rect(surface, panel_line, (di.x + 4, di.y + ph + 6, di.width - 8, ph), 1)
+        # Handle
+        handle_col = bstyle["accent"] if bstyle else (200, 180, 100)
+        pygame.draw.circle(surface, handle_col, (di.x + di.width - 8, di.centery), 3)
+
+    elif tile == 5:  # Tree
+        grass_base = (65, 130, 0) if (row + col) % 2 == 0 else (70, 140, 5)
+        pygame.draw.rect(surface, grass_base, rect)
+        # Trunk
+        tw, th = 8, 14
+        pygame.draw.rect(surface, (90, 60, 30), (x + w // 2 - tw // 2, y + h - th - 2, tw, th))
+        # Canopy
+        cr = w // 2 - 4
+        cx, cy = x + w // 2, y + h // 2 - 4
+        cs = (seed % 3) * 8
+        cc = (25 + cs, 85 + cs, 15)
+        pygame.draw.circle(surface, cc, (cx, cy), cr)
+        # Canopy highlight
+        pygame.draw.circle(surface, (cc[0] + 15, cc[1] + 15, cc[2] + 10), (cx - 3, cy - 3), cr // 2)
+
+    else:
+        pygame.draw.rect(surface, TILE_COLORS.get(tile, BG_COLOR), rect)
+
+
+def get_npc_sprite(npc):
+    """Get the current sprite for an NPC based on their movement state."""
+    facing = npc.get("facing", "south")
+    if npc.get("npc_walking"):
+        frames = npc_walk_frames.get(facing)
+        if frames:
+            idx = npc.get("npc_anim_frame", 0) % len(frames)
+            return frames[idx]
+    return npc_idle_sprites.get(facing)
 
 def blit_clamped(surface, surf, x, y):
     """Blit a surface clamped within screen bounds."""
@@ -2356,10 +2182,15 @@ def draw_centered_text_wrapped(
 
 
 def quantum_blood_game_loop():
+    global display
+    global is_fullscreen
     global master_volume
     global music_volume
     global menu_bg_timer
     global menu_bg_frame_idx
+    global menu_clip_idx
+    global menu_frame_idx
+    global menu_frame_timer
     global player_facing
     global player_walking
     global player_anim_timer
@@ -2379,7 +2210,11 @@ def quantum_blood_game_loop():
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_F11:
-                pygame.display.toggle_fullscreen()
+                is_fullscreen = not is_fullscreen
+                if is_fullscreen:
+                    display = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                else:
+                    display = pygame.display.set_mode((SCREEN_W, SCREEN_H), pygame.RESIZABLE)
             if event.key == pygame.K_ESCAPE:
                 if game.state in ("DAY", "ACCUSE"):
                     if game.state == "ACCUSE":
@@ -2394,13 +2229,20 @@ def quantum_blood_game_loop():
                         game.search_result_timer = 0
                         game.search_result_text = ""
                     elif game.dialogue_target:
+                        if game.dialogue_target:
+                            game.dialogue_target["talking"] = False
                         game.dialogue_target = None
                         game.dialogue_text = ""
                         game.dialogue_loading = False
                     elif game.current_interior and not game.fading:
                         sfx_door.play()
-                        # Exit interior back to town with fade
-                        game.start_fade(lambda: game.try_exit_interior())
+                        _esc_interior = INTERIORS[game.current_interior]
+                        _esc_wx, _esc_wy = _esc_interior["exit_world_pos"]
+                        def _do_esc_exit(wx=_esc_wx, wy=_esc_wy):
+                            game.player_x = wx * TILE_SIZE
+                            game.player_y = wy * TILE_SIZE
+                            game.current_interior = None
+                        game.start_fade(_do_esc_exit)
                     else:
                         running = False
                 elif game.state == "SETTINGS":
@@ -2418,6 +2260,16 @@ def quantum_blood_game_loop():
                 and not game.fading
             ):
                 game.start_fade(lambda: game.new_game())
+            if game.state == "MENU" and event.key == pygame.K_c and not game.fading:
+                def _start_credits():
+                    game.state = "CREDITS"
+                    game.credits_scroll_y = SCREEN_H
+                    game.credits_timer = 0.0
+                    music_stop(fade_ms=500)
+                    pygame.mixer.music.load(CREDITS_MUSIC)
+                    pygame.mixer.music.set_volume(0.7)
+                    pygame.mixer.music.play()
+                game.start_fade(_start_credits)
 
             # Night — skip with any key after timer
             if game.state == "NIGHT" and game.night_timer <= 0 and not game.fading:
@@ -2426,6 +2278,10 @@ def quantum_blood_game_loop():
 
             # Day
             if game.state == "DAY":
+                # Tutorial step 3: dismiss on any key
+                if game.tutorial_step == 3 and event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_e):
+                    game.tutorial_step = 4
+
                 if event.key == pygame.K_e:
                     # Dismiss search result
                     if game.search_result_timer > 0:
@@ -2433,6 +2289,7 @@ def quantum_blood_game_loop():
                         game.search_result_text = ""
                     # Close dialogue
                     elif game.dialogue_target:
+                        game.dialogue_target["talking"] = False
                         game.dialogue_target = None
                         game.dialogue_text = ""
                         game.dialogue_loading = False
@@ -2444,7 +2301,14 @@ def quantum_blood_game_loop():
                         game.current_interior and game.is_on_exit() and not game.fading
                     ):
                         sfx_door.play()
-                        game.start_fade(lambda: game.try_exit_interior())
+                        # Capture exit data now so walking off the tile doesn't cancel it
+                        _exit_interior = INTERIORS[game.current_interior]
+                        _exit_wx, _exit_wy = _exit_interior["exit_world_pos"]
+                        def _do_exit(wx=_exit_wx, wy=_exit_wy):
+                            game.player_x = wx * TILE_SIZE
+                            game.player_y = wy * TILE_SIZE
+                            game.current_interior = None
+                        game.start_fade(_do_exit)
                     # Try enter building
                     elif (
                         not game.current_interior
@@ -2495,6 +2359,8 @@ def quantum_blood_game_loop():
                     game.showing_evidence_log = False
                     game.showing_clue_tracker = False
                     game.journal_page = 0
+                    if game.tutorial_step == 2:
+                        game.tutorial_step = 3
 
                 if (
                     event.key == pygame.K_TAB
@@ -2541,6 +2407,11 @@ def quantum_blood_game_loop():
                     if suspects:
                         game.do_accuse(suspects[game.accuse_selection])
 
+            # Reveal screen — press ENTER after verdict shown
+            elif game.state == "REVEAL" and game.reveal_done:
+                if (event.key == pygame.K_RETURN or event.key == pygame.K_SPACE) and not game.fading:
+                    game.start_fade(lambda: game._advance_from_reveal())
+
             # Accuse result — wrong guess, continue to next night
             elif game.state == "ACCUSE_RESULT":
                 if (
@@ -2548,36 +2419,72 @@ def quantum_blood_game_loop():
                 ) and not game.fading:
                     game.start_fade(lambda: game.start_night())
 
-            # Settings
-            elif game.state == "SETTINGS":
+            # Recap
+            elif game.state == "RECAP":
+                if event.key == pygame.K_RETURN and not game.fading:
+                    def _to_credits():
+                        game.state = "CREDITS"
+                        game.credits_scroll_y = SCREEN_H
+                        game.credits_timer = 0.0
+                        music_stop(fade_ms=500)
+                        pygame.mixer.music.load(CREDITS_MUSIC)
+                        pygame.mixer.music.set_volume(0.7)
+                        pygame.mixer.music.play()
+                    game.start_fade(_to_credits)
                 if event.key == pygame.K_UP:
-                    game.settings_selection = (game.settings_selection - 1) % 2
-                elif event.key == pygame.K_DOWN:
-                    game.settings_selection = (game.settings_selection + 1) % 2
-                elif event.key in (pygame.K_LEFT, pygame.K_RIGHT):
-                    delta = 0.1 if event.key == pygame.K_RIGHT else -0.1
-                    if game.settings_selection == 0:
-                        master_volume = round(
-                            max(0.0, min(1.0, master_volume + delta)), 1
-                        )
-                        apply_master_volume()
-                    else:
-                        music_volume = round(
-                            max(0.0, min(1.0, music_volume + delta)), 1
-                        )
-                        apply_music_volume()
+                    game.recap_scroll = max(0, game.recap_scroll - 1)
+                if event.key == pygame.K_DOWN:
+                    game.recap_scroll += 1
+
+            # Credits
+            elif game.state == "CREDITS":
+                if event.key in (pygame.K_RETURN, pygame.K_ESCAPE, pygame.K_SPACE) and not game.fading:
+                    def _credits_to_menu():
+                        global menu_clip_idx, menu_frame_idx, menu_frame_timer, menu_transition_timer
+                        game.state = "MENU"
+                        menu_clip_idx = 0
+                        menu_frame_idx = 0
+                        menu_frame_timer = 0.0
+                        menu_transition_timer = 0.0
+                        music_start_menu()
+                    game.start_fade(_credits_to_menu)
 
             # Win/Lose
-            elif game.state in ("WIN", "LOSE"):
+            elif game.state in {"WIN", "LOSE"}:
                 if event.key == pygame.K_RETURN and not game.fading:
 
                     def _to_menu():
+                        global menu_clip_idx, menu_frame_idx, menu_frame_timer, menu_transition_timer
                         game.state = "MENU"
+                        menu_clip_idx = 0
+                        menu_frame_idx = 0
+                        menu_frame_timer = 0.0
+                        menu_transition_timer = 0.0
                         music_start_menu()
 
                     game.start_fade(_to_menu)
 
     # ── Update ──────────────────────────────────────────────────
+    # Credits auto-scroll + 30s fade-out to menu
+    if game.state == "CREDITS":
+        game.credits_scroll_y -= 40 * dt
+        game.credits_timer += dt
+        # Fade music out during last 5 seconds
+        if game.credits_timer > 25.0:
+            vol = max(0.0, 0.7 * (1.0 - (game.credits_timer - 25.0) / 5.0))
+            pygame.mixer.music.set_volume(vol)
+        # Return to menu at 30s
+        if game.credits_timer >= 30.0 and not game.fading:
+            def _credits_done():
+                global menu_clip_idx, menu_frame_idx, menu_frame_timer, menu_transition_timer
+                game.state = "MENU"
+                menu_clip_idx = 0
+                menu_frame_idx = 0
+                menu_frame_timer = 0.0
+                menu_transition_timer = 0.0
+                music_start_menu()
+            game.start_fade(_credits_done)
+
     # Fade transition
     if game.fade_direction == 1:
         game.fade_alpha += game.fade_speed * dt
@@ -2599,12 +2506,17 @@ def quantum_blood_game_loop():
     if game.state == "NIGHT":
         game.night_timer -= dt
 
-    if (
-        game.state == "DAY"
-        and not game.showing_journal
-        and not game.showing_evidence_log
-        and not game.showing_clue_tracker
-    ):
+    if game.state == "REVEAL":
+        prev = game.reveal_timer
+        game.reveal_timer += dt
+        # Play drum hit at the moment the verdict appears (50% mark)
+        half = game.reveal_duration * 0.5
+        if prev < half <= game.reveal_timer:
+            sfx_reverb_drum.play()
+        if game.reveal_timer >= game.reveal_duration and not game.reveal_done:
+            game._finish_reveal()
+
+    if game.state == "DAY" and not game.showing_journal and not game.showing_evidence_log and not game.showing_clue_tracker:
         # Movement
         keys = pygame.key.get_pressed()
         dx, dy = 0, 0
@@ -2659,20 +2571,16 @@ def quantum_blood_game_loop():
                     ptx = int((game.player_x + (TILE_SIZE - 4) / 2) // TILE_SIZE)
                     pty = int((game.player_y + (TILE_SIZE - 4) / 2) // TILE_SIZE)
                     if game.current_interior:
-                        imap = INTERIORS[game.current_interior]["map"]
-                        tile = (
-                            imap[pty][ptx]
-                            if 0 <= pty < len(imap) and 0 <= ptx < len(imap[0])
-                            else 7
-                        )
-                        play_footstep("stone" if tile in (7, 8) else "grass")
+                        # Interior: wood floors
+                        play_footstep("wood")
                     else:
-                        tile = (
-                            tilemap[pty][ptx]
-                            if 0 <= pty < MAP_H and 0 <= ptx < MAP_W
-                            else 0
-                        )
-                        play_footstep("stone" if tile == 2 else "grass")
+                        tile = tilemap[pty][ptx] if 0 <= pty < MAP_H and 0 <= ptx < MAP_W else 0
+                        if tile == 2:
+                            play_footstep("stone")   # cobblestone paths
+                        elif tile == 4:
+                            play_footstep("wood")    # door threshold
+                        else:
+                            play_footstep("grass")   # grass, forest, etc.
         else:
             player_walking = False
             player_anim_timer = 0.0
@@ -2683,6 +2591,9 @@ def quantum_blood_game_loop():
             game.search_result_timer -= dt
             if game.search_result_timer <= 0:
                 game.search_result_text = ""
+
+        # Update NPC movement
+        game._update_npcs(dt)
 
         # Check LLM responses
         if game.dialogue_loading and game.dialogue_target:
@@ -2702,71 +2613,153 @@ def quantum_blood_game_loop():
     screen.fill(BG_COLOR)
 
     if game.state == "MENU":
-        # Animate GIF background
-        menu_bg_timer += dt
+        t = pygame.time.get_ticks() / 1000.0
 
-        if menu_bg_timer >= 1.0 / MENU_BG_FPS:
-            menu_bg_timer -= 1.0 / MENU_BG_FPS
+        # Video background — loops clips with crossfade
+        if MENU_VIDEO_CLIPS:
+            clip = MENU_VIDEO_CLIPS[menu_clip_idx % len(MENU_VIDEO_CLIPS)]
+            fade_frames = int(MENU_VIDEO_FPS * 0.5)  # frames for fade (0.5s)
 
-            if menu_bg_frame_idx < len(menu_bg_frames) - 1:
-                menu_bg_frame_idx += 1
+            # Advance frame
+            menu_frame_timer += dt
+            if menu_frame_timer >= 1.0 / MENU_VIDEO_FPS:
+                menu_frame_timer -= 1.0 / MENU_VIDEO_FPS
+                menu_frame_idx += 1
 
-            # menu_bg_frame_idx = (menu_bg_frame_idx + 1) % len(menu_bg_frames)
-            # if menu_bg_frame_idx < 0:
-            # menu_bg_frame_idx = 0
+            if menu_frame_idx >= len(clip):
+                menu_clip_idx = (menu_clip_idx + 1) % len(MENU_VIDEO_CLIPS)
+                menu_frame_idx = 0
+                menu_frame_timer = 0.0
+                clip = MENU_VIDEO_CLIPS[menu_clip_idx]
 
-        screen.blit(menu_bg_frames[menu_bg_frame_idx], (0, 0))
-        _menu_overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
-        _menu_overlay.fill((0, 0, 0, 140))
-        screen.blit(_menu_overlay, (0, 0))
-        _shadow_surf = font_title.render("QUANTUM Blood", True, (0, 0, 0))
-        screen.blit(
-            _shadow_surf, (SCREEN_W // 2 - _shadow_surf.get_width() // 2 + 3, 183)
-        )
-        draw_centered_text(screen, "QUANTUM Blood", font_title, BLOOD_RED, 180)
-        draw_centered_text(
-            screen,
-            "A villain hides among the townspeople.",
-            font_md,
-            (200, 200, 200),
-            270,
-        )
-        draw_centered_text(
-            screen, "Find them before it's too late.", font_md, (200, 200, 200), 310
-        )
-        draw_centered_text(
-            screen, "Press ENTER to begin", font_md, (255, 255, 255), 420
-        )
-        draw_centered_text(
-            screen, "Press S for Settings", font_sm, (180, 180, 180), 460
-        )
-        draw_centered_text(
-            screen,
-            "[WASD] Move  [E] Interact  [B] Journal  [L] Log  [J] Clues  [TAB] Accuse",
-            font_sm,
-            (150, 150, 150),
-            500,
-        )
-        draw_centered_text(
-            screen,
-            "Tip: Press Fn + F11 for fullscreen",
-            font_sm,
-            (120, 120, 120),
-            530,
-        )
+            # Draw current frame
+            frame_idx = min(menu_frame_idx, len(clip) - 1)
+            screen.blit(clip[frame_idx], (0, 0))
+
+            # Fade in at start of clip
+            if menu_frame_idx < fade_frames:
+                alpha = int(255 * (1.0 - menu_frame_idx / fade_frames))
+                fade_s = pygame.Surface((SCREEN_W, SCREEN_H))
+                fade_s.fill((0, 0, 0))
+                fade_s.set_alpha(alpha)
+                screen.blit(fade_s, (0, 0))
+
+            # Fade out at end of clip
+            frames_left = len(clip) - menu_frame_idx
+            if frames_left <= fade_frames:
+                alpha = int(255 * (1.0 - frames_left / fade_frames))
+                fade_s = pygame.Surface((SCREEN_W, SCREEN_H))
+                fade_s.fill((0, 0, 0))
+                fade_s.set_alpha(alpha)
+                screen.blit(fade_s, (0, 0))
+
+            # Dark overlay for text readability
+            _menu_ov = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
+            _menu_ov.fill((0, 0, 0, 120))
+            screen.blit(_menu_ov, (0, 0))
+        else:
+            # Fallback dark gradient if no videos found
+            for y_line in range(SCREEN_H):
+                frac = y_line / SCREEN_H
+                pygame.draw.line(screen, (int(8 + 15 * frac), int(5 + 8 * frac), int(18 + 12 * (1 - frac))),
+                    (0, y_line), (SCREEN_W, y_line))
+
+        # Blood drips from top of screen
+        drip_positions = [
+            (85, 0.6, 55, 3), (150, 0.9, 40, 2), (230, 0.5, 70, 3),
+            (310, 1.1, 35, 2), (390, 0.7, 60, 3), (470, 0.4, 80, 2),
+            (540, 0.8, 45, 3), (620, 1.0, 50, 2), (700, 0.6, 65, 3),
+            (780, 0.7, 38, 2), (840, 0.5, 55, 3),
+        ]
+        for dx, spd, length_base, w in drip_positions:
+            cycle = (t * spd + dx * 0.01) % 4.0
+            if cycle < 3.0:
+                drip_len = int(length_base * min(1.0, cycle / 1.5))
+                for dy in range(drip_len):
+                    alpha_frac = 1.0 - (dy / max(drip_len, 1)) * 0.6
+                    col = (int(150 * alpha_frac), int(15 * alpha_frac), int(15 * alpha_frac))
+                    pygame.draw.rect(screen, col, (dx, dy, w, 1))
+                if drip_len > 10:
+                    pygame.draw.circle(screen, (140, 18, 18), (dx + w // 2, drip_len), w)
+
+        # Title with drop shadow — large serif font
+        title_y = 120
+        title_cx = SCREEN_W // 2
+        # Deep shadow
+        s1 = font_menu_title.render("QUANTUM BLOOD", True, (0, 0, 0))
+        screen.blit(s1, (title_cx - s1.get_width() // 2 + 4, title_y + 5))
+        # Mid shadow
+        s2 = font_menu_title.render("QUANTUM BLOOD", True, (30, 3, 3))
+        screen.blit(s2, (title_cx - s2.get_width() // 2 + 2, title_y + 3))
+        # Main title
+        pulse = 0.85 + 0.15 * math.sin(t * 2)
+        title_col = (int(220 * pulse), int(25 * pulse), int(25 * pulse))
+        title_surf = font_menu_title.render("QUANTUM BLOOD", True, title_col)
+        screen.blit(title_surf, (title_cx - title_surf.get_width() // 2, title_y))
+
+        # Subtitle — brighter for contrast
+        draw_centered_text(screen, "A villain hides among the townspeople.", font_md, (220, 215, 200), 250)
+        draw_centered_text(screen, "Find them before it's too late.", font_md, (200, 195, 180), 285)
+
+        # Pulsing "Press ENTER" — brighter
+        enter_alpha = 180 + int(75 * math.sin(t * 3))
+        enter_surf = font_md.render("Press ENTER to begin", True, (enter_alpha, enter_alpha, enter_alpha))
+        screen.blit(enter_surf, (SCREEN_W // 2 - enter_surf.get_width() // 2, 380))
+
+        # Controls — brighter
+        draw_centered_text(screen, "[WASD] Move   [E] Interact   [B] Journal   [TAB] Accuse", font_sm, (170, 165, 155), 520)
+        draw_centered_text(screen, "[L] Evidence Log   [J] Clue Tracker   [C] Credits   [F11] Fullscreen", font_sm, (170, 165, 155), 545)
 
     elif game.state == "NIGHT":
-        screen.fill(NIGHT_OVERLAY)
-        cur_y = 200
+        t = pygame.time.get_ticks() / 1000.0
+
+        # Dark sky gradient
+        for y_line in range(SCREEN_H):
+            frac = y_line / SCREEN_H
+            r = int(5 + 8 * frac)
+            g = int(5 + 6 * frac)
+            b = int(25 + 20 * (1 - frac))
+            pygame.draw.line(screen, (r, g, b), (0, y_line), (SCREEN_W, y_line))
+
+        # Stars
+        for i in range(60):
+            sx = (i * 97 + 31) % SCREEN_W
+            sy = (i * 53 + 17) % (SCREEN_H - 100) + 10
+            twinkle = 80 + int(100 * max(0, math.sin(t * 1.2 + i * 0.9)))
+            size = 1 if i % 3 != 0 else 2
+            pygame.draw.circle(screen, (twinkle, twinkle, twinkle + 30), (sx, sy), size)
+
+        # Moon with glow
+        moon_x, moon_y = 150, 80
+        # Outer glow
+        for gr in range(50, 15, -5):
+            glow_s = pygame.Surface((gr * 2, gr * 2), pygame.SRCALPHA)
+            pygame.draw.circle(glow_s, (180, 180, 200, 6), (gr, gr), gr)
+            screen.blit(glow_s, (moon_x - gr, moon_y - gr))
+        # Moon body
+        pygame.draw.circle(screen, (220, 218, 200), (moon_x, moon_y), 25)
+        pygame.draw.circle(screen, (200, 198, 180), (moon_x - 6, moon_y - 4), 22)
+        # Craters
+        pygame.draw.circle(screen, (195, 192, 175), (moon_x + 8, moon_y - 5), 4)
+        pygame.draw.circle(screen, (195, 192, 175), (moon_x - 3, moon_y + 8), 3)
+
+        # Subtle clouds drifting
+        for i in range(5):
+            cx = (int(t * 8 + i * 200) % (SCREEN_W + 200)) - 100
+            cy = 50 + i * 120 + int(math.sin(t * 0.3 + i) * 10)
+            cloud = pygame.Surface((120 + i * 20, 20), pygame.SRCALPHA)
+            cloud.fill((40, 40, 60, 12 + i * 3))
+            screen.blit(cloud, (cx, cy))
+
+        # Storyteller text
+        cur_y = 220
         for line in game.storyteller_text.split("\n"):
-            cur_y = draw_centered_text_wrapped(
-                screen, line, font_lg, (220, 220, 255), cur_y
-            )
-            cur_y += 10  # extra gap between paragraphs
+            cur_y = draw_centered_text_wrapped(screen, line, font_lg, (220, 220, 255), cur_y)
+            cur_y += 10
         if game.night_timer <= 0:
-            draw_centered_text(
-                screen, "Press ENTER to continue", font_md, (150, 150, 180), 500
-            )
+            enter_a = 150 + int(80 * math.sin(t * 3))
+            enter_surf = font_md.render("Press ENTER to continue", True, (enter_a, enter_a, min(255, int(enter_a * 1.2))))
+            screen.blit(enter_surf, (SCREEN_W // 2 - enter_surf.get_width() // 2, 520))
 
     elif game.state in ("DAY", "ACCUSE"):
         pw, ph = TILE_SIZE - 4, TILE_SIZE - 4
@@ -2905,6 +2898,44 @@ def quantum_blood_game_loop():
                     else:
                         pygame.draw.rect(screen, TILE_COLORS.get(tile, BG_COLOR), rect)
 
+            # Crime scene details inside building
+            if game.current_interior == game.crime_scene_building:
+                for ci, (cr, cc) in enumerate([(2, 2), (3, 3), (4, 2)]):
+                    if cr < ih and cc < iw and imap[cr][cc] == 7:
+                        fx = cc * TILE_SIZE - cam_x
+                        fy = cr * TILE_SIZE - cam_y
+                        # Blood splatters
+                        splat = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+                        for si in range(3 + ci):
+                            sx2 = 8 + ((ci * 17 + si * 11) % (TILE_SIZE - 16))
+                            sy2 = 8 + ((ci * 13 + si * 7) % (TILE_SIZE - 16))
+                            pygame.draw.circle(splat, (160, 20, 20, 120), (sx2, sy2), 3 + si % 3)
+                        screen.blit(splat, (fx, fy))
+                # Body outline on tile (2, 3)
+                if 3 < ih and 2 < iw and imap[3][2] == 7:
+                    ox2 = 2 * TILE_SIZE - cam_x
+                    oy2 = 3 * TILE_SIZE - cam_y
+                    # Simple chalk outline
+                    outline_col = (220, 220, 200, 150)
+                    os2 = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+                    # Head
+                    pygame.draw.circle(os2, outline_col, (24, 10), 6, 1)
+                    # Body
+                    pygame.draw.line(os2, outline_col, (24, 16), (24, 32), 1)
+                    # Arms
+                    pygame.draw.line(os2, outline_col, (24, 22), (14, 28), 1)
+                    pygame.draw.line(os2, outline_col, (24, 22), (34, 28), 1)
+                    # Legs
+                    pygame.draw.line(os2, outline_col, (24, 32), (16, 44), 1)
+                    pygame.draw.line(os2, outline_col, (24, 32), (32, 44), 1)
+                    screen.blit(os2, (ox2, oy2))
+                # Crime scene description popup (first visit)
+                if not game.crime_scene_seen:
+                    game.crime_scene_seen = True
+                    scene_desc = game.night_clues.get("scene_evidence", "")
+                    if scene_desc:
+                        game.show_search_result(f"CRIME SCENE: {scene_desc}")
+
             # Draw subtle glint on active search spots in interior
             interior = INTERIORS[game.current_interior]
             t = pygame.time.get_ticks()
@@ -2932,8 +2963,7 @@ def quantum_blood_game_loop():
                 ):
                     sx = npc["x"] - cam_x
                     sy = npc["y"] - cam_y
-                    idx = game.characters.index(npc) if npc in game.characters else -1
-                    sprite = npc_sprites[idx] if 0 <= idx < len(npc_sprites) else None
+                    sprite = get_npc_sprite(npc)
                     if sprite:
                         screen.blit(sprite, (sx - npc_off, sy - npc_off))
                     else:
@@ -2955,19 +2985,38 @@ def quantum_blood_game_loop():
                         blit_clamped(screen, hint, sx - 5, sy - 38)
 
         else:
-            # ── Draw town map ──
-            if village_skin:
-                screen.blit(village_skin, (-cam_x, -cam_y))
-            else:
-                for row in range(MAP_H):
-                    for col in range(MAP_W):
-                        rect = pygame.Rect(
-                            col * TILE_SIZE - cam_x,
-                            row * TILE_SIZE - cam_y,
-                            TILE_SIZE,
-                            TILE_SIZE,
-                        )
-                        pygame.draw.rect(screen, TILE_COLORS[tilemap[row][col]], rect)
+            # ── Draw town map with detailed tiles ──
+            for row in range(MAP_H):
+                for col in range(MAP_W):
+                    tile = tilemap[row][col]
+                    # Skip building tiles that will be covered by sprites
+                    if (col, row) in BUILDING_TILE_MAP and tile in (1, 3, 4):
+                        # Draw grass underneath so there's no black gap
+                        rect = pygame.Rect(col * TILE_SIZE - cam_x, row * TILE_SIZE - cam_y, TILE_SIZE, TILE_SIZE)
+                        draw_town_tile(screen, 0, rect, row, col)
+                        continue
+                    rect = pygame.Rect(
+                        col * TILE_SIZE - cam_x,
+                        row * TILE_SIZE - cam_y,
+                        TILE_SIZE, TILE_SIZE,
+                    )
+                    draw_town_tile(screen, tile, rect, row, col)
+
+            # Draw building sprites on top
+            for bname, (bx, by) in BUILDING_SPRITE_POS.items():
+                if bname in building_sprites:
+                    sx = bx * TILE_SIZE - cam_x
+                    sy = by * TILE_SIZE - cam_y
+                    screen.blit(building_sprites[bname], (sx, sy))
+                    # Crime scene red tint
+                    if bname == game.crime_scene_building:
+                        tint = pygame.Surface(BUILDING_SPRITE_SIZE, pygame.SRCALPHA)
+                        tint.fill((200, 20, 20, 40))
+                        screen.blit(tint, (sx, sy))
+                        # "!" marker near door
+                        mark = font_md.render("!", True, (255, 60, 60))
+                        screen.blit(mark, (sx + BUILDING_SPRITE_SIZE[0] // 2 - mark.get_width() // 2,
+                                           sy + BUILDING_SPRITE_SIZE[1] + 2))
 
             # Draw building name labels
             for i, (lx, ly) in enumerate(BUILDING_LABEL_POS):
@@ -3024,8 +3073,7 @@ def quantum_blood_game_loop():
                     continue  # Skip NPCs inside buildings
                 sx = npc["x"] - cam_x
                 sy = npc["y"] - cam_y
-                idx = game.characters.index(npc) if npc in game.characters else -1
-                sprite = npc_sprites[idx] if 0 <= idx < len(npc_sprites) else None
+                sprite = get_npc_sprite(npc)
                 if sprite:
                     screen.blit(sprite, (sx - npc_off, sy - npc_off))
                 else:
@@ -3108,7 +3156,9 @@ def quantum_blood_game_loop():
         hud_h = 45
         if game.current_interior:
             hud_h = 65  # extra row for location
-        pygame.draw.rect(screen, (0, 0, 0, 180), (0, 0, SCREEN_W, hud_h))
+        hud_overlay = pygame.Surface((SCREEN_W, hud_h), pygame.SRCALPHA)
+        hud_overlay.fill((0, 0, 0, 180))
+        screen.blit(hud_overlay, (0, 0))
 
         hud_left = font_md.render(
             f"Day {game.night_num}  |  Guesses: {3 - game.wrong_guesses}  |  Evidence: {ev_count}",
@@ -3146,6 +3196,70 @@ def quantum_blood_game_loop():
             screen.blit(
                 jkey, (jbtn.x + jbtn.width // 2 - jkey.get_width() // 2, jbtn.y + 32)
             )
+
+        # Mini-map (town map only, no overlays)
+        if not game.current_interior and not game.dialogue_target and not game.showing_journal and not game.showing_evidence_log and not game.showing_clue_tracker and game.tutorial_step >= 4:
+            mm_w, mm_h = 150, 90
+            mm_x, mm_y = SCREEN_W - mm_w - 10, SCREEN_H - mm_h - 190
+            mm_sx = mm_w / (MAP_W * TILE_SIZE)
+            mm_sy = mm_h / (MAP_H * TILE_SIZE)
+            # Background
+            mm_bg = pygame.Surface((mm_w, mm_h), pygame.SRCALPHA)
+            mm_bg.fill((0, 0, 0, 140))
+            screen.blit(mm_bg, (mm_x, mm_y))
+            # Buildings
+            for bname, (bx, by) in BUILDING_SPRITE_POS.items():
+                bstyle = BUILDING_EXTERIOR_STYLES.get(bname)
+                bc = bstyle["wall"] if bstyle else (100, 80, 60)
+                br = pygame.Rect(mm_x + bx * TILE_SIZE * mm_sx, mm_y + by * TILE_SIZE * mm_sy,
+                                 4 * TILE_SIZE * mm_sx, 4 * TILE_SIZE * mm_sy)
+                pygame.draw.rect(screen, bc, br)
+                # Crime scene marker
+                if bname == game.crime_scene_building:
+                    pygame.draw.rect(screen, (255, 50, 50), br, 1)
+            # Paths (simplified — draw the two horizontal road rows)
+            for pr in [7, 15]:
+                py2 = mm_y + pr * TILE_SIZE * mm_sy
+                pygame.draw.line(screen, (150, 135, 100), (mm_x, int(py2)), (mm_x + mm_w, int(py2)), 1)
+            # Forest
+            pygame.draw.rect(screen, (30, 80, 20),
+                (mm_x + 24 * TILE_SIZE * mm_sx, mm_y + 9 * TILE_SIZE * mm_sy,
+                 5 * TILE_SIZE * mm_sx, 6 * TILE_SIZE * mm_sy))
+            # NPC dots
+            for npc in game.alive:
+                if npc.get("location_type") == "interior":
+                    continue
+                nx = mm_x + npc["x"] * mm_sx
+                ny = mm_y + npc["y"] * mm_sy
+                pygame.draw.circle(screen, npc["color"], (int(nx), int(ny)), 2)
+            # Player dot (pulsing white)
+            pp = 0.6 + 0.4 * math.sin(pygame.time.get_ticks() * 0.005)
+            px2 = mm_x + game.player_x * mm_sx
+            py2 = mm_y + game.player_y * mm_sy
+            pygame.draw.circle(screen, (int(255 * pp), int(255 * pp), int(255 * pp)), (int(px2), int(py2)), 3)
+            # Border
+            pygame.draw.rect(screen, (100, 100, 100), (mm_x, mm_y, mm_w, mm_h), 1)
+
+        # Tutorial messages (Day 1 only)
+        if game.tutorial_step in (1, 2, 3):
+            tut_msgs = {
+                1: "Press [E] near a townsperson to speak with them.",
+                2: "Press [B] to open your Journal and learn about the residents.",
+                3: "Press [TAB] when ready to accuse. Good luck, detective!",
+            }
+            tut_text = tut_msgs.get(game.tutorial_step, "")
+            if tut_text:
+                tw = SCREEN_W - 100
+                tut_surf = font_md.render(tut_text, True, (255, 255, 220))
+                tbg_w = min(tut_surf.get_width() + 30, tw)
+                tbg_h = 40
+                tbg_x = SCREEN_W // 2 - tbg_w // 2
+                tbg_y = hud_h + 8
+                tbg = pygame.Surface((tbg_w, tbg_h), pygame.SRCALPHA)
+                tbg.fill((20, 15, 40, 200))
+                screen.blit(tbg, (tbg_x, tbg_y))
+                pygame.draw.rect(screen, (100, 80, 180), (tbg_x, tbg_y, tbg_w, tbg_h), 1, border_radius=4)
+                screen.blit(tut_surf, (SCREEN_W // 2 - tut_surf.get_width() // 2, tbg_y + 8))
 
         # Dialogue box
         if game.dialogue_target:
@@ -3388,10 +3502,9 @@ def quantum_blood_game_loop():
             ly += 40
 
             # Portrait
-            idx = game.characters.index(c)
-            sprite = npc_sprites[idx] if 0 <= idx < len(npc_sprites) else None
-            if sprite:
-                portrait = pygame.transform.smoothscale(sprite, (80, 80))
+            portrait_sprite = npc_idle_sprites.get("south")
+            if portrait_sprite:
+                portrait = pygame.transform.smoothscale(portrait_sprite, (80, 80))
                 screen.blit(portrait, (lx, ly))
             else:
                 pygame.draw.rect(screen, c["color"], (lx, ly, 80, 80))
@@ -3495,6 +3608,57 @@ def quantum_blood_game_loop():
                 )
                 draw_centered_text(screen, text, font_md, col, y_pos)
 
+    elif game.state == "REVEAL":
+        t = game.reveal_timer
+        dur = game.reveal_duration
+        progress = min(t / dur, 1.0)
+        accused = game.reveal_accused
+
+        screen.fill((10, 8, 15))
+
+        if accused:
+            if progress < 0.5:
+                # Suspense: "You accused..." then name fades in
+                fade_in = min(1.0, t / (dur * 0.25))
+                text_surf = font_lg.render("You accused...", True, (200, 200, 220))
+                text_surf.set_alpha(int(255 * fade_in))
+                screen.blit(text_surf, (SCREEN_W // 2 - text_surf.get_width() // 2, 220))
+
+                if progress > 0.15:
+                    name_surf = font_title.render(accused["name"], True, (255, 255, 255))
+                    name_surf.set_alpha(int(255 * min(1.0, (progress - 0.15) / 0.15)))
+                    screen.blit(name_surf, (SCREEN_W // 2 - name_surf.get_width() // 2, 310))
+            else:
+                # Reveal: flash then verdict
+                flash_progress = (progress - 0.5) / 0.5
+                if flash_progress < 0.2:
+                    flash = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
+                    flash.fill((255, 255, 255, int(255 * (1.0 - flash_progress / 0.2))))
+                    screen.blit(flash, (0, 0))
+
+                draw_centered_text(screen, accused["name"], font_title, (255, 255, 255), 200)
+                if game.reveal_correct:
+                    draw_centered_text(screen, "VILLAIN!", font_title, (255, 80, 80), 290)
+                else:
+                    draw_centered_text(screen, "INNOCENT...", font_title, (100, 200, 255), 290)
+
+                # After animation is done, show details and prompt
+                if game.reveal_done:
+                    if game.reveal_correct:
+                        draw_centered_text(screen, "The town is saved!", font_md, (100, 255, 100), 390)
+                    else:
+                        guesses_left = 3 - game.wrong_guesses
+                        if guesses_left <= 0:
+                            draw_centered_text(screen, "You have no guesses remaining...", font_md, BLOOD_RED, 390)
+                            draw_centered_text(screen, f"The villain {game.villain_name} wins!", font_md, BLOOD_RED, 430)
+                        else:
+                            draw_centered_text(screen, f"{guesses_left} guess{'es' if guesses_left > 1 else ''} remaining.", font_md, (200, 200, 180), 390)
+                            # Show who was killed if there was a victim
+                            if game.killed_tonight:
+                                draw_centered_text(screen, f"{game.killed_tonight['name']} was murdered last night.", font_md, (220, 160, 160), 430)
+
+                    draw_centered_text(screen, "Press ENTER to continue", font_md, (180, 180, 180), 530)
+
     elif game.state == "ACCUSE_RESULT":
         screen.fill((40, 30, 10))
         cur_y = 220
@@ -3505,6 +3669,11 @@ def quantum_blood_game_loop():
         draw_centered_text(
             screen, "Press ENTER to continue", font_md, (200, 200, 180), 500
         )
+
+    elif game.state == "CHASE":
+        game.state = "REVEAL"
+        doom_game.new_game()
+        return running, "doom"
 
     elif game.state == "WIN":
         screen.fill((10, 40, 10))
@@ -3549,20 +3718,140 @@ def quantum_blood_game_loop():
                 screen, f"{prefix}{label}  {bar}  {int(val * 100)}%", font_md, col, y
             )
 
+    elif game.state == "RECAP":
+        screen.fill((15, 12, 8))
+        # Build recap lines
+        recap_lines = []
+        won = game.reveal_correct
+        if won:
+            recap_lines.append(("CASE CLOSED", (255, 220, 60), font_title))
+            recap_lines.append(("", (0, 0, 0), font_sm))  # spacer
+        else:
+            recap_lines.append(("CASE UNSOLVED", BLOOD_RED, font_title))
+            recap_lines.append(("", (0, 0, 0), font_sm))
+
+        # The villain
+        villain_c = next((c for c in game.characters if c["is_villain"]), None)
+        if villain_c:
+            recap_lines.append(("The Villain:", (200, 180, 100), font_md))
+            recap_lines.append((f"  {villain_c['name']} — {villain_c['personality']}, from {villain_c['hometown']}", (220, 210, 180), font_sm))
+            recap_lines.append(("", (0, 0, 0), font_sm))
+
+        # Motives
+        victims = [e for e in game.history if e["type"] == "night" and e.get("victim")]
+        if victims and villain_c:
+            recap_lines.append(("Motives:", (200, 180, 100), font_md))
+            for ev in victims:
+                vname = ev["victim"]
+                rel = game.get_relationship(villain_c["name"], vname)
+                if rel:
+                    recap_lines.append((f"  {vname}: {rel['detail']}", (220, 210, 180), font_sm))
+                else:
+                    recap_lines.append((f"  {vname}: No known motive", (180, 170, 150), font_sm))
+            recap_lines.append(("", (0, 0, 0), font_sm))
+
+        # Victims timeline
+        recap_lines.append(("Timeline:", (200, 180, 100), font_md))
+        for ev in game.history:
+            recap_lines.append((f"  {ev['description']}", (200, 195, 170), font_sm))
+        recap_lines.append(("", (0, 0, 0), font_sm))
+
+        # Evidence found
+        if game.evidence_found:
+            recap_lines.append(("Evidence Collected:", (200, 180, 100), font_md))
+            for ef in game.evidence_found:
+                recap_lines.append((f"  - {ef['name']}", (200, 195, 170), font_sm))
+
+        # Render with scrolling
+        visible_start = game.recap_scroll
+        visible_end = min(visible_start + 16, len(recap_lines))
+        game.recap_scroll = min(game.recap_scroll, max(0, len(recap_lines) - 16))
+
+        if visible_start > 0:
+            draw_centered_text(screen, "▲", font_md, (180, 180, 180), 25)
+        y_pos = 40
+        for i in range(visible_start, visible_end):
+            txt, col, fnt = recap_lines[i]
+            if txt:
+                y_pos = draw_centered_text_wrapped(screen, txt, fnt, col, y_pos, max_width=SCREEN_W - 100)
+            y_pos += 6
+        if visible_end < len(recap_lines):
+            draw_centered_text(screen, "▼", font_md, (180, 180, 180), SCREEN_H - 60)
+        draw_centered_text(screen, "Press ENTER to return to menu", font_md, (150, 150, 130), SCREEN_H - 35)
+
+    elif game.state == "CREDITS":
+        screen.fill((5, 3, 8))
+        cy = game.credits_scroll_y
+        credits_content = [
+            ("QUANTUM BLOOD", font_title, (180, 20, 20)),
+            ("", font_sm, (0, 0, 0)),
+            ("A Murder Mystery Game", font_lg, (200, 190, 160)),
+            ("", font_sm, (0, 0, 0)),
+            ("", font_sm, (0, 0, 0)),
+            ("— Development —", font_md, (160, 140, 100)),
+            ("", font_sm, (0, 0, 0)),
+            ("Game Design & Programming", font_sm, (140, 130, 110)),
+            ("Garrett Bradham", font_md, (220, 210, 180)),
+            ("Will", font_md, (220, 210, 180)),
+            ("Taz", font_md, (220, 210, 180)),
+            ("Teresa", font_md, (220, 210, 180)),
+            ("", font_sm, (0, 0, 0)),
+            ("AI Integration", font_sm, (140, 130, 110)),
+            ("Powered by Ollama + Llama 3.1", font_md, (220, 210, 180)),
+            ("", font_sm, (0, 0, 0)),
+            ("", font_sm, (0, 0, 0)),
+            ("— Art & Assets —", font_md, (160, 140, 100)),
+            ("", font_sm, (0, 0, 0)),
+            ("Character Sprites", font_sm, (140, 130, 110)),
+            ("Pixel Art Generation", font_md, (220, 210, 180)),
+            ("", font_sm, (0, 0, 0)),
+            ("Building Design", font_sm, (140, 130, 110)),
+            ("Procedural Generation", font_md, (220, 210, 180)),
+            ("", font_sm, (0, 0, 0)),
+            ("", font_sm, (0, 0, 0)),
+            ("— Audio —", font_md, (160, 140, 100)),
+            ("", font_sm, (0, 0, 0)),
+            ("Music & Sound Effects", font_sm, (140, 130, 110)),
+            ("Original Compositions", font_md, (220, 210, 180)),
+            ("", font_sm, (0, 0, 0)),
+            ("", font_sm, (0, 0, 0)),
+            ("Thank you for playing!", font_lg, (180, 20, 20)),
+            ("", font_sm, (0, 0, 0)),
+            ("", font_sm, (0, 0, 0)),
+            ("Press ENTER to return to menu", font_sm, (100, 95, 85)),
+        ]
+        for text, fnt, col in credits_content:
+            if text:
+                surf = fnt.render(text, True, col)
+                screen.blit(surf, (SCREEN_W // 2 - surf.get_width() // 2, int(cy)))
+                cy += surf.get_height() + 8
+            else:
+                cy += 20  # spacer
+
     # Fade overlay (drawn over everything)
     if game.fade_alpha > 0:
         fade_surf = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
         fade_surf.fill((0, 0, 0, int(game.fade_alpha)))
         screen.blit(fade_surf, (0, 0))
 
+    # Scale render surface to display (handles fullscreen + window resize)
+    dw, dh = display.get_size()
+    scale = min(dw / SCREEN_W, dh / SCREEN_H)
+    sw, sh = int(SCREEN_W * scale), int(SCREEN_H * scale)
+    ox, oy = (dw - sw) // 2, (dh - sh) // 2
+    display.fill((0, 0, 0))
+    display.blit(pygame.transform.smoothscale(screen, (sw, sh)), (ox, oy))
     pygame.display.flip()
-    return running
+    return running, "quantum"
 
 
 # ── Main Loop ───────────────────────────────────────────────────
-running = True
+running, state = True, "quantum"
 while running:
-    running = quantum_blood_game_loop()
+    if state == "quantum":
+        running, state = quantum_blood_game_loop()
+    if state == "doom":
+        running, state = doom_game.loop()
 
 
 pygame.quit()
