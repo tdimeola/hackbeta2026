@@ -13,10 +13,10 @@ pygame.init()
 pygame.mixer.init(frequency=44100, size=-16, channels=1, buffer=512)
 
 TILE_SIZE = 48
-SCREEN_W, SCREEN_H = 900, 700
+SCREEN_W, SCREEN_H = 854, 480
 FPS = 60
 
-screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
+screen = pygame.display.set_mode((SCREEN_W, SCREEN_H), pygame.SCALED)
 pygame.display.set_caption("Q.U.A.N.T.U.M Blood")
 clock = pygame.time.Clock()
 
@@ -2365,6 +2365,8 @@ while running:
             running = False
 
         if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F11:
+                pygame.display.toggle_fullscreen()
             if event.key == pygame.K_ESCAPE:
                 if game.state in ("DAY", "ACCUSE"):
                     if game.state == "ACCUSE":
