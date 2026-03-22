@@ -1,15 +1,15 @@
 import pygame as pg
 import sys
-from settings import *
-from map import *
-from player import *
-from raycasting import *
-from object_renderer import *
-from sprite_object import *
-from object_handler import *
-from weapon import *
-from sound import *
-from pathfinding import *
+from .settings import *
+from .map import *
+from .player import *
+from .raycasting import *
+from .object_renderer import *
+from .sprite_object import *
+from .object_handler import *
+from .weapon import *
+from .sound import *
+from .pathfinding import *
 
 
 class Game:
@@ -62,12 +62,14 @@ class Game:
                 self.global_trigger = True
             self.player.single_fire_event(event)
 
+    def loop(self):
+        self.check_events()
+        self.update()
+        self.draw()
+
     def run(self):
         while True:
-            self.check_events()
-            self.update()
-            self.draw()
-
+            self.loop()
 
 if __name__ == '__main__':
     game = Game()
