@@ -11,6 +11,7 @@ import numpy as np
 
 from doom.main import Game as DoomGame
 
+master_volume = music_volume = 1.0
 pygame.init()
 pygame.mixer.init(frequency=44100, size=-16, channels=1, buffer=512)
 
@@ -3337,14 +3338,23 @@ def quantum_blood_game_loop():
             ("AI Integration", font_sm, (140, 130, 110)),
             ("Powered by Ollama + Llama 3.1", font_md, (220, 210, 180)),
             ("", font_sm, (0, 0, 0)),
+            ("Doom Engine", font_sm, (140, 130, 110)),
+            ("Based on Umang-Lodaya/Doom (GitHub)", font_md, (220, 210, 180)),
+            ("", font_sm, (0, 0, 0)),
             ("", font_sm, (0, 0, 0)),
             ("— Art & Assets —", font_md, (160, 140, 100)),
             ("", font_sm, (0, 0, 0)),
             ("Character Sprites", font_sm, (140, 130, 110)),
             ("Pixel Art Generation", font_md, (220, 210, 180)),
             ("", font_sm, (0, 0, 0)),
+            ("Intro Videos", font_sm, (140, 130, 110)),
+            ("Midjourney", font_md, (220, 210, 180)),
+            ("", font_sm, (0, 0, 0)),
             ("Building Design", font_sm, (140, 130, 110)),
             ("Procedural Generation", font_md, (220, 210, 180)),
+            ("", font_sm, (0, 0, 0)),
+            ("Additional Assets", font_sm, (140, 130, 110)),
+            ("Pixelab & Pixabay", font_md, (220, 210, 180)),
             ("", font_sm, (0, 0, 0)),
             ("", font_sm, (0, 0, 0)),
             ("— Audio —", font_md, (160, 140, 100)),
