@@ -27,6 +27,8 @@ font_sm = pygame.font.SysFont(None, 24)
 font_md = pygame.font.SysFont(None, 32)
 font_lg = pygame.font.SysFont(None, 48)
 font_title = pygame.font.SysFont(None, 72)
+# Menu title font — old-style serif, bigger
+font_menu_title = pygame.font.SysFont("timesnewroman", 100) or pygame.font.SysFont("serif", 100)
 
 # -- Procedural footstep sounds --
 def _bandpass(signal, low_hz, high_hz, sample_rate):
@@ -282,6 +284,29 @@ BUILDING_SPRITE_POS = {
     "Town Hall":         (10, 9),
     "the Library":       (18, 9),
 }
+
+# Menu background GIF — plays once then holds last frame
+def _load_gif_frames(path, target_size):
+    from PIL import Image
+    try:
+        pil_img = Image.open(path)
+        frames = []
+        for i in range(pil_img.n_frames):
+            pil_img.seek(i)
+            frame = pil_img.convert("RGBA")
+            raw = frame.tobytes()
+            surf = pygame.image.frombytes(raw, frame.size, "RGBA").convert_alpha()
+            surf = pygame.transform.smoothscale(surf, target_size)
+            frames.append(surf)
+        return frames
+    except Exception as e:
+        print(f"Could not load GIF: {e}")
+        return []
+
+menu_bg_frames = _load_gif_frames("bg_village.gif", (SCREEN_W, SCREEN_H))
+menu_bg_frame_idx = 0
+menu_bg_timer = 0.0
+MENU_BG_FPS = 15
 
 player_facing = "south"
 player_walking = False
@@ -2130,7 +2155,10 @@ while running:
             elif game.state == "RECAP":
                 if event.key == pygame.K_RETURN and not game.fading:
                     def _to_menu():
+                        global menu_bg_frame_idx, menu_bg_timer
                         game.state = "MENU"
+                        menu_bg_frame_idx = 0
+                        menu_bg_timer = 0.0
                         music_start_menu()
                     game.start_fade(_to_menu)
                 if event.key == pygame.K_UP:
@@ -2142,7 +2170,10 @@ while running:
             elif game.state in ("WIN", "LOSE"):
                 if event.key == pygame.K_RETURN and not game.fading:
                     def _to_menu():
+                        global menu_bg_frame_idx, menu_bg_timer
                         game.state = "MENU"
+                        menu_bg_frame_idx = 0
+                        menu_bg_timer = 0.0
                         music_start_menu()
                     game.start_fade(_to_menu)
 
@@ -2263,96 +2294,70 @@ while running:
     if game.state == "MENU":
         t = pygame.time.get_ticks() / 1000.0
 
-        # Dark gradient background
-        for y_line in range(SCREEN_H):
-            frac = y_line / SCREEN_H
-            r = int(8 + 15 * frac)
-            g = int(5 + 8 * frac)
-            b = int(18 + 12 * (1 - frac))
-            pygame.draw.line(screen, (r, g, b), (0, y_line), (SCREEN_W, y_line))
+        # GIF background — plays once, holds on last frame
+        if menu_bg_frames:
+            if menu_bg_frame_idx < len(menu_bg_frames) - 1:
+                menu_bg_timer += dt
+                if menu_bg_timer >= 1.0 / MENU_BG_FPS:
+                    menu_bg_timer -= 1.0 / MENU_BG_FPS
+                    menu_bg_frame_idx += 1
+            screen.blit(menu_bg_frames[menu_bg_frame_idx], (0, 0))
+            # Dark overlay for readability
+            _menu_ov = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
+            _menu_ov.fill((0, 0, 0, 140))
+            screen.blit(_menu_ov, (0, 0))
+        else:
+            # Fallback dark gradient if GIF not found
+            for y_line in range(SCREEN_H):
+                frac = y_line / SCREEN_H
+                pygame.draw.line(screen, (int(8 + 15 * frac), int(5 + 8 * frac), int(18 + 12 * (1 - frac))),
+                    (0, y_line), (SCREEN_W, y_line))
 
-        # Animated fog/mist particles
-        for i in range(20):
-            px = (i * 137 + int(t * 15 * (0.5 + (i % 3) * 0.3))) % (SCREEN_W + 100) - 50
-            py = 300 + (i * 43) % 350 + int(math.sin(t * 0.5 + i) * 15)
-            fog = pygame.Surface((80 + i * 4, 20), pygame.SRCALPHA)
-            fog.fill((120, 110, 130, 8 + (i % 5) * 3))
-            screen.blit(fog, (px, py))
-
-        # Moon
-        moon_x, moon_y = SCREEN_W - 140, 60
-        moon_glow = pygame.Surface((100, 100), pygame.SRCALPHA)
-        pygame.draw.circle(moon_glow, (200, 200, 180, 15), (50, 50), 50)
-        pygame.draw.circle(moon_glow, (200, 200, 180, 25), (50, 50), 35)
-        screen.blit(moon_glow, (moon_x - 50, moon_y - 50))
-        pygame.draw.circle(screen, (220, 215, 195), (moon_x, moon_y), 22)
-        pygame.draw.circle(screen, (200, 195, 175), (moon_x - 5, moon_y - 3), 20)
-
-        # Silhouette town skyline
-        sky_y = 420
-        buildings_silhouette = [
-            (80, 60), (140, 80), (210, 50), (270, 90), (350, 70),
-            (420, 100), (500, 55), (570, 85), (650, 65), (730, 75), (800, 60),
+        # Blood drips from top of screen
+        drip_positions = [
+            (85, 0.6, 55, 3), (150, 0.9, 40, 2), (230, 0.5, 70, 3),
+            (310, 1.1, 35, 2), (390, 0.7, 60, 3), (470, 0.4, 80, 2),
+            (540, 0.8, 45, 3), (620, 1.0, 50, 2), (700, 0.6, 65, 3),
+            (780, 0.7, 38, 2), (840, 0.5, 55, 3),
         ]
-        for bx, bh in buildings_silhouette:
-            pygame.draw.rect(screen, (15, 10, 22), (bx, sky_y - bh, 55, bh + 30))
-            # Roof peak
-            pygame.draw.polygon(screen, (18, 13, 25),
-                [(bx - 5, sky_y - bh), (bx + 27, sky_y - bh - 18), (bx + 60, sky_y - bh)])
-            # Dim window lights (some on, some off)
-            if (bx // 50 + int(t)) % 3 != 0:
-                wy = sky_y - bh + 15
-                for wx in range(bx + 10, bx + 45, 18):
-                    glow = pygame.Surface((8, 10), pygame.SRCALPHA)
-                    warmth = 40 + int(15 * math.sin(t * 2 + bx * 0.1))
-                    glow.fill((200, 170, 80, warmth))
-                    screen.blit(glow, (wx, wy))
+        for dx, spd, length_base, w in drip_positions:
+            cycle = (t * spd + dx * 0.01) % 4.0
+            if cycle < 3.0:
+                drip_len = int(length_base * min(1.0, cycle / 1.5))
+                for dy in range(drip_len):
+                    alpha_frac = 1.0 - (dy / max(drip_len, 1)) * 0.6
+                    col = (int(150 * alpha_frac), int(15 * alpha_frac), int(15 * alpha_frac))
+                    pygame.draw.rect(screen, col, (dx, dy, w, 1))
+                if drip_len > 10:
+                    pygame.draw.circle(screen, (140, 18, 18), (dx + w // 2, drip_len), w)
 
-        # Ground line
-        pygame.draw.rect(screen, (12, 8, 15), (0, sky_y, SCREEN_W, SCREEN_H - sky_y))
-        pygame.draw.line(screen, (30, 22, 35), (0, sky_y), (SCREEN_W, sky_y), 2)
-
-        # Stars
-        for i in range(40):
-            sx = (i * 97 + 13) % SCREEN_W
-            sy = (i * 53 + 7) % (sky_y - 50) + 10
-            twinkle = 100 + int(80 * math.sin(t * 1.5 + i * 0.7))
-            pygame.draw.circle(screen, (twinkle, twinkle, twinkle + 20), (sx, sy), 1)
-
-        # Blood drip accent (top)
-        for dx in [180, 420, 680]:
-            drip_h = 30 + int(15 * math.sin(t * 0.8 + dx * 0.01))
-            pygame.draw.rect(screen, (120, 15, 15), (dx, 0, 3, drip_h))
-            pygame.draw.circle(screen, (130, 20, 20), (dx + 1, drip_h), 3)
-
-        # Title with shadow
-        title_y = 140
-        shadow_surf = font_title.render("QUANTUM BLOOD", True, (40, 5, 5))
-        screen.blit(shadow_surf, (SCREEN_W // 2 - shadow_surf.get_width() // 2 + 3, title_y + 3))
-        # Pulsing title
+        # Title with drop shadow — large serif font
+        title_y = 120
+        title_cx = SCREEN_W // 2
+        # Deep shadow
+        s1 = font_menu_title.render("QUANTUM BLOOD", True, (0, 0, 0))
+        screen.blit(s1, (title_cx - s1.get_width() // 2 + 4, title_y + 5))
+        # Mid shadow
+        s2 = font_menu_title.render("QUANTUM BLOOD", True, (30, 3, 3))
+        screen.blit(s2, (title_cx - s2.get_width() // 2 + 2, title_y + 3))
+        # Main title
         pulse = 0.85 + 0.15 * math.sin(t * 2)
-        title_col = (int(180 * pulse), int(20 * pulse), int(20 * pulse))
-        title_surf = font_title.render("QUANTUM BLOOD", True, title_col)
-        screen.blit(title_surf, (SCREEN_W // 2 - title_surf.get_width() // 2, title_y))
+        title_col = (int(220 * pulse), int(25 * pulse), int(25 * pulse))
+        title_surf = font_menu_title.render("QUANTUM BLOOD", True, title_col)
+        screen.blit(title_surf, (title_cx - title_surf.get_width() // 2, title_y))
 
-        # Decorative line under title
-        line_w = 300
-        line_x = SCREEN_W // 2 - line_w // 2
-        pygame.draw.line(screen, (100, 30, 30), (line_x, title_y + 65), (line_x + line_w, title_y + 65), 1)
-        pygame.draw.circle(screen, (140, 40, 40), (SCREEN_W // 2, title_y + 65), 4)
+        # Subtitle — brighter for contrast
+        draw_centered_text(screen, "A villain hides among the townspeople.", font_md, (220, 215, 200), 250)
+        draw_centered_text(screen, "Find them before it's too late.", font_md, (200, 195, 180), 285)
 
-        # Subtitle
-        draw_centered_text(screen, "A villain hides among the townspeople.", font_md, (160, 155, 145), 250)
-        draw_centered_text(screen, "Find them before it's too late.", font_md, (140, 135, 125), 285)
-
-        # Pulsing "Press ENTER" prompt
-        enter_alpha = 150 + int(105 * math.sin(t * 3))
+        # Pulsing "Press ENTER" — brighter
+        enter_alpha = 180 + int(75 * math.sin(t * 3))
         enter_surf = font_md.render("Press ENTER to begin", True, (enter_alpha, enter_alpha, enter_alpha))
         screen.blit(enter_surf, (SCREEN_W // 2 - enter_surf.get_width() // 2, 380))
 
-        # Controls at bottom
-        #draw_centered_text(screen, "[WASD] Move   [E] Interact   [B] Journal   [TAB] Accuse", font_sm, (80, 75, 70), 520)
-        #draw_centered_text(screen, "[L] Evidence Log   [J] Clue Tracker   [F11] Fullscreen", font_sm, (80, 75, 70), 545)
+        # Controls — brighter
+        draw_centered_text(screen, "[WASD] Move   [E] Interact   [B] Journal   [TAB] Accuse", font_sm, (170, 165, 155), 520)
+        draw_centered_text(screen, "[L] Evidence Log   [J] Clue Tracker   [F11] Fullscreen", font_sm, (170, 165, 155), 545)
 
     elif game.state == "NIGHT":
         screen.fill(NIGHT_OVERLAY)
