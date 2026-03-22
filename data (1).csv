@@ -1,0 +1,784 @@
+Name, Power, Strength, Magic, Intelligence, Speed, Defense, Poison, Rage, Corrupted, Evilness, Age, Personality, Hometown, Favorite_Color, Weakness, Height, Weight, isVillain, isLiving, isEmployed, isHuman
+Green X, 30, 37, 76, 74, 92, 89, 7, 31, 24, 48, 33.83, Sarcastic, Hong Kong, 0x09251b, Fearful, 16' 0'', 58.01804, False, False, False, True
+Wonder Hulk, 92, 43, 66, 78, 51, 82, 0, 13, 45, 0, 23.46, Sadistic, Zhengzhou, 0x52deff, Soft hearted, 17' 2'', 234.36007, False, False, True, False
+Dark Daredevil, 64, 0, 40, 100, 80, 11, 50, 28, 42, 100, 18.00, Power hungry, Porto Alegre, 0xa130bb, Prideful, 8' 3'', 51.02968, False, False, True, False
+Radioactive X, 76, 51, 89, 89, 63, 60, 45, 82, 20, 7, 43.31, Sarcastic, Buenos Aires, 0xe54430, Obsessive, 16' 3'', 207.13496, True, False, True, True
+Dark Girl, 8, 14, 54, 6, 10, 3, 45, 9, 30, 18, 26.27, Calculating, Shenyang, 0x7a3047, Power addicted, 4' 9'', 9.74529, True, True, False, False
+Professor Darkness, 99, 51, 90, 60, 24, 45, 21, 60, 84, 46, 50.27, Cold blooded, San Diego, 0xfe059a, Ice weakness, 15' 3'', 116.81676, False, True, False, False
+Omega Claw, 74, 23, 6, 61, 24, 93, 32, 48, 96, 14, 39.69, Protective, Baghdad, 0xdffe22, Soft hearted, 17' 10'', 219.40828, True, False, False, True
+Wonder Entity, 56, 86, 63, 43, 90, 25, 79, 14, 87, 87, 31.05, Power hungry, Chengdu, 0x6de54a, Fire weakness, 4' 10'', 282.18105, True, False, True, False
+Super Girl, 49, 12, 26, 74, 94, 95, 11, 10, 74, 22, 18.00, Protective, Haerbin, 0x6abe4b, Trusting, 8' 0'', 261.81168, False, False, False, False
+Green Hornet, 84, 94, 65, 38, 85, 9, 82, 18, 70, 9, 62.90, Power hungry, Sydney, 0x4cc1bd, Fearful, 17' 11'', 210.06672, False, True, False, True
+Ms Daredevil, 63, 6, 7, 0, 99, 80, 65, 68, 0, 56, 47.83, Manipulative, Ankara, 0x22c130, Fearful, 6' 0'', 60.76255, True, False, True, True
+Wonder X, 1, 52, 6, 7, 53, 25, 32, 93, 39, 29, 4489.91, Power hungry, Mumbai, 0x68b2c9, Power addicted, 17' 5'', 213.70580, True, False, False, False
+The Boy, 44, 75, 17, 98, 18, 31, 64, 88, 80, 20, 63.90, Cruel, Washington, 0x71c4c9, Paranoid, 13' 10'', 34.57546, True, False, False, True
+Metal Knight, 55, 91, 32, 67, 22, 40, 49, 2, 52, 49, 52.41, Calculating, Columbus, 0xa1ee77, Silver weakness, 9' 11'', 229.71106, True, True, True, False
+Incredible Shadow, 59, 6, 42, 44, 85, 39, 2, 100, 51, 13, 35.82, Arrogant, Nanjing, 0x9c0aea, Stubborn, 0' 5'', 175.84662, False, True, True, False
+Human Crusader, 38, 75, 98, 5, 79, 61, 88, 84, 38, 26, 42.67, Cunning, Ankara, 0x12cef3, Radiation weak, 4' 2'', 106.62903, False, False, True, True
+The Crusader, 68, 84, 45, 83, 46, 52, 93, 51, 79, 7, 19.00, Honorable, Yangon, 0xf449d6, Radiation weak, 18' 10'', 98.48219, False, True, False, False
+Super Lightning, 74, 29, 55, 28, 52, 57, 94, 10, 62, 38, 46.89, Power hungry, Dalian, 0x63c732, Prideful, 19' 3'', 14.87347, True, False, False, True
+Super Boy, 94, 0, 72, 22, 94, 85, 86, 17, 66, 38, 58.27, Honorable, Pune, 0x74ce2f, Darkness bound, 11' 8'', 283.17884, False, False, True, False
+Rocket X, 92, 24, 26, 69, 62, 41, 15, 41, 2, 43, 18.95, Cunning, Surat, 0x798814, Soft hearted, 16' 5'', 32.24799, False, True, False, False
+Rocket Claw, 65, 24, 69, 34, 38, 44, 78, 37, 95, 4, 31.39, Ruthless, Chicago, 0x78e124, Naive, 2' 3'', 145.26695, False, True, False, True
+Doctor X, 53, 7, 24, 47, 25, 33, 15, 17, 34, 77, 56.78, Stoic, Qingdao, 0xb51a1f, Distrustful, 6' 2'', 22.47608, True, False, False, False
+Human Claw, 17, 34, 56, 11, 99, 38, 45, 11, 27, 77, 34.35, Ruthless, London, 0x899c8a, Soft hearted, 4' 0'', 90.50859, True, False, False, False
+Dark Boy, 63, 78, 72, 42, 23, 42, 64, 17, 59, 3, 44.72, Loyal, Dallas, 0xf99ffa, Magic vulnerable, 19' 8'', 19.11176, False, True, False, True
+Doctor Master, 31, 93, 52, 77, 94, 100, 39, 100, 37, 89, 18.00, Sarcastic, Washington, 0x180419, Short sighted, 11' 4'', 99.70479, False, True, False, True
+Masked Crusader, 11, 33, 20, 58, 29, 66, 68, 86, 73, 45, 48.99, Compassionate, Philadelphia, 0x7b03a6, Hubris, 17' 2'', 248.55870, True, False, True, False
+Impossible Centurion, 98, 70, 25, 57, 91, 74, 95, 87, 31, 72, 70.94, Stoic, Ahmedabad, 0xd0b4d5, Poison susceptible, 2' 2'', 36.89904, True, False, False, True
+Metal Shadow, 63, 57, 79, 17, 21, 14, 24, 54, 46, 22, 46.24, Stoic, Hangzhou, 0xcff2de, Sound sensitive, 16' 1'', 240.70750, True, False, True, True
+Impossible Boy, 24, 71, 2, 1, 28, 84, 66, 53, 63, 77, 21.25, Arrogant, Delhi, 0x586e8e, Technology vulnerable, 20' 11'', 5.12138, False, True, False, True
+Doctor Hornet, 29, 90, 73, 68, 37, 10, 81, 77, 92, 23, 18.00, Clever, Riyadh, 0x7e835b, Hotheaded, 20' 10'', 238.96395, False, False, True, True
+Omega Lightning, 48, 81, 97, 26, 76, 49, 56, 20, 43, 54, 55.82, Manipulative, Johannesburg, 0x317e8b, Hubris, 1' 11'', 174.49047, True, True, False, False
+Rocket Cloak, 2, 56, 5, 27, 0, 27, 36, 67, 50, 37, 74.53, Honorable, Toronto, 0x8514a4, Guilt ridden, 9' 10'', 11.00006, False, False, False, False
+Invisible Soldier, 9, 41, 80, 18, 24, 29, 39, 40, 51, 81, 29.55, Calculating, San Francisco, 0x088ace, Fearful, 15' 6'', 133.18865, False, False, True, False
+Ms Shadow, 36, 41, 16, 56, 71, 46, 37, 42, 79, 26, 18.00, Cruel, Ho Chi Minh City, 0xb8ebcc, Magic vulnerable, 3' 5'', 264.54528, False, False, False, True
+Human Entity, 26, 32, 31, 80, 19, 9, 52, 84, 41, 16, 30.58, Manipulative, Delhi, 0x11fc3d, Vengeful, 18' 7'', 168.79573, False, False, True, True
+Omega Crusader, 43, 41, 19, 34, 3, 57, 99, 87, 86, 98, 25.03, Power hungry, Shenzhen, 0xfe6de5, Sound sensitive, 16' 9'', 245.36753, False, False, True, False
+Incredible Surfer, 49, 1, 56, 75, 66, 65, 37, 84, 89, 86, 45.17, Stoic, Mexico City, 0x5e9718, Vengeful, 19' 1'', 235.13078, True, False, True, True
+Crimson Man, 76, 70, 10, 24, 22, 36, 40, 100, 45, 95, 44.77, Obsessive, Delhi, 0x74267f, Fire weakness, 6' 5'', 26.27085, True, False, False, True
+Professor Knight, 77, 44, 62, 9, 78, 97, 44, 67, 66, 9, 475.99, Brave, Hong Kong, 0xbf088c, Lonely, 8' 9'', 176.19312, True, True, True, True
+Masked Master, 94, 65, 56, 38, 39, 27, 53, 14, 60, 26, 47.30, Cruel, Barcelona, 0x63b56a, Darkness bound, 18' 3'', 58.90075, True, False, True, True
+Mr Claw, 84, 70, 16, 53, 20, 95, 18, 36, 34, 36, 35.12, Charismatic, Denver, 0xda658e, Ice weakness, 20' 7'', 157.79068, True, False, False, False
+Super Master, 12, 77, 23, 58, 51, 27, 19, 8, 90, 88, 39.96, Protective, Dongguan, 0xfd32ea, Impulsive, 12' 2'', 33.68190, False, False, False, False
+The Woman, 64, 78, 87, 29, 11, 29, 45, 63, 30, 51, 51.48, Charismatic, Paris, 0x1cad05, Stubborn, 1' 1'', 109.87421, False, False, True, True
+Incredible Torch, 90, 64, 2, 67, 52, 66, 14, 79, 44, 76, 53.78, Clever, Mumbai, 0x0d2d08, Radiation weak, 20' 6'', 146.21843, True, True, False, False
+Silver Lightning, 18, 92, 10, 71, 71, 6, 89, 87, 13, 81, 19.85, Sarcastic, Baghdad, 0x87dd0d, Soft hearted, 16' 8'', 209.28954, True, False, False, True
+Power Surfer, 19, 80, 75, 14, 38, 73, 9, 60, 4, 76, 18.00, Sarcastic, Tianjin, 0x126fd4, Prideful, 7' 4'', 145.41046, True, False, True, False
+Mr Knight, 45, 72, 46, 19, 50, 44, 59, 53, 49, 77, 53.03, Loyal, Bangalore, 0x2fb366, Silver weakness, 14' 11'', 81.06373, False, True, True, False
+Ancient Lightning, 36, 68, 12, 15, 91, 93, 65, 87, 39, 35, 18.00, Cruel, Columbus, 0x20bdf6, Sound sensitive, 12' 5'', 293.11906, True, False, True, False
+Silver Darkness, 38, 67, 82, 98, 37, 28, 38, 47, 69, 72, 18.00, Cold blooded, Barcelona, 0x3691a7, Radiation weak, 11' 11'', 27.11450, True, False, False, True
+Iron Crusader, 18, 56, 99, 17, 81, 15, 83, 5, 50, 42, 60.06, Ruthless, Moscow, 0x600311, Hotheaded, 19' 2'', 192.55439, True, False, False, True
+Incredible Knight, 98, 22, 53, 22, 95, 77, 67, 91, 18, 5, 32.03, Sadistic, Dhaka, 0xa3e54e, Soft hearted, 1' 9'', 182.39471, False, True, False, True
+Silver Man, 79, 7, 26, 92, 13, 58, 42, 91, 48, 40, 21.49, Clever, Dhaka, 0x4a602d, Stubborn, 16' 11'', 141.02989, False, False, True, True
+Radioactive Soldier, 91, 28, 82, 99, 50, 47, 88, 75, 57, 37, 31.86, Arrogant, Surat, 0x295532, Soft hearted, 3' 8'', 271.54187, False, False, True, False
+Ms Phantom, 75, 33, 45, 70, 17, 47, 83, 79, 5, 7, 36.27, Obsessive, Seattle, 0x6bb75d, Prideful, 13' 6'', 134.05334, True, False, False, True
+Spider Centurion, 100, 29, 44, 13, 65, 9, 91, 90, 90, 49, 22.09, Determined, Shanghai, 0x95abfc, Energy drain, 12' 10'', 56.70178, False, True, False, True
+Power Torch, 28, 65, 3, 45, 24, 1, 7, 78, 78, 77, 53.11, Loyal, Manila, 0x3fb54f, Radiation weak, 10' 9'', 17.77184, False, True, False, True
+The Surfer, 27, 55, 70, 55, 0, 8, 1, 80, 2, 76, 26.54, Cold blooded, Paris, 0x2bb7ab, Vengeful, 2' 6'', 240.04200, False, False, False, True
+Spider X, 58, 17, 0, 1, 78, 93, 87, 5, 34, 84, 18.00, Obsessive, Columbus, 0x73fce8, Ice weakness, 2' 10'', 117.08368, False, False, True, True
+Silver Claw, 13, 74, 1, 11, 5, 27, 100, 68, 63, 83, 28.59, Honorable, Hong Kong, 0xb1722c, Energy drain, 14' 2'', 121.26270, False, True, True, True
+Omega Knight, 53, 83, 0, 33, 64, 61, 81, 87, 44, 63, 53.46, Cold blooded, Kuala Lumpur, 0x37ac60, Radiation weak, 17' 2'', 228.10941, False, False, False, True
+Master Warrior, 81, 26, 49, 21, 69, 87, 21, 80, 76, 2, 39.94, Arrogant, Istanbul, 0xafb99c, Poison susceptible, 19' 10'', 237.50707, True, True, True, False
+Captain Centurion, 51, 4, 46, 57, 23, 53, 89, 30, 63, 87, 28.68, Arrogant, Philadelphia, 0xaee7a8, Naive, 10' 10'', 87.03413, True, True, True, True
+Human Lightning, 9, 87, 0, 82, 14, 35, 43, 11, 72, 16, 44.12, Loyal, Cape Town, 0x562b98, Paranoid, 8' 1'', 218.09394, True, True, True, True
+Ms Boy, 84, 85, 56, 40, 46, 72, 45, 10, 17, 6, 32.13, Determined, Dongguan, 0x9801a3, Water weakness, 11' 6'', 147.75992, True, True, False, True
+Metal Darkness, 31, 1, 66, 92, 92, 29, 7, 15, 9, 53, 53.69, Ruthless, Buenos Aires, 0x751f38, Obsessive, 20' 10'', 137.81417, True, False, False, False
+Wonder Phantom, 0, 19, 74, 46, 94, 86, 41, 96, 8, 13, 18.00, Power hungry, Philadelphia, 0x61f491, Impulsive, 10' 7'', 31.17767, False, True, False, True
+Spider Daredevil, 15, 28, 68, 68, 68, 1, 11, 95, 99, 54, 41.56, Cunning, Istanbul, 0xef3ba8, Fire weakness, 10' 10'', 65.96820, False, True, True, True
+Crimson Machine, 89, 92, 51, 31, 34, 18, 64, 90, 48, 72, 33.74, Charismatic, Seattle, 0xe9289b, Prideful, 13' 6'', 251.49513, False, True, False, False
+Wonder Darkness, 81, 59, 43, 98, 74, 5, 99, 39, 3, 25, 28.38, Arrogant, Shenzhen, 0x9dcded, Naive, 11' 9'', 270.89094, True, False, False, False
+Mr Void, 5, 26, 98, 59, 87, 29, 25, 93, 39, 36, 38.82, Calculating, Bangkok, 0x744c1a, Overconfident, 11' 10'', 170.33316, False, False, True, False
+Professor X, 33, 24, 79, 79, 81, 97, 25, 56, 62, 59, 43.97, Cold blooded, Seattle, 0x52ac33, Silver weakness, 20' 10'', 294.24797, False, False, True, False
+Power X, 69, 7, 63, 59, 12, 62, 38, 28, 74, 91, 18.00, Stoic, San Francisco, 0x3c4c3d, Obsessive, 0' 9'', 46.14695, True, True, False, True
+Wonder Warrior, 36, 91, 7, 47, 53, 67, 73, 20, 40, 39, 40.31, Vengeful, Cairo, 0x3f82f8, Soft hearted, 13' 3'', 202.49713, True, True, False, True
+Omega Darkness, 46, 88, 9, 90, 88, 10, 94, 8, 76, 74, 18.60, Compassionate, Kano, 0x0704a3, Hotheaded, 11' 0'', 12.03886, True, True, True, True
+Crimson Daredevil, 95, 51, 96, 30, 58, 56, 19, 10, 35, 24, 39.44, Honorable, Ankara, 0xcddb34, Electric weakness, 6' 4'', 212.56259, False, True, False, True
+Super Warrior, 9, 82, 74, 17, 31, 28, 53, 42, 57, 78, 44.53, Sadistic, Mumbai, 0x08da04, Reckless, 17' 6'', 98.08863, True, True, False, True
+Green Machine, 90, 95, 89, 16, 71, 48, 44, 96, 21, 85, 59.33, Charismatic, Charlotte, 0x09ac03, Energy drain, 11' 1'', 71.90894, True, True, False, False
+Green Woman, 39, 25, 87, 100, 18, 4, 41, 50, 55, 72, 30.94, Arrogant, Toronto, 0xe31d41, Trusting, 1' 5'', 40.64792, False, True, True, False
+Human Machine, 87, 87, 64, 62, 71, 65, 86, 81, 15, 32, 37.28, Sarcastic, Luanda, 0x9160bb, Power addicted, 14' 7'', 193.05932, True, True, False, False
+Captain Soldier, 28, 37, 71, 89, 49, 48, 84, 46, 16, 89, 24.79, Protective, Santiago, 0x9ba9a5, Naive, 5' 4'', 76.29973, True, False, True, True
+Metal Man, 91, 48, 50, 6, 73, 30, 50, 72, 39, 19, 43.36, Honorable, Tehran, 0x473276, Fire weakness, 11' 4'', 93.13914, False, False, False, False
+Radioactive Knight, 85, 59, 70, 49, 20, 28, 58, 57, 21, 21, 31.11, Honorable, Buenos Aires, 0x8d4465, Silver weakness, 7' 8'', 163.77771, False, False, True, False
+Doctor Skull, 4, 69, 89, 45, 13, 86, 91, 68, 53, 40, 20.92, Manipulative, Bangalore, 0x22c5e3, Obsessive, 18' 9'', 207.65307, False, True, False, False
+Ancient Phantom, 47, 74, 13, 88, 49, 98, 40, 77, 73, 81, 28.95, Calculating, Shenzhen, 0xdbb1f2, Prideful, 5' 9'', 33.80399, True, True, False, True
+Omega Ghost, 4, 35, 38, 61, 13, 35, 2, 11, 33, 8, 42.16, Compassionate, Bangkok, 0x8ceed6, Light sensitive, 8' 8'', 43.68390, True, False, False, False
+Master Girl, 84, 57, 14, 59, 98, 3, 84, 40, 76, 96, 9366.72, Arrogant, Tokyo, 0x758b65, Egotistical, 9' 3'', 200.22856, False, False, True, True
+Invisible Void, 44, 85, 34, 60, 80, 90, 70, 34, 51, 57, 27.80, Reckless, Toronto, 0x521690, Short sighted, 14' 0'', 19.59383, True, True, True, True
+Spider Woman, 63, 76, 69, 67, 19, 73, 1, 86, 68, 18, 25.11, Obsessive, Cape Town, 0xf6187f, Soft hearted, 12' 10'', 174.58496, True, False, True, False
+Ancient Fist, 83, 6, 72, 47, 57, 43, 54, 53, 22, 59, 64.77, Power hungry, Paris, 0xb69a0b, Prideful, 12' 10'', 100.58429, True, False, True, True
+Master Knight, 98, 90, 21, 44, 26, 35, 16, 39, 28, 96, 8241.84, Clever, Chongqing, 0x3483a4, Electric weakness, 10' 4'', 285.42409, True, True, False, True
+Spider Skull, 51, 59, 73, 85, 56, 100, 55, 56, 77, 73, 40.96, Arrogant, Lagos, 0xef90e3, Hubris, 15' 5'', 181.29614, True, True, True, True
+Ms Soldier, 39, 33, 25, 1, 68, 19, 86, 9, 74, 72, 32.38, Determined, Yangon, 0x92ab35, Naive, 10' 4'', 245.65355, False, True, False, False
+Rocket Crusader, 48, 34, 63, 22, 64, 70, 98, 35, 94, 71, 27.40, Cold blooded, Abidjan, 0x3532dc, Hubris, 19' 2'', 1.97883, False, True, True, True
+Metal Hulk, 41, 38, 37, 100, 39, 71, 0, 0, 47, 1, 70.79, Compassionate, Johannesburg, 0xa9a447, Egotistical, 16' 0'', 221.15553, True, False, False, True
+Power Cloak, 76, 0, 8, 94, 34, 12, 81, 26, 95, 54, 32.10, Vengeful, Luanda, 0x33e91f, Short sighted, 15' 1'', 277.59263, False, True, True, False
+Impossible Darkness, 74, 38, 91, 24, 7, 90, 4, 55, 82, 4, 28.27, Stoic, Columbus, 0x200940, Egotistical, 8' 11'', 133.94217, False, False, False, True
+The Machine, 7, 40, 56, 24, 47, 75, 85, 0, 22, 53, 48.53, Honorable, Lima, 0xfbd782, Poison susceptible, 10' 4'', 226.88845, False, False, True, False
+Masked Woman, 34, 59, 55, 26, 58, 4, 74, 7, 46, 99, 18.00, Honorable, Seoul, 0x60526c, Prideful, 4' 0'', 63.28061, False, True, False, False
+Master Surfer, 54, 42, 0, 64, 84, 24, 11, 17, 88, 89, 68.56, Clever, Bangalore, 0x43a56f, Ice weakness, 19' 2'', 197.18874, False, True, True, True
+Night Soldier, 23, 29, 66, 38, 57, 16, 84, 27, 89, 44, 2368.54, Power hungry, Tehran, 0xc9a941, Greedy, 5' 9'', 205.33638, False, False, False, True
+Professor Woman, 91, 41, 94, 73, 86, 77, 32, 26, 10, 91, 50.01, Determined, Tianjin, 0x9e2292, Darkness bound, 10' 4'', 88.16900, False, True, False, True
+Incredible Entity, 36, 93, 76, 29, 61, 13, 72, 52, 3, 18, 57.00, Brave, Cape Town, 0x5e7fba, Magic vulnerable, 17' 9'', 282.55772, False, False, True, True
+Rocket Skull, 39, 88, 54, 31, 96, 80, 88, 82, 63, 14, 69.57, Clever, Tokyo, 0xdb2f75, Lonely, 13' 8'', 252.47438, True, True, True, False
+The Entity, 97, 48, 51, 5, 65, 14, 4, 80, 32, 80, 25.16, Brave, Melbourne, 0xa0b41b, Prideful, 8' 1'', 31.92420, False, True, True, True
+Masked Void, 44, 74, 47, 95, 36, 31, 19, 9, 93, 35, 22.15, Compassionate, Chicago, 0x7f4a78, Fire weakness, 10' 3'', 201.73858, False, True, True, False
+Ancient Cloak, 6, 85, 85, 68, 35, 3, 77, 94, 26, 6, 31.44, Manipulative, Jacksonville, 0xebc1ca, Technology vulnerable, 19' 0'', 203.67536, False, False, True, False
+Mr Master, 94, 36, 11, 88, 43, 53, 76, 57, 34, 57, 48.12, Cruel, Melbourne, 0x55182c, Obsessive, 20' 1'', 86.59473, False, False, True, False
+Night Void, 61, 11, 50, 91, 82, 74, 78, 62, 64, 6, 64.66, Sadistic, Kuala Lumpur, 0x8b6257, Fearful, 10' 4'', 275.75179, False, False, True, False
+Night Hulk, 32, 80, 54, 43, 75, 45, 92, 44, 83, 50, 28.85, Cunning, Nairobi, 0xbb53ca, Poison susceptible, 1' 9'', 100.83935, True, False, True, False
+Master Soldier, 45, 55, 31, 60, 91, 27, 29, 79, 73, 88, 55.24, Charismatic, Dongguan, 0x71c410, Magic vulnerable, 20' 9'', 137.41303, False, False, False, False
+Metal Master, 17, 3, 4, 59, 2, 83, 56, 31, 96, 43, 52.90, Sarcastic, Yangon, 0xbeecc2, Paranoid, 11' 0'', 181.23691, False, True, False, True
+Professor Daredevil, 71, 47, 51, 78, 28, 43, 13, 58, 14, 62, 40.04, Clever, Lima, 0xc44942, Guilt ridden, 14' 10'', 41.48829, False, False, False, False
+The X, 75, 23, 46, 19, 73, 4, 99, 4, 51, 63, 24.02, Cruel, Paris, 0x38a704, Manipulable, 11' 11'', 139.99680, True, False, True, True
+Silver Fist, 15, 90, 95, 49, 8, 59, 44, 63, 70, 32, 29.35, Calculating, Karachi, 0xe3ce05, Reckless, 6' 9'', 126.93389, True, True, False, False
+Power Woman, 67, 43, 28, 3, 33, 74, 100, 60, 95, 79, 32.36, Reckless, Abidjan, 0xf44bc9, Naive, 4' 3'', 273.35085, True, False, True, True
+Ms Warrior, 85, 31, 5, 54, 96, 71, 0, 67, 35, 71, 54.78, Loyal, Nairobi, 0x0214ad, Guilt ridden, 7' 5'', 191.24644, True, True, True, False
+Ms X, 15, 52, 82, 4, 21, 15, 90, 81, 78, 4, 23.43, Brave, Shenzhen, 0x25b9d4, Manipulable, 4' 6'', 198.01706, False, False, False, True
+Captain Knight, 74, 80, 67, 48, 81, 42, 32, 34, 19, 5, 20.10, Sadistic, Ho Chi Minh City, 0x812aa4, Power addicted, 14' 0'', 76.30168, True, True, True, True
+Wonder Master, 8, 0, 81, 18, 3, 52, 5, 12, 6, 19, 27.12, Obsessive, Shenzhen, 0x7eb0d5, Overconfident, 11' 0'', 274.38877, True, True, True, False
+Professor Cloak, 58, 59, 90, 31, 48, 2, 47, 6, 23, 18, 32.44, Sarcastic, New York City, 0x640e7e, Fearful, 15' 5'', 182.50349, False, True, True, True
+Silver Machine, 66, 18, 60, 33, 24, 32, 15, 65, 86, 88, 41.00, Sadistic, Houston, 0x58fb9d, Stubborn, 13' 8'', 160.94544, False, True, False, False
+Iron Claw, 94, 0, 96, 81, 14, 12, 39, 54, 26, 98, 18.00, Ruthless, Ankara, 0xf589fa, Egotistical, 9' 6'', 286.90561, True, False, True, True
+Ancient Surfer, 50, 48, 29, 98, 66, 43, 46, 79, 96, 71, 48.25, Protective, Washington, 0xd01c22, Radiation weak, 1' 2'', 233.69774, True, True, True, True
+Super Knight, 33, 9, 38, 32, 16, 63, 46, 49, 32, 60, 49.75, Obsessive, Phoenix, 0x66cb81, Water weakness, 5' 5'', 77.21093, True, True, False, False
+Impossible Man, 78, 85, 0, 82, 1, 15, 45, 52, 38, 84, 33.00, Ruthless, Abidjan, 0x0d62ed, Sound sensitive, 7' 3'', 125.78970, False, False, False, False
+Wonder Knight, 86, 62, 25, 44, 28, 42, 70, 34, 54, 45, 89.00, Determined, New York City, 0xc410ab, Magic vulnerable, 19' 11'', 151.75000, True, False, True, False
+Impossible Fist, 24, 95, 12, 13, 10, 10, 5, 27, 31, 99, 36.67, Ruthless, Baghdad, 0x481769, Lonely, 5' 3'', 130.72362, False, False, False, True
+Super Skull, 76, 42, 61, 12, 91, 45, 70, 13, 90, 78, 57.68, Protective, Nagoya, 0xc24ed4, Darkness bound, 12' 1'', 152.60257, False, True, False, True
+Ms Master, 34, 95, 90, 80, 33, 32, 5, 61, 8, 41, 27.92, Vengeful, Mumbai, 0xc23252, Power addicted, 5' 5'', 286.18753, True, False, False, False
+Impossible Void, 74, 47, 97, 26, 99, 58, 75, 18, 10, 2, 18.00, Sarcastic, Qingdao, 0x01ccd5, Naive, 13' 8'', 247.60676, True, False, False, False
+Incredible Darkness, 23, 81, 88, 77, 50, 79, 65, 38, 17, 88, 8217.36, Calculating, Mexico City, 0xe619f2, Egotistical, 0' 5'', 144.25865, False, False, False, False
+Master Woman, 13, 1, 30, 73, 30, 29, 49, 11, 3, 95, 41.70, Loyal, Baghdad, 0xb04edb, Naive, 19' 2'', 265.64817, False, True, True, False
+Master Hornet, 15, 75, 97, 78, 44, 6, 81, 37, 0, 61, 28.39, Arrogant, Wuhan, 0xf6392b, Hubris, 10' 1'', 210.04853, True, False, False, True
+Green Skull, 57, 91, 72, 76, 28, 12, 49, 21, 45, 81, 48.10, Calculating, Jacksonville, 0xb4fe40, Hubris, 9' 1'', 210.01955, True, True, False, False
+Rocket Knight, 78, 92, 33, 51, 29, 24, 4, 19, 14, 93, 53.16, Arrogant, Toronto, 0x047ffc, Hubris, 8' 4'', 289.62274, False, False, False, False
+Crimson Torch, 40, 95, 33, 18, 21, 49, 32, 44, 66, 23, 50.70, Determined, Hyderabad, 0x4a5b87, Energy drain, 13' 1'', 278.23705, True, True, True, True
+The Torch, 41, 6, 87, 34, 21, 0, 34, 40, 7, 49, 22.22, Brave, Zhengzhou, 0x166271, Paranoid, 15' 10'', 92.50624, True, False, True, False
+Crimson Shadow, 72, 78, 78, 93, 79, 37, 78, 37, 32, 24, 33.41, Sarcastic, Luanda, 0xac6126, Short sighted, 14' 6'', 198.11436, True, False, True, False
+Silver Girl, 3, 55, 72, 84, 13, 43, 21, 4, 19, 5, 34.97, Sarcastic, Beijing, 0x1d77cc, Reckless, 9' 9'', 4.74931, False, False, True, False
+Silver Ghost, 86, 44, 40, 67, 89, 38, 40, 73, 0, 65, 43.80, Loyal, Singapore, 0xb41fcb, Vengeful, 10' 3'', 117.65863, True, False, True, True
+Night Entity, 15, 4, 30, 90, 76, 32, 86, 1, 40, 99, 49.49, Cruel, Lima, 0x7e1d9f, Light sensitive, 2' 5'', 193.52331, True, True, True, True
+Mr Entity, 59, 50, 57, 64, 4, 7, 90, 27, 5, 27, 37.70, Charismatic, Shenzhen, 0xd3745e, Light sensitive, 9' 11'', 59.70577, False, True, False, True
+Crimson Boy, 8, 26, 84, 87, 34, 16, 9, 28, 23, 40, 47.55, Sarcastic, Nairobi, 0x1c5cfa, Vengeful, 16' 8'', 26.29679, True, True, True, False
+Impossible Surfer, 94, 57, 65, 98, 29, 48, 60, 94, 25, 32, 19.21, Cunning, Abidjan, 0x5803fe, Egotistical, 18' 0'', 231.59976, False, True, True, True
+Professor Lightning, 81, 46, 15, 3, 16, 60, 16, 61, 18, 2, 50.86, Obsessive, Suzhou, 0xe67832, Water weakness, 9' 10'', 181.31462, False, False, False, True
+Spider Crusader, 28, 3, 24, 33, 50, 53, 42, 60, 18, 46, 20.21, Sadistic, Manila, 0x097fef, Stubborn, 15' 1'', 199.71309, True, False, True, False
+Crimson Ghost, 18, 74, 16, 47, 37, 91, 80, 81, 78, 97, 35.30, Manipulative, Bangalore, 0xbbb4f2, Water weakness, 9' 8'', 158.37772, True, True, False, False
+Master Cloak, 69, 100, 44, 77, 72, 43, 88, 3, 89, 7, 19.15, Arrogant, Cape Town, 0x842f73, Silver weakness, 11' 5'', 276.68671, False, True, True, True
+Professor Surfer, 49, 7, 27, 54, 88, 2, 25, 60, 42, 58, 24.43, Honorable, Seoul, 0xfaee6d, Trusting, 9' 4'', 54.90075, True, False, True, False
+Dark Crusader, 22, 43, 65, 24, 74, 33, 91, 53, 74, 87, 47.25, Protective, Kolkata, 0xf07fb1, Energy drain, 0' 2'', 138.30091, True, True, True, False
+Mr Torch, 8, 16, 70, 97, 47, 20, 31, 81, 58, 39, 40.59, Cold blooded, Dalian, 0xd2c22d, Overconfident, 15' 4'', 83.42248, False, False, True, True
+Mr Soldier, 11, 26, 14, 6, 35, 34, 44, 78, 97, 76, 39.71, Brave, Addis Ababa, 0xfcd67d, Obsessive, 7' 7'', 45.27436, True, True, True, False
+Ms Skull, 47, 45, 60, 100, 22, 92, 16, 47, 65, 40, 38.27, Power hungry, Kano, 0xdf6355, Magic vulnerable, 7' 8'', 55.87439, True, False, True, False
+Rocket Boy, 94, 69, 6, 78, 84, 15, 91, 85, 10, 21, 32.91, Sarcastic, Riyadh, 0x5a2534, Hubris, 9' 1'', 82.78755, False, False, True, True
+Dark Surfer, 84, 79, 1, 10, 41, 88, 81, 55, 93, 80, 38.20, Determined, Houston, 0xec6593, Naive, 18' 8'', 79.20315, False, False, False, True
+Crimson Lightning, 8, 78, 40, 58, 63, 11, 19, 89, 75, 57, 18.00, Brave, Singapore, 0xf06cdc, Energy drain, 10' 9'', 227.61759, False, False, False, True
+Crimson Soldier, 5, 89, 52, 47, 4, 63, 79, 52, 76, 64, 47.81, Vengeful, Rio de Janeiro, 0x164615, Light sensitive, 3' 5'', 208.94437, True, False, False, True
+Super Woman, 70, 39, 6, 25, 13, 68, 62, 57, 48, 6, 20.07, Cruel, Columbus, 0xa535ea, Overconfident, 10' 6'', 49.33424, True, True, True, True
+Crimson Surfer, 85, 92, 80, 84, 52, 42, 66, 10, 42, 77, 59.13, Cunning, Washington, 0x1f547d, Obsessive, 9' 2'', 58.68134, True, False, True, False
+Green Master, 5, 18, 96, 89, 42, 85, 52, 96, 37, 55, 51.63, Sadistic, Abidjan, 0x893fed, Reckless, 9' 11'', 43.72937, True, True, False, True
+Ancient Skull, 34, 69, 45, 25, 98, 64, 45, 11, 77, 12, 50.49, Cold blooded, Dar es Salaam, 0xc73438, Trusting, 3' 8'', 19.74384, False, False, True, True
+Ancient Machine, 96, 42, 11, 39, 29, 97, 79, 79, 68, 53, 25.06, Sarcastic, Belo Horizonte, 0x559430, Darkness bound, 2' 10'', 8.61730, True, True, True, True
+Rocket Void, 57, 7, 68, 87, 84, 4, 26, 6, 59, 3, 38.42, Clever, Dhaka, 0x2dbfac, Magic vulnerable, 6' 8'', 76.42689, True, False, True, False
+Professor Doom, 96, 43, 26, 41, 12, 46, 59, 17, 37, 68, 33.60, Clever, Barcelona, 0x2dffb5, Manipulable, 5' 0'', 74.84829, True, True, False, True
+Masked Darkness, 97, 44, 51, 61, 17, 59, 45, 29, 19, 11, 21.40, Calculating, Zhengzhou, 0xe3c61a, Greedy, 4' 1'', 197.63508, False, True, True, True
+Master Entity, 0, 7, 24, 53, 89, 17, 77, 98, 62, 28, 71.74, Compassionate, Shanghai, 0x3c608e, Hubris, 2' 1'', 238.13320, True, True, True, True
+Incredible Woman, 20, 35, 94, 44, 91, 80, 19, 40, 72, 7, 26.62, Vengeful, Philadelphia, 0x30f8b6, Energy drain, 16' 1'', 148.82073, True, False, False, False
+Metal Fist, 14, 71, 71, 51, 13, 99, 76, 77, 29, 13, 34.46, Vengeful, Osaka, 0xe7e4b3, Paranoid, 2' 0'', 261.77856, False, False, True, True
+Rocket Girl, 86, 34, 91, 67, 4, 15, 48, 98, 76, 95, 29.52, Power hungry, Dalian, 0xd50128, Obsessive, 15' 6'', 58.90520, False, False, True, False
+Silver Surfer, 1, 20, 97, 43, 43, 70, 38, 21, 76, 25, 24.70, Brave, Osaka, 0xbc0959, Magic vulnerable, 8' 4'', 194.35825, True, True, False, False
+Invisible Cloak, 87, 71, 81, 36, 86, 10, 61, 32, 67, 60, 28.99, Determined, Dongguan, 0x2d7d29, Soft hearted, 3' 5'', 181.20651, True, False, False, False
+Wonder Soldier, 74, 70, 87, 66, 76, 55, 47, 95, 81, 14, 34.31, Stoic, Los Angeles, 0x6399e0, Vengeful, 8' 3'', 290.43046, True, False, True, False
+Silver Skull, 47, 8, 10, 81, 95, 11, 9, 74, 2, 69, 43.82, Cunning, Detroit, 0x6368bc, Hotheaded, 12' 11'', 48.77371, False, False, True, False
+Ancient Master, 17, 13, 28, 66, 76, 39, 56, 70, 37, 72, 18.00, Vengeful, Sydney, 0xeae289, Water weakness, 19' 2'', 29.89755, True, True, False, True
+Super Torch, 81, 61, 14, 58, 1, 95, 69, 35, 5, 49, 25.72, Manipulative, Suzhou, 0x59ce4d, Hubris, 9' 7'', 136.04442, True, True, True, True
+Omega Void, 51, 39, 52, 4, 9, 73, 2, 60, 62, 13, 36.72, Sarcastic, Chicago, 0xc2adc2, Prideful, 15' 5'', 151.52414, False, False, True, False
+Green Fist, 65, 52, 34, 10, 83, 64, 52, 54, 77, 12, 38.10, Vengeful, Kinshasa, 0xa66637, Light sensitive, 4' 4'', 237.64930, False, False, True, True
+Wonder Claw, 88, 90, 63, 25, 50, 35, 0, 36, 26, 3, 18.00, Arrogant, Rio de Janeiro, 0xe2917b, Radiation weak, 1' 4'', 83.79497, False, True, False, True
+Green Void, 2, 39, 96, 8, 28, 53, 33, 71, 18, 56, 18.00, Sadistic, Houston, 0x8d6a4d, Electric weakness, 16' 10'', 45.37962, True, False, True, False
+Iron Darkness, 79, 5, 27, 95, 67, 39, 8, 67, 17, 32, 57.51, Determined, Lima, 0x04802c, Lonely, 10' 7'', 165.83362, True, False, False, False
+Dark Torch, 91, 64, 13, 21, 0, 31, 50, 6, 49, 99, 58.37, Cunning, Johannesburg, 0x72b315, Overconfident, 16' 10'', 36.09150, False, False, False, False
+Mr Woman, 12, 58, 6, 75, 4, 35, 38, 92, 93, 47, 26.75, Protective, Seoul, 0xd19e4e, Water weakness, 10' 6'', 50.33654, True, True, True, False
+Spider Machine, 29, 92, 29, 83, 33, 29, 87, 66, 92, 64, 20.85, Sarcastic, Austin, 0x121f33, Energy drain, 9' 3'', 117.51036, True, False, True, True
+Doctor Claw, 74, 39, 30, 63, 98, 5, 96, 74, 20, 42, 39.59, Compassionate, Belo Horizonte, 0x4cbe2e, Guilt ridden, 12' 1'', 120.16000, False, True, False, True
+Green Lightning, 52, 12, 57, 27, 53, 33, 23, 21, 14, 0, 24.12, Cunning, Pune, 0x85a717, Naive, 8' 5'', 142.45340, False, False, False, True
+Dark Master, 99, 88, 85, 94, 66, 8, 71, 48, 79, 12, 20.91, Brave, Recife, 0xae8c23, Paranoid, 15' 5'', 283.75837, True, False, True, True
+Captain Phantom, 16, 27, 70, 58, 76, 48, 12, 11, 52, 4, 40.71, Clever, Shenzhen, 0x99aa70, Light sensitive, 18' 5'', 114.22714, True, False, False, True
+Human Cloak, 37, 52, 29, 90, 82, 40, 86, 19, 53, 71, 31.43, Loyal, Bangkok, 0x520b27, Short sighted, 19' 6'', 106.13921, True, True, False, False
+Ms Woman, 49, 96, 89, 56, 36, 41, 76, 6, 21, 86, 30.21, Brave, Surat, 0x1d53f0, Guilt ridden, 17' 9'', 290.26643, True, False, True, False
+Night Boy, 54, 29, 23, 26, 10, 92, 88, 8, 52, 77, 8406.97, Power hungry, Sao Paulo, 0x9a70bc, Short sighted, 5' 9'', 12.74988, True, True, False, False
+Master Boy, 12, 84, 8, 51, 42, 32, 42, 12, 60, 57, 8023.14, Reckless, Nanjing, 0x5ff4c8, Manipulable, 18' 7'', 84.31688, False, False, False, True
+Power Crusader, 33, 41, 82, 11, 2, 44, 38, 22, 38, 57, 42.14, Cruel, Karachi, 0x4c0956, Hotheaded, 9' 7'', 30.85573, True, False, True, True
+Silver Entity, 86, 72, 28, 37, 23, 15, 25, 49, 47, 90, 41.69, Cold blooded, San Francisco, 0x3521ab, Silver weakness, 1' 10'', 21.04704, True, False, False, False
+Radioactive Lightning, 49, 22, 83, 84, 99, 22, 15, 73, 32, 64, 36.93, Clever, Houston, 0x3e42ce, Greedy, 14' 3'', 210.08572, True, False, False, False
+Mr Darkness, 75, 50, 25, 63, 74, 13, 0, 43, 4, 77, 44.40, Brave, Kinshasa, 0x4c5710, Prideful, 18' 7'', 44.88927, False, False, False, False
+Doctor Ghost, 52, 46, 98, 85, 91, 6, 70, 76, 85, 77, 38.82, Loyal, Riyadh, 0x36abe4, Paranoid, 7' 1'', 190.01834, False, False, False, True
+Invisible Claw, 18, 95, 68, 58, 36, 39, 7, 81, 14, 60, 18.00, Brave, Foshan, 0xe7c060, Darkness bound, 16' 9'', 144.03034, True, False, True, False
+Human Void, 50, 39, 24, 93, 40, 93, 61, 59, 53, 35, 40.31, Cold blooded, Toronto, 0xb2c478, Power addicted, 13' 6'', 246.29358, True, True, False, True
+Mr Centurion, 50, 31, 60, 76, 47, 35, 15, 60, 94, 30, 21.20, Determined, Kinshasa, 0x621d24, Egotistical, 13' 5'', 257.51045, True, True, True, False
+Crimson Master, 99, 17, 47, 84, 31, 56, 95, 45, 68, 6, 46.82, Obsessive, London, 0x8c184f, Silver weakness, 3' 3'', 124.82873, True, False, True, True
+Ms Man, 73, 27, 91, 15, 91, 14, 6, 24, 4, 62, 56.98, Cold blooded, Barcelona, 0xffb072, Trusting, 10' 9'', 248.73877, False, True, False, True
+Incredible Machine, 0, 60, 58, 20, 78, 12, 85, 61, 71, 27, 50.28, Arrogant, San Diego, 0x214fd2, Obsessive, 14' 6'', 7.31139, False, True, False, False
+Spider Lightning, 57, 39, 28, 74, 83, 40, 71, 9, 62, 100, 37.61, Loyal, Kano, 0xc896ef, Hubris, 1' 7'', 241.59309, False, True, True, False
+Dark Doom, 22, 40, 48, 76, 69, 80, 73, 17, 53, 27, 18.00, Protective, Porto Alegre, 0x83b700, Sound sensitive, 0' 1'', 190.27156, True, False, False, False
+Omega Fist, 31, 79, 30, 51, 61, 73, 42, 66, 53, 28, 34.18, Arrogant, Buenos Aires, 0xb5f085, Sound sensitive, 9' 3'', 94.47818, True, False, True, True
+Mr Shadow, 53, 28, 87, 94, 4, 96, 66, 11, 7, 80, 7886.90, Honorable, Ankara, 0x9cf6fe, Light sensitive, 12' 8'', 65.04837, False, True, True, True
+Iron Warrior, 61, 1, 55, 22, 12, 12, 70, 46, 74, 67, 33.79, Cruel, Wuhan, 0x45b9e9, Water weakness, 17' 7'', 204.88413, True, False, False, True
+Rocket Surfer, 82, 77, 48, 13, 80, 52, 67, 94, 29, 21, 33.35, Honorable, Singapore, 0x61004c, Greedy, 14' 8'', 26.02375, True, True, True, False
+Master Darkness, 88, 6, 10, 33, 45, 35, 28, 49, 42, 81, 21.96, Honorable, Santiago, 0xe512e9, Fire weakness, 9' 11'', 220.10121, True, False, False, False
+Omega X, 3, 26, 34, 30, 3, 22, 51, 34, 26, 64, 49.19, Cold blooded, Cape Town, 0x09375b, Prideful, 2' 1'', 157.13390, True, True, True, True
+The Hornet, 91, 94, 46, 56, 69, 13, 85, 82, 4, 4, 40.79, Stoic, Tianjin, 0xa4cc76, Poison susceptible, 20' 4'', 209.94599, True, True, True, True
+Mr Skull, 81, 39, 33, 24, 14, 4, 80, 67, 100, 91, 19.11, Reckless, Porto Alegre, 0xa66206, Sound sensitive, 11' 9'', 21.75007, True, True, False, True
+Masked Knight, 96, 70, 92, 34, 91, 71, 44, 29, 8, 10, 28.21, Brave, Sao Paulo, 0x8be4ce, Short sighted, 4' 7'', 52.60736, False, False, True, False
+Rocket Hulk, 95, 68, 55, 40, 49, 4, 79, 11, 17, 89, 25.27, Obsessive, Rio de Janeiro, 0xe46d42, Lonely, 9' 7'', 128.70262, True, True, False, True
+Omega Master, 88, 61, 9, 99, 19, 38, 23, 9, 29, 34, 57.26, Cold blooded, Washington, 0x0558a1, Electric weakness, 3' 10'', 120.99289, False, True, True, True
+Night Phantom, 42, 26, 91, 33, 12, 86, 25, 2, 19, 70, 30.81, Obsessive, Bogota, 0x6bfc70, Technology vulnerable, 7' 8'', 190.86464, False, True, False, False
+Impossible Machine, 14, 35, 82, 56, 69, 8, 4, 23, 61, 62, 60.61, Ruthless, Manila, 0x126e06, Light sensitive, 15' 4'', 261.93878, False, True, True, True
+Ms Knight, 30, 3, 43, 5, 73, 67, 2, 39, 57, 66, 24.44, Brave, Nairobi, 0x69db19, Reckless, 3' 10'', 148.62547, True, True, True, True
+Captain Torch, 43, 99, 64, 27, 28, 74, 90, 40, 84, 13, 65.55, Cunning, Pune, 0x11c246, Darkness bound, 5' 0'', 43.05273, False, True, True, True
+Doctor Surfer, 7, 11, 41, 15, 70, 48, 14, 98, 63, 69, 47.98, Cunning, Istanbul, 0x5dbe41, Soft hearted, 17' 0'', 89.34154, True, True, False, True
+Omega Woman, 89, 4, 89, 61, 38, 7, 49, 49, 98, 67, 7229.42, Honorable, Los Angeles, 0x780518, Water weakness, 7' 10'', 147.84412, True, False, True, False
+Doctor Lightning, 53, 97, 66, 46, 98, 18, 37, 28, 8, 57, 34.58, Obsessive, Chengdu, 0xa19271, Radiation weak, 16' 0'', 216.30395, True, True, False, False
+Super Shadow, 57, 66, 83, 38, 52, 31, 47, 20, 31, 75, 33.04, Cruel, Belo Horizonte, 0x9ecb05, Reckless, 6' 10'', 51.43855, True, False, False, False
+Ms Void, 75, 98, 61, 28, 12, 69, 56, 78, 86, 70, 39.57, Reckless, Kuala Lumpur, 0x749776, Ice weakness, 14' 0'', 74.74175, False, True, True, True
+Dark Warrior, 68, 51, 52, 97, 62, 88, 25, 48, 85, 69, 6111.00, Cunning, Lahore, 0x8e01b8, Egotistical, 16' 1'', 132.31837, True, True, False, False
+Mr Girl, 89, 62, 7, 85, 64, 76, 80, 54, 89, 61, 43.04, Obsessive, Jacksonville, 0x6ef77e, Naive, 5' 3'', 45.45543, True, True, True, True
+Metal Boy, 42, 96, 18, 20, 71, 19, 22, 47, 94, 41, 32.61, Determined, Bangkok, 0xc2f5c2, Fire weakness, 14' 10'', 238.90689, True, False, False, False
+Radioactive Torch, 91, 80, 49, 31, 64, 45, 20, 81, 24, 66, 18.00, Compassionate, Toronto, 0xdaf5c2, Fearful, 2' 6'', 12.06504, True, False, True, False
+Captain Doom, 79, 94, 27, 70, 54, 9, 6, 93, 16, 64, 51.80, Cunning, Bangalore, 0x960cc6, Darkness bound, 5' 10'', 122.78135, True, False, True, True
+Master Hulk, 11, 81, 94, 85, 3, 23, 13, 90, 90, 96, 42.91, Cruel, Riyadh, 0xf05867, Guilt ridden, 20' 9'', 192.48990, False, True, True, True
+The Daredevil, 62, 47, 21, 11, 17, 24, 70, 47, 46, 39, 44.03, Brave, Singapore, 0xca0df7, Darkness bound, 0' 7'', 154.90321, False, True, True, False
+Master Void, 50, 98, 49, 18, 45, 74, 95, 18, 49, 25, 39.73, Cruel, Paris, 0x967687, Electric weakness, 3' 4'', 261.10407, False, True, False, True
+Power Knight, 24, 59, 62, 78, 52, 21, 19, 21, 84, 48, 53.58, Compassionate, Jacksonville, 0x18bebd, Vengeful, 4' 3'', 224.92030, True, True, False, True
+Metal Hornet, 90, 64, 27, 21, 86, 53, 10, 94, 88, 51, 31.92, Clever, Madrid, 0x03f9e9, Prideful, 2' 6'', 140.48019, True, True, False, True
+Power Machine, 73, 37, 18, 16, 12, 24, 62, 46, 60, 45, 1095.99, Compassionate, San Francisco, 0xba37b9, Hubris, 10' 2'', 95.02071, False, False, False, True
+Power Claw, 7, 79, 81, 64, 65, 60, 36, 100, 1, 66, 45.15, Power hungry, Wuhan, 0x38fd40, Short sighted, 18' 0'', 93.81773, True, True, True, False
+Impossible Hornet, 11, 68, 41, 16, 100, 64, 0, 58, 74, 49, 37.70, Compassionate, Chongqing, 0xc88263, Poison susceptible, 17' 4'', 146.65899, False, True, False, True
+The Cloak, 98, 28, 26, 93, 44, 53, 22, 88, 48, 83, 52.02, Sadistic, Surat, 0x01cb0f, Magic vulnerable, 2' 4'', 260.82049, True, True, True, False
+Impossible Warrior, 96, 54, 56, 69, 15, 8, 32, 100, 39, 62, 24.43, Calculating, London, 0x0546a9, Magic vulnerable, 16' 10'', 28.81562, False, False, False, False
+Incredible Warrior, 18, 96, 95, 2, 77, 85, 56, 42, 55, 35, 31.56, Power hungry, Foshan, 0x88a9b9, Radiation weak, 1' 9'', 120.43959, True, True, False, True
+Spider Darkness, 16, 29, 96, 13, 31, 53, 88, 37, 74, 69, 29.13, Clever, Foshan, 0x67b2e5, Sound sensitive, 19' 9'', 9.22374, False, False, True, False
+Green Claw, 15, 83, 41, 74, 25, 65, 60, 79, 27, 43, 54.60, Sadistic, Wuhan, 0xa0ae14, Magic vulnerable, 15' 2'', 202.26866, False, True, True, False
+Incredible Hulk, 53, 42, 41, 71, 27, 50, 2, 60, 94, 68, 5839.90, Protective, Paris, 0x64d7f5, Naive, 7' 6'', 226.85407, True, True, False, False
+Impossible Torch, 39, 86, 60, 12, 28, 20, 28, 84, 58, 20, 26.67, Obsessive, Foshan, 0x680082, Overconfident, 0' 10'', 205.94392, False, False, True, True
+Spider Cloak, 86, 76, 94, 38, 80, 72, 22, 88, 73, 1, 23.25, Manipulative, Shanghai, 0xdf73c9, Technology vulnerable, 11' 11'', 248.41844, False, False, False, True
+Wonder Doom, 63, 95, 61, 100, 24, 81, 92, 58, 80, 44, 60.31, Obsessive, Yangon, 0x8d68bf, Vengeful, 13' 4'', 154.15257, True, True, True, False
+Invisible Daredevil, 84, 33, 96, 20, 69, 11, 96, 14, 66, 78, 66.80, Protective, Zhengzhou, 0xd475f9, Water weakness, 7' 7'', 213.31779, False, True, True, False
+Wonder Lightning, 20, 83, 31, 66, 2, 76, 30, 1, 1, 25, 41.53, Obsessive, Zhengzhou, 0x0abeb8, Impulsive, 10' 4'', 128.01644, False, True, False, True
+Doctor Doom, 33, 99, 37, 86, 37, 19, 10, 52, 24, 39, 46.06, Cold blooded, Toronto, 0x6fa886, Manipulable, 20' 5'', 278.32871, True, False, False, False
+Night Shadow, 7, 49, 57, 88, 96, 35, 1, 78, 15, 84, 40.19, Obsessive, Kinshasa, 0x8f79fe, Silver weakness, 16' 5'', 270.92788, True, True, False, False
+Omega Entity, 98, 13, 99, 8, 93, 44, 80, 56, 66, 90, 41.42, Clever, Lima, 0x25d5cb, Silver weakness, 9' 0'', 208.98839, True, False, True, True
+The Hulk, 89, 9, 11, 21, 17, 49, 66, 100, 59, 52, 18.00, Compassionate, Buenos Aires, 0x25052b, Silver weakness, 4' 11'', 221.96894, True, True, False, False
+Green Warrior, 42, 54, 20, 83, 7, 24, 95, 33, 4, 16, 27.68, Protective, Addis Ababa, 0xe486ee, Trusting, 7' 6'', 130.06748, True, True, False, False
+Omega Surfer, 42, 20, 9, 56, 77, 47, 80, 44, 99, 79, 18.00, Clever, Bangalore, 0xe6c274, Lonely, 17' 3'', 23.21098, True, False, False, False
+Human Torch, 80, 52, 1, 1, 24, 70, 51, 70, 66, 39, 30.15, Stoic, Mumbai, 0xfe8fdd, Darkness bound, 12' 8'', 52.66455, True, True, True, True
+Radioactive Cloak, 67, 36, 58, 45, 87, 61, 76, 58, 10, 27, 30.37, Determined, Karachi, 0xf2418e, Paranoid, 14' 6'', 130.22212, False, False, False, True
+Night Darkness, 46, 61, 55, 55, 39, 2, 74, 9, 37, 90, 37.90, Brave, Lahore, 0xe63af6, Hotheaded, 12' 1'', 276.30810, False, False, False, False
+Night Knight, 86, 55, 48, 28, 34, 24, 49, 55, 43, 38, 29.09, Protective, Dallas, 0x2c2cf4, Overconfident, 5' 2'', 267.65217, True, False, True, False
+Masked Doom, 84, 35, 89, 73, 35, 79, 30, 44, 10, 58, 38.35, Charismatic, Seoul, 0x7ba338, Power addicted, 6' 7'', 45.53858, True, False, False, True
+Human X, 55, 98, 94, 27, 43, 74, 68, 95, 69, 71, 18.00, Compassionate, Qingdao, 0xae97ce, Egotistical, 19' 1'', 198.73051, False, False, True, False
+Radioactive Crusader, 64, 41, 60, 37, 56, 90, 35, 1, 4, 6, 34.20, Obsessive, Johannesburg, 0x9be35c, Paranoid, 8' 9'', 116.19805, True, True, False, True
+Green Crusader, 39, 66, 2, 23, 85, 69, 96, 91, 0, 45, 53.63, Protective, Riyadh, 0x46d0e6, Water weakness, 5' 1'', 288.79813, False, False, False, False
+Wonder Torch, 64, 86, 16, 7, 96, 85, 11, 3, 25, 45, 28.99, Cunning, Beijing, 0xceeddf, Technology vulnerable, 17' 11'', 40.19766, False, True, True, True
+Invisible Machine, 100, 72, 34, 88, 73, 22, 85, 84, 84, 27, 48.48, Vengeful, Mumbai, 0x5b3820, Naive, 20' 1'', 194.44754, True, False, False, False
+Green Darkness, 77, 61, 17, 7, 65, 87, 62, 63, 1, 53, 25.69, Determined, Kinshasa, 0x9dd07c, Manipulable, 13' 7'', 189.42156, False, True, False, True
+Power Skull, 14, 15, 65, 86, 7, 11, 20, 33, 91, 72, 39.88, Stoic, Santiago, 0x24aae9, Stubborn, 14' 2'', 274.70031, True, True, True, False
+Spider Boy, 85, 41, 86, 80, 80, 97, 73, 27, 23, 68, 21.71, Stoic, Manila, 0x5fd398, Technology vulnerable, 10' 6'', 147.08426, True, False, False, True
+Professor Master, 88, 99, 65, 65, 76, 9, 53, 38, 28, 42, 40.39, Cunning, Johannesburg, 0xf577ad, Trusting, 14' 10'', 261.96719, False, False, False, True
+Super Machine, 26, 36, 53, 12, 33, 55, 37, 19, 67, 87, 18.00, Reckless, Dalian, 0xe286c3, Electric weakness, 12' 1'', 40.94025, False, True, False, False
+Green Girl, 82, 1, 50, 25, 51, 14, 55, 87, 56, 14, 28.20, Loyal, Toronto, 0x75df72, Silver weakness, 18' 3'', 97.13689, True, True, True, True
+Captain X, 5, 83, 51, 33, 13, 43, 51, 39, 4, 11, 21.45, Cold blooded, Luanda, 0xe64700, Short sighted, 8' 11'', 167.64190, True, False, False, True
+Green Surfer, 1, 73, 60, 21, 27, 26, 74, 47, 73, 73, 27.20, Reckless, Istanbul, 0x611025, Vengeful, 0' 7'', 179.29259, False, True, True, True
+Mr Phantom, 88, 55, 40, 25, 42, 100, 18, 60, 35, 94, 37.25, Arrogant, Bangkok, 0x217654, Obsessive, 5' 1'', 138.24021, True, False, True, True
+Ancient Hornet, 92, 38, 32, 94, 48, 62, 26, 62, 50, 7, 26.82, Determined, San Jose, 0x0c2bdb, Water weakness, 10' 2'', 18.84002, False, True, True, False
+Green Ghost, 51, 6, 47, 21, 5, 56, 44, 62, 39, 36, 18.00, Obsessive, Dalian, 0xc88f0a, Impulsive, 5' 3'', 219.27015, True, False, False, True
+The Darkness, 78, 69, 77, 80, 75, 88, 77, 16, 61, 46, 42.20, Arrogant, Johannesburg, 0x3520b1, Soft hearted, 7' 9'', 143.42327, True, True, False, True
+Master Centurion, 20, 65, 19, 18, 53, 54, 7, 7, 73, 49, 18.00, Clever, Columbus, 0xa6b545, Short sighted, 0' 5'', 16.00547, True, True, True, False
+Silver Hulk, 86, 98, 1, 74, 0, 43, 22, 10, 80, 76, 24.43, Vengeful, Xi'an, 0x9eca8e, Silver weakness, 0' 3'', 50.75158, False, False, True, False
+Power Void, 38, 79, 12, 65, 32, 76, 84, 78, 52, 80, 29.21, Obsessive, Indianapolis, 0xa58bc9, Magic vulnerable, 8' 5'', 183.42535, False, True, False, True
+Ms Entity, 35, 65, 85, 63, 96, 41, 60, 5, 47, 3, 48.10, Cold blooded, Nairobi, 0x5a615b, Hubris, 1' 6'', 202.62945, False, True, False, True
+Green Cloak, 8, 33, 60, 74, 67, 81, 80, 49, 63, 64, 39.50, Stoic, Sydney, 0xf222dd, Lonely, 14' 9'', 73.60836, True, False, False, False
+Silver Hornet, 86, 34, 49, 51, 32, 20, 77, 9, 3, 79, 41.42, Arrogant, Buenos Aires, 0xd2721e, Prideful, 2' 10'', 210.32096, False, True, True, True
+Iron Daredevil, 17, 17, 68, 47, 48, 90, 59, 90, 100, 55, 47.46, Loyal, Seattle, 0xc2bf50, Reckless, 3' 10'', 228.67686, False, False, True, True
+Spider Shadow, 51, 14, 21, 25, 97, 87, 65, 50, 68, 40, 30.09, Cruel, Ankara, 0x90b919, Poison susceptible, 1' 2'', 122.32462, True, False, True, True
+Super Hornet, 58, 50, 74, 0, 29, 71, 82, 10, 68, 83, 18.00, Vengeful, Ankara, 0xccf86f, Egotistical, 6' 5'', 53.04086, True, False, False, True
+Impossible Claw, 36, 84, 43, 73, 58, 31, 23, 14, 23, 96, 18.00, Protective, San Diego, 0xe0acb7, Hotheaded, 5' 1'', 247.80642, False, True, False, False
+Wonder Girl, 50, 53, 92, 75, 96, 89, 8, 79, 48, 21, 50.34, Honorable, Mumbai, 0x7d4c24, Guilt ridden, 9' 8'', 286.99214, False, True, False, True
+Wonder Centurion, 54, 96, 78, 17, 8, 31, 5, 65, 55, 2, 59.75, Vengeful, Beijing, 0xa42e20, Energy drain, 13' 7'', 124.32834, False, True, False, False
+Super Claw, 20, 49, 25, 81, 40, 99, 4, 87, 28, 29, 18.00, Sarcastic, Madrid, 0xc2768f, Naive, 10' 1'', 157.87646, False, False, False, True
+Metal Skull, 67, 36, 73, 13, 60, 45, 33, 82, 73, 50, 21.37, Obsessive, Addis Ababa, 0x340924, Fearful, 20' 1'', 34.76778, True, True, False, False
+Dark Fist, 16, 23, 29, 81, 72, 87, 38, 73, 60, 29, 18.00, Determined, Shenzhen, 0xd48425, Sound sensitive, 1' 4'', 21.97901, False, True, True, False
+Captain Surfer, 100, 19, 80, 72, 28, 91, 64, 4, 79, 86, 40.62, Cruel, Seoul, 0xdcb2dd, Ice weakness, 12' 10'', 170.38181, False, False, True, True
+Incredible Cloak, 100, 55, 12, 55, 88, 24, 0, 3, 86, 95, 54.69, Arrogant, Kuala Lumpur, 0x57e45f, Prideful, 1' 6'', 224.57164, True, True, False, True
+Masked Machine, 63, 71, 7, 64, 18, 84, 80, 25, 12, 2, 55.68, Determined, Singapore, 0x3535fa, Overconfident, 4' 11'', 253.51938, False, True, False, False
+The Man, 39, 91, 68, 69, 39, 73, 62, 64, 21, 92, 18.00, Reckless, Santiago, 0x0a7917, Guilt ridden, 14' 2'', 23.37449, True, True, False, False
+Iron Torch, 42, 84, 22, 30, 87, 78, 97, 36, 93, 16, 32.77, Vengeful, Porto Alegre, 0x7bce3c, Obsessive, 6' 11'', 23.81980, True, True, False, True
+Iron Girl, 93, 11, 53, 17, 87, 62, 3, 72, 50, 19, 19.59, Stoic, Dongguan, 0xebf2f1, Electric weakness, 11' 1'', 229.10948, True, True, False, False
+Power Fist, 67, 33, 61, 96, 48, 62, 19, 29, 2, 84, 55.22, Arrogant, Brasilia, 0x4798af, Paranoid, 8' 7'', 139.26344, True, False, False, True
+Omega Warrior, 36, 59, 68, 79, 11, 100, 13, 15, 2, 60, 18.00, Ruthless, Bogota, 0x21c139, Hotheaded, 3' 4'', 61.13767, False, True, False, False
+Rocket Torch, 90, 96, 19, 8, 32, 78, 69, 59, 7, 12, 18.00, Honorable, Haerbin, 0xf116e5, Magic vulnerable, 19' 9'', 0.82952, False, True, True, True
+Radioactive Master, 81, 19, 58, 42, 1, 10, 64, 78, 91, 89, 27.63, Cunning, Denver, 0x0597ae, Technology vulnerable, 18' 11'', 233.20900, True, True, False, True
+Green Shadow, 49, 6, 20, 85, 59, 29, 19, 70, 45, 32, 49.94, Honorable, Moscow, 0xf6a4ca, Ice weakness, 7' 5'', 5.58145, False, False, True, True
+The Claw, 73, 97, 60, 46, 41, 34, 33, 76, 10, 50, 53.37, Vengeful, Dar es Salaam, 0xc00ca7, Manipulable, 4' 5'', 147.35845, True, False, False, False
+Metal Doom, 13, 24, 71, 41, 58, 51, 13, 35, 38, 93, 57.05, Reckless, Manila, 0xc9bc37, Obsessive, 19' 4'', 235.12409, False, True, True, True
+Spider Void, 43, 23, 44, 77, 6, 83, 84, 50, 20, 2, 37.81, Brave, Dhaka, 0xa7d863, Reckless, 1' 10'', 196.15253, True, False, True, True
+Wonder Crusader, 13, 58, 5, 68, 69, 34, 74, 38, 75, 76, 37.63, Manipulative, Sao Paulo, 0x19be21, Radiation weak, 2' 11'', 37.85371, False, True, False, False
+Omega Shadow, 1, 38, 42, 77, 80, 10, 26, 67, 19, 66, 56.52, Sarcastic, Bogota, 0x7b136c, Naive, 17' 9'', 78.42254, True, True, False, True
+Power Doom, 73, 11, 75, 17, 39, 49, 22, 13, 13, 53, 33.67, Compassionate, Manila, 0x1da488, Electric weakness, 17' 4'', 259.04873, False, True, False, False
+Iron Hulk, 28, 100, 93, 91, 29, 100, 82, 62, 66, 66, 31.02, Vengeful, Buenos Aires, 0x5f283e, Radiation weak, 19' 11'', 187.96504, False, False, False, True
+Invisible Torch, 33, 43, 24, 52, 19, 3, 52, 70, 21, 44, 40.96, Clever, Paris, 0xcd6fb2, Poison susceptible, 10' 9'', 108.69413, True, True, False, False
+Metal Lightning, 23, 2, 49, 52, 74, 76, 57, 90, 2, 72, 57.17, Ruthless, Kinshasa, 0xd582de, Fearful, 18' 4'', 182.15987, True, False, False, False
+Crimson Knight, 19, 25, 31, 47, 41, 24, 60, 15, 90, 6, 22.30, Brave, Chennai, 0xbedb1c, Prideful, 13' 0'', 100.57758, False, False, False, False
+Professor Shadow, 80, 10, 60, 22, 73, 78, 10, 52, 16, 99, 33.10, Brave, Los Angeles, 0xa26777, Hubris, 18' 7'', 78.26944, False, False, False, True
+Ms Cloak, 53, 83, 40, 93, 91, 90, 27, 69, 30, 97, 24.90, Obsessive, Brasilia, 0x4e1a8b, Water weakness, 4' 9'', 103.59282, True, True, True, False
+Impossible Ghost, 60, 75, 4, 19, 8, 62, 39, 16, 14, 26, 27.70, Cold blooded, Chicago, 0xd3951a, Radiation weak, 6' 5'', 63.82429, False, False, False, False
+Human Knight, 65, 23, 79, 60, 72, 54, 36, 25, 21, 67, 29.29, Manipulative, Charlotte, 0x3038e5, Fearful, 17' 3'', 275.48535, False, False, True, False
+Radioactive Girl, 59, 73, 11, 87, 93, 56, 17, 94, 4, 13, 49.51, Brave, Foshan, 0xae3d2c, Power addicted, 12' 2'', 85.68658, True, False, False, True
+Wonder Skull, 54, 69, 39, 31, 41, 38, 42, 88, 27, 92, 18.00, Stoic, Zhengzhou, 0x4f457b, Obsessive, 14' 8'', 273.98928, False, False, True, False
+Ancient Woman, 81, 60, 72, 20, 89, 41, 63, 84, 58, 56, 18.00, Protective, Tehran, 0x18f3db, Reckless, 10' 2'', 183.16511, False, False, True, False
+Crimson Doom, 96, 66, 56, 45, 22, 30, 70, 100, 95, 2, 28.21, Sadistic, Brasilia, 0xa6a640, Ice weakness, 5' 1'', 201.62402, True, True, False, True
+Impossible Shadow, 53, 84, 10, 77, 32, 53, 90, 84, 45, 24, 30.90, Cunning, Shenyang, 0xfe6551, Hubris, 5' 11'', 232.18559, True, False, True, True
+Night Fist, 46, 49, 17, 71, 75, 17, 88, 23, 11, 73, 24.61, Calculating, Tehran, 0xa03215, Ice weakness, 5' 0'', 151.44046, False, False, False, False
+Iron Man, 66, 61, 13, 71, 35, 95, 22, 31, 63, 99, 18.00, Cunning, Seoul, 0x23dabb, Lonely, 11' 10'', 226.45405, True, False, True, False
+Ancient Centurion, 85, 31, 32, 17, 19, 73, 17, 12, 80, 63, 37.24, Reckless, Luanda, 0x02f0b5, Poison susceptible, 4' 9'', 157.83244, True, False, False, True
+Super Phantom, 6, 25, 0, 81, 3, 84, 67, 66, 38, 65, 52.99, Clever, Columbus, 0x9ca436, Sound sensitive, 17' 4'', 284.24392, False, True, True, False
+Incredible Phantom, 77, 33, 21, 91, 59, 9, 33, 25, 42, 68, 47.74, Clever, Ankara, 0x38af07, Distrustful, 8' 4'', 10.78346, False, False, False, False
+Impossible Phantom, 82, 76, 91, 36, 53, 70, 58, 61, 1, 10, 50.36, Protective, Mumbai, 0xc6d823, Ice weakness, 1' 8'', 296.46050, False, True, False, False
+Professor Hulk, 44, 35, 85, 22, 22, 73, 0, 18, 32, 75, 9948.28, Reckless, Tianjin, 0xd7a6fd, Short sighted, 7' 3'', 74.32648, True, True, True, False
+Omega Cloak, 69, 10, 32, 28, 78, 100, 47, 98, 94, 55, 23.01, Loyal, Wuhan, 0xd16c5b, Hotheaded, 9' 7'', 213.44158, True, False, True, True
+Impossible Daredevil, 84, 42, 44, 92, 59, 80, 96, 57, 23, 12, 59.68, Cunning, Boston, 0x8b4f48, Sound sensitive, 13' 7'', 167.77575, False, True, False, True
+Omega Daredevil, 63, 89, 90, 59, 22, 63, 77, 7, 66, 49, 24.67, Sarcastic, Yangon, 0x5bcec2, Technology vulnerable, 1' 5'', 19.34837, True, False, False, True
+Doctor Soldier, 39, 70, 88, 70, 57, 31, 58, 35, 37, 88, 43.22, Brave, Chicago, 0x3f4b20, Silver weakness, 11' 3'', 204.93145, False, False, False, False
+Professor Girl, 13, 14, 85, 90, 57, 36, 86, 12, 14, 78, 52.70, Cruel, San Diego, 0x367e92, Ice weakness, 2' 1'', 60.38988, False, True, True, True
+Doctor Entity, 11, 14, 41, 24, 55, 32, 84, 12, 85, 73, 37.49, Stoic, New York City, 0x5e51b0, Paranoid, 11' 10'', 95.74049, True, False, False, False
+Masked Skull, 44, 81, 67, 40, 41, 25, 75, 14, 98, 33, 18.00, Cold blooded, Seattle, 0xc2b54f, Energy drain, 10' 11'', 39.38294, False, True, True, False
+Master Shadow, 21, 57, 87, 68, 6, 28, 15, 50, 73, 78, 18.00, Cold blooded, Toronto, 0xd5e99f, Obsessive, 0' 6'', 164.13499, True, False, False, False
+Ms Claw, 32, 71, 26, 17, 55, 18, 44, 42, 91, 87, 24.23, Obsessive, San Jose, 0x9942cd, Energy drain, 20' 1'', 9.13898, True, False, False, True
+Omega Torch, 56, 31, 46, 46, 6, 79, 6, 41, 59, 46, 485.03, Cruel, Fortaleza, 0x200466, Sound sensitive, 12' 9'', 188.37611, True, False, False, True
+Rocket Machine, 65, 33, 50, 86, 83, 49, 95, 46, 44, 67, 25.87, Loyal, Belo Horizonte, 0x320d43, Hubris, 16' 9'', 220.40892, False, True, False, True
+Doctor Fist, 94, 87, 20, 18, 8, 52, 77, 12, 16, 40, 40.54, Obsessive, Detroit, 0x00e50c, Manipulable, 9' 6'', 38.18116, True, True, True, False
+Captain Hornet, 13, 12, 45, 56, 62, 95, 14, 3, 38, 100, 20.19, Sadistic, Detroit, 0xf990da, Poison susceptible, 5' 3'', 140.22275, False, False, True, False
+Masked Surfer, 13, 30, 75, 79, 86, 48, 2, 43, 50, 85, 56.66, Reckless, Cairo, 0x18abd3, Stubborn, 0' 7'', 89.81606, True, False, False, False
+Ancient Soldier, 8, 43, 77, 30, 71, 30, 70, 3, 5, 2, 18.00, Calculating, San Diego, 0x787ef9, Egotistical, 13' 5'', 251.73224, True, True, False, False
+Invisible Hornet, 45, 22, 86, 8, 29, 7, 23, 39, 43, 78, 54.51, Reckless, Sydney, 0x945de9, Naive, 16' 5'', 41.89015, True, True, True, True
+Night Crusader, 49, 65, 56, 93, 48, 29, 77, 18, 67, 73, 28.95, Stoic, Indianapolis, 0x081ccd, Impulsive, 16' 10'', 182.09818, True, True, False, True
+Wonder Woman, 43, 83, 63, 41, 44, 1, 42, 66, 63, 45, 45.83, Charismatic, Phoenix, 0x73d099, Poison susceptible, 15' 8'', 138.56263, True, True, False, True
+Incredible Daredevil, 6, 87, 8, 77, 93, 49, 14, 30, 22, 45, 47.37, Ruthless, Austin, 0x414abb, Electric weakness, 14' 6'', 251.07085, False, False, False, True
+The Ghost, 78, 26, 74, 84, 0, 18, 80, 63, 41, 0, 69.64, Stoic, Moscow, 0xf02364, Light sensitive, 16' 7'', 87.94093, False, False, True, True
+Invisible Man, 0, 87, 5, 4, 30, 76, 97, 28, 25, 32, 47.97, Sarcastic, Buenos Aires, 0x9d0e3c, Reckless, 5' 3'', 106.86750, False, False, True, True
+Night Doom, 97, 78, 90, 82, 15, 89, 29, 63, 60, 23, 18.00, Sarcastic, Surat, 0xe2dd3f, Distrustful, 4' 10'', 121.91812, False, False, False, True
+Rocket Fist, 94, 14, 79, 41, 21, 54, 85, 40, 7, 64, 43.27, Power hungry, Dongguan, 0x95fd00, Energy drain, 19' 2'', 261.01273, False, True, False, False
+Incredible X, 20, 64, 30, 70, 89, 43, 85, 79, 72, 24, 30.64, Reckless, San Jose, 0xc7ef9a, Water weakness, 19' 3'', 258.41491, False, False, False, True
+The Warrior, 15, 98, 26, 43, 54, 28, 14, 27, 12, 78, 54.48, Loyal, Shenyang, 0xfa53a7, Darkness bound, 9' 7'', 70.45875, False, True, True, True
+Incredible Crusader, 5, 94, 64, 65, 97, 5, 62, 50, 88, 93, 40.14, Protective, Addis Ababa, 0x7f0f39, Sound sensitive, 6' 3'', 155.88286, True, True, True, False
+Mr Crusader, 57, 4, 88, 1, 13, 58, 49, 66, 92, 99, 24.53, Compassionate, Bogota, 0xe4d7e3, Greedy, 16' 10'', 295.13356, False, True, True, True
+Spider Soldier, 74, 41, 4, 89, 17, 71, 46, 89, 82, 7, 48.96, Sarcastic, London, 0x23220b, Water weakness, 2' 1'', 292.12608, False, True, True, True
+Metal Girl, 7, 60, 26, 59, 99, 36, 20, 72, 52, 45, 43.19, Brave, Moscow, 0x1c1d9a, Soft hearted, 0' 3'', 197.03767, True, True, False, True
+Iron Void, 43, 18, 27, 37, 13, 55, 8, 14, 21, 13, 36.89, Ruthless, Chennai, 0x312f28, Power addicted, 12' 4'', 245.79263, True, True, False, True
+Iron Lightning, 20, 47, 33, 72, 64, 7, 77, 27, 44, 76, 56.23, Determined, Rio de Janeiro, 0xdcc644, Sound sensitive, 17' 3'', 108.70802, False, True, True, False
+Silver Void, 29, 72, 56, 17, 12, 57, 62, 37, 77, 13, 25.82, Manipulative, Barcelona, 0x07084c, Fire weakness, 6' 6'', 53.94869, True, True, False, False
+Captain Warrior, 44, 57, 22, 25, 5, 81, 68, 12, 66, 56, 41.75, Cruel, Chongqing, 0x8a7c12, Guilt ridden, 10' 11'', 79.10531, True, False, True, True
+Omega Hornet, 81, 84, 33, 14, 21, 93, 72, 25, 76, 48, 20.20, Clever, London, 0x4379e7, Egotistical, 5' 0'', 79.67030, True, False, True, False
+Wonder Boy, 89, 8, 51, 25, 8, 87, 62, 13, 85, 32, 3195.25, Sadistic, Cairo, 0xb51855, Trusting, 2' 8'', 19.45958, False, True, True, False
+Professor Boy, 59, 5, 21, 91, 11, 62, 48, 93, 50, 65, 39.53, Reckless, Fortaleza, 0x010455, Poison susceptible, 13' 5'', 28.01399, False, False, False, False
+Captain Hulk, 22, 25, 61, 7, 4, 15, 23, 44, 2, 35, 18.00, Compassionate, Seoul, 0x7ac286, Power addicted, 6' 0'', 168.28025, False, True, True, True
+Green Daredevil, 56, 21, 43, 47, 16, 31, 69, 87, 68, 93, 38.03, Ruthless, Kano, 0x3d47b6, Impulsive, 17' 4'', 270.09076, False, False, True, True
+Omega Soldier, 40, 18, 8, 44, 85, 41, 18, 88, 99, 52, 41.15, Ruthless, Kano, 0x54b84a, Greedy, 9' 11'', 267.51315, False, False, False, False
+Impossible Hulk, 43, 26, 19, 10, 61, 20, 90, 13, 7, 34, 25.69, Stoic, Pune, 0x560844, Guilt ridden, 13' 2'', 171.58577, False, False, True, True
+Power Girl, 22, 39, 36, 11, 62, 84, 16, 0, 9, 72, 58.31, Cruel, Ahmedabad, 0x419fc1, Sound sensitive, 16' 9'', 188.13106, False, False, True, True
+Doctor Phantom, 37, 53, 87, 70, 3, 33, 97, 4, 95, 54, 9139.24, Reckless, Jakarta, 0xa6eb5b, Manipulable, 5' 11'', 285.03561, False, True, False, False
+Metal Warrior, 73, 7, 84, 46, 24, 98, 80, 57, 65, 72, 31.44, Vengeful, Bogota, 0x4859af, Egotistical, 18' 2'', 66.98432, False, False, False, True
+Metal Torch, 2, 2, 52, 92, 53, 58, 90, 10, 21, 3, 54.92, Compassionate, Guangzhou, 0x179fc3, Vengeful, 2' 10'', 181.07758, False, False, True, True
+Super Man, 69, 94, 78, 24, 26, 28, 50, 99, 47, 19, 40.45, Stoic, Columbus, 0x15f3b8, Guilt ridden, 12' 9'', 241.85626, False, False, True, False
+Omega Centurion, 41, 9, 67, 7, 82, 43, 48, 83, 5, 73, 31.11, Determined, Moscow, 0x4bb152, Obsessive, 8' 10'', 23.61276, False, True, True, True
+Ancient Knight, 26, 75, 0, 24, 88, 83, 40, 67, 88, 80, 61.89, Obsessive, Chongqing, 0xfc4fa4, Magic vulnerable, 12' 0'', 200.57785, False, False, False, True
+Invisible Crusader, 95, 4, 25, 14, 17, 66, 84, 0, 47, 14, 27.29, Manipulative, Tokyo, 0x90599e, Impulsive, 7' 8'', 152.15049, True, True, True, True
+Ms Darkness, 92, 14, 18, 92, 60, 19, 84, 6, 26, 58, 64.60, Reckless, Jakarta, 0x7fb28f, Poison susceptible, 9' 6'', 284.25783, True, True, True, True
+Human Woman, 13, 14, 65, 41, 8, 97, 94, 46, 99, 29, 47.25, Power hungry, Xi'an, 0x1fbcaa, Darkness bound, 1' 2'', 102.02143, False, True, True, True
+Impossible Cloak, 83, 59, 76, 42, 26, 23, 52, 37, 67, 100, 18.00, Vengeful, Jacksonville, 0x411dc0, Silver weakness, 4' 1'', 179.68951, False, True, False, True
+Radioactive Woman, 35, 33, 87, 98, 95, 99, 1, 19, 15, 100, 31.25, Arrogant, Ankara, 0x24b272, Manipulable, 16' 8'', 266.87735, False, False, True, True
+Metal Soldier, 70, 2, 79, 70, 27, 1, 50, 86, 54, 36, 18.28, Reckless, Wuhan, 0xe3902a, Energy drain, 8' 5'', 179.47228, True, False, True, True
+Masked Soldier, 56, 97, 94, 46, 60, 1, 34, 89, 11, 48, 42.96, Power hungry, Lagos, 0x1e6428, Manipulable, 11' 8'', 21.49292, False, False, True, True
+Incredible Man, 57, 98, 35, 22, 10, 82, 56, 39, 18, 93, 19.73, Protective, Hangzhou, 0x03989c, Power addicted, 13' 8'', 60.71966, True, False, True, True
+Rocket Warrior, 18, 36, 51, 88, 40, 62, 71, 12, 5, 54, 43.64, Cold blooded, Delhi, 0xabcb46, Prideful, 9' 7'', 263.90077, False, False, False, True
+Omega Man, 59, 43, 0, 27, 66, 59, 4, 82, 48, 52, 29.09, Arrogant, Sydney, 0x3e767c, Poison susceptible, 14' 7'', 48.49380, True, True, True, False
+Radioactive Centurion, 43, 8, 3, 40, 73, 57, 12, 12, 0, 94, 32.77, Sadistic, Lima, 0xe0724c, Impulsive, 3' 3'', 217.06652, False, False, False, True
+Super X, 15, 93, 65, 20, 90, 87, 14, 1, 30, 74, 656.72, Honorable, Baghdad, 0x1298dd, Fearful, 6' 1'', 178.29655, True, False, True, False
+Captain Fist, 39, 92, 17, 11, 8, 87, 43, 33, 54, 98, 45.52, Cold blooded, Kuala Lumpur, 0xebbbfc, Hotheaded, 13' 5'', 80.35535, True, True, False, False
+Omega Boy, 67, 80, 43, 77, 31, 84, 26, 10, 35, 51, 40.35, Honorable, Tehran, 0xaa03f6, Short sighted, 16' 9'', 70.70092, True, False, False, False
+Incredible Soldier, 98, 24, 88, 21, 45, 93, 0, 72, 51, 49, 50.50, Arrogant, Zhengzhou, 0xf33c6f, Lonely, 0' 4'', 133.69680, True, True, False, True
+Radioactive Fist, 90, 9, 41, 83, 61, 31, 8, 87, 29, 65, 37.46, Obsessive, Sao Paulo, 0xcbdc23, Vengeful, 17' 3'', 175.31500, False, False, False, False
+Incredible Master, 70, 77, 73, 7, 4, 51, 55, 37, 41, 92, 39.02, Manipulative, Baghdad, 0x617662, Greedy, 5' 3'', 262.21275, True, True, True, False
+Power Warrior, 70, 47, 49, 59, 22, 81, 49, 80, 59, 56, 28.90, Cold blooded, Austin, 0x5cc277, Impulsive, 0' 5'', 214.69060, False, True, True, True
+Master Ghost, 51, 6, 62, 80, 7, 28, 94, 57, 67, 53, 31.44, Reckless, Shenyang, 0x79429c, Vengeful, 16' 4'', 107.19096, False, True, True, False
+Silver Soldier, 19, 45, 89, 64, 95, 43, 85, 6, 75, 89, 26.70, Vengeful, Moscow, 0xe59dc0, Stubborn, 1' 9'', 72.35552, True, False, True, True
+Masked Daredevil, 28, 72, 0, 57, 3, 22, 21, 1, 37, 93, 79.12, Arrogant, Phoenix, 0x443df0, Water weakness, 3' 6'', 200.55442, False, False, True, False
+The Fist, 88, 11, 4, 57, 67, 54, 36, 69, 81, 63, 25.77, Cold blooded, Lagos, 0x4b5612, Lonely, 16' 8'', 296.09206, False, True, True, False
+Dark Darkness, 54, 14, 5, 0, 71, 57, 79, 96, 2, 96, 79.19, Cunning, Haerbin, 0xd3494c, Naive, 7' 3'', 239.16329, True, True, True, True
+Metal Crusader, 6, 81, 52, 68, 72, 18, 39, 1, 100, 26, 32.17, Loyal, Hyderabad, 0xfbb941, Vengeful, 10' 6'', 97.93969, True, True, True, True
+Doctor Man, 41, 70, 57, 1, 47, 23, 16, 34, 93, 30, 18.00, Compassionate, Mexico City, 0xc53684, Ice weakness, 1' 9'', 114.09993, True, True, True, False
+Dark Hornet, 16, 95, 2, 64, 46, 17, 23, 54, 2, 51, 83.45, Reckless, Buenos Aires, 0xa124fb, Guilt ridden, 4' 11'', 36.05609, False, False, True, True
+Masked Boy, 94, 8, 14, 52, 97, 87, 44, 79, 71, 65, 18.00, Compassionate, Addis Ababa, 0x1323ec, Silver weakness, 10' 9'', 48.29737, True, True, True, False
+Captain Machine, 69, 83, 94, 23, 29, 89, 45, 86, 3, 84, 18.96, Honorable, Dalian, 0x0d1a24, Trusting, 8' 7'', 200.41620, False, True, False, False
+Super Ghost, 29, 52, 13, 89, 28, 23, 25, 84, 88, 43, 6869.14, Compassionate, Fortaleza, 0x977084, Fearful, 20' 5'', 220.90868, True, False, False, False
+Mr Machine, 7, 55, 13, 13, 90, 44, 81, 37, 93, 86, 47.57, Charismatic, Cape Town, 0x5fc959, Guilt ridden, 2' 5'', 271.17845, False, True, False, False
+Doctor Woman, 8, 55, 12, 64, 71, 20, 78, 95, 97, 22, 31.36, Brave, Kinshasa, 0xa59aaf, Manipulable, 13' 9'', 133.87300, True, True, True, True
+Human Boy, 10, 24, 88, 5, 84, 71, 24, 37, 94, 19, 64.37, Manipulative, Beijing, 0x315f1f, Greedy, 6' 8'', 64.59547, True, True, True, False
+Night X, 8, 90, 51, 36, 100, 96, 52, 42, 80, 36, 49.68, Loyal, Seattle, 0xf29df6, Impulsive, 8' 6'', 140.53152, False, True, False, True
+Spider Man, 43, 28, 5, 37, 0, 1, 54, 24, 66, 65, 41.61, Ruthless, Dallas, 0xdca910, Distrustful, 19' 5'', 235.06985, False, True, True, True
+Iron Ghost, 59, 28, 18, 0, 58, 50, 68, 32, 12, 60, 42.71, Calculating, Porto Alegre, 0xac8c44, Technology vulnerable, 11' 4'', 251.49044, True, False, False, False
+Super Doom, 53, 67, 60, 97, 68, 36, 76, 17, 75, 82, 25.05, Clever, Kinshasa, 0x071e53, Greedy, 18' 10'', 259.53395, True, True, True, False
+Captain Lightning, 1, 11, 48, 32, 53, 99, 56, 38, 58, 4, 33.65, Stoic, Kolkata, 0x57892d, Silver weakness, 19' 0'', 48.66061, True, True, True, True
+Night Surfer, 43, 55, 5, 80, 21, 49, 62, 60, 84, 41, 42.61, Ruthless, Melbourne, 0x4124c3, Fearful, 18' 3'', 40.15106, False, True, True, False
+Invisible Lightning, 66, 62, 21, 85, 12, 66, 36, 19, 80, 73, 30.41, Charismatic, Ankara, 0x9d5315, Trusting, 3' 2'', 276.81385, True, False, False, False
+Crimson Hulk, 38, 14, 6, 60, 42, 84, 100, 55, 24, 4, 34.15, Manipulative, San Francisco, 0x1a1ac1, Trusting, 14' 11'', 100.97746, True, True, False, False
+Radioactive Doom, 94, 98, 13, 8, 8, 54, 33, 11, 96, 93, 9110.78, Brave, Bangkok, 0xadc292, Water weakness, 1' 0'', 234.33629, True, False, True, True
+Professor Phantom, 40, 20, 89, 46, 41, 93, 66, 85, 2, 95, 29.88, Determined, Istanbul, 0x180592, Paranoid, 13' 0'', 292.85033, False, False, False, True
+Radioactive Entity, 87, 59, 4, 11, 8, 8, 86, 2, 75, 31, 18.00, Protective, Kinshasa, 0xb26d6d, Greedy, 8' 9'', 108.05015, False, False, False, False
+Dark Woman, 58, 4, 59, 44, 37, 79, 55, 82, 83, 70, 22.25, Calculating, Suzhou, 0xd35480, Soft hearted, 1' 8'', 130.63975, True, True, True, False
+Metal Machine, 59, 63, 92, 69, 13, 14, 42, 85, 94, 65, 39.01, Clever, Nagoya, 0xb55355, Guilt ridden, 2' 6'', 269.15028, True, True, True, True
+Human Girl, 43, 89, 66, 61, 94, 12, 6, 8, 2, 94, 47.91, Cold blooded, Addis Ababa, 0xeac9d8, Greedy, 12' 4'', 201.07299, True, True, False, True
+Captain Girl, 92, 3, 86, 19, 34, 48, 67, 20, 46, 46, 38.62, Protective, Foshan, 0xa07dc0, Radiation weak, 20' 9'', 94.99526, False, False, False, False
+Ancient Man, 50, 44, 58, 76, 6, 50, 81, 83, 79, 31, 6889.38, Manipulative, Fortaleza, 0xd6b1f1, Trusting, 15' 7'', 88.22957, False, False, False, True
+Silver X, 44, 6, 30, 63, 27, 67, 82, 94, 28, 58, 18.00, Cold blooded, Delhi, 0x64882d, Energy drain, 9' 9'', 157.51892, False, False, False, True
+Dark X, 100, 54, 43, 45, 42, 25, 6, 92, 74, 95, 33.82, Stoic, Recife, 0x86ac86, Overconfident, 3' 0'', 287.24018, False, True, True, False
+Rocket Doom, 29, 72, 64, 35, 1, 29, 69, 40, 63, 86, 37.99, Stoic, Melbourne, 0xca2aa7, Trusting, 5' 11'', 107.78403, False, False, False, True
+Green Hulk, 48, 68, 61, 39, 32, 44, 50, 55, 41, 20, 2155.83, Protective, Chicago, 0xef0224, Vengeful, 9' 5'', 142.47616, True, True, False, True
+Super Entity, 12, 71, 42, 94, 11, 54, 19, 46, 43, 58, 37.45, Arrogant, Dallas, 0x385c2c, Impulsive, 5' 2'', 231.27045, False, False, False, False
+Metal Cloak, 50, 51, 50, 90, 100, 40, 20, 64, 25, 98, 38.37, Cunning, Tehran, 0x09d386, Manipulable, 19' 9'', 17.00273, True, True, False, True
+Night Lightning, 82, 41, 70, 28, 16, 100, 40, 25, 58, 17, 29.35, Cruel, Manila, 0x81de71, Light sensitive, 8' 9'', 219.67501, False, True, False, False
+Incredible Girl, 21, 45, 11, 1, 3, 21, 52, 16, 93, 78, 29.65, Honorable, Barcelona, 0x2dce99, Prideful, 0' 2'', 74.76022, True, False, True, True
+Professor Man, 25, 41, 74, 50, 16, 69, 68, 50, 50, 59, 6363.38, Reckless, Hong Kong, 0x91cb64, Prideful, 4' 0'', 258.35252, True, False, True, True
+Omega Machine, 50, 52, 48, 12, 0, 34, 23, 59, 26, 76, 33.36, Power hungry, Charlotte, 0x0ee026, Greedy, 15' 0'', 103.50224, False, False, True, True
+Omega Girl, 51, 54, 15, 52, 94, 53, 78, 56, 80, 52, 37.57, Clever, Suzhou, 0x1d5d04, Manipulable, 14' 6'', 24.21592, False, False, False, True
+Mr Boy, 91, 58, 68, 13, 63, 43, 37, 23, 59, 51, 28.33, Manipulative, Nairobi, 0xba746a, Radiation weak, 1' 8'', 105.01633, True, False, False, True
+Dark Shadow, 96, 77, 94, 23, 99, 28, 55, 85, 44, 79, 32.01, Calculating, Kuala Lumpur, 0x962331, Light sensitive, 14' 4'', 153.06236, False, True, True, False
+Captain Ghost, 56, 15, 87, 80, 76, 59, 96, 5, 59, 27, 18.00, Sarcastic, Hyderabad, 0x73a7d8, Trusting, 5' 4'', 267.37504, False, True, False, True
+Captain Void, 36, 73, 24, 47, 42, 25, 78, 62, 37, 40, 36.44, Vengeful, Addis Ababa, 0x8d0683, Stubborn, 4' 8'', 214.80322, True, True, True, True
+Green Soldier, 70, 70, 58, 39, 14, 47, 91, 25, 91, 7, 60.35, Arrogant, Istanbul, 0xb4cfc5, Lonely, 6' 5'', 92.26298, False, True, True, True
+Incredible Fist, 89, 24, 21, 1, 38, 64, 4, 40, 30, 26, 18.00, Stoic, Chicago, 0x3fae12, Stubborn, 1' 0'', 47.68804, False, False, False, True
+Human Fist, 32, 19, 23, 46, 18, 97, 99, 19, 1, 27, 45.10, Sadistic, Porto Alegre, 0x1fb961, Light sensitive, 18' 2'', 48.60986, True, False, True, False
+Dark Hulk, 70, 7, 30, 18, 91, 17, 65, 96, 87, 82, 30.81, Brave, Philadelphia, 0xbc9e4f, Water weakness, 20' 3'', 199.96999, False, False, False, False
+Impossible Master, 13, 89, 63, 66, 81, 9, 100, 13, 76, 16, 23.59, Reckless, San Diego, 0x504716, Obsessive, 6' 11'', 108.81160, True, True, False, True
+Radioactive Daredevil, 68, 40, 48, 38, 48, 87, 17, 72, 65, 28, 20.64, Manipulative, Boston, 0x095cb7, Manipulable, 14' 1'', 131.58563, False, False, False, True
+Iron Surfer, 50, 68, 2, 45, 42, 67, 22, 48, 70, 0, 48.01, Honorable, Lima, 0x7d030c, Lonely, 4' 8'', 30.98376, True, False, True, True
+Crimson Hornet, 62, 63, 13, 0, 87, 72, 14, 19, 93, 86, 19.58, Stoic, Indianapolis, 0x20fef1, Energy drain, 17' 9'', 44.46815, True, True, True, False
+Masked Man, 31, 36, 16, 34, 75, 64, 30, 47, 72, 3, 1194.75, Power hungry, Dhaka, 0x1a4150, Egotistical, 6' 5'', 60.71781, False, True, False, False
+Crimson Entity, 14, 79, 22, 58, 85, 87, 94, 21, 60, 40, 1843.06, Loyal, Tokyo, 0x7738ed, Fire weakness, 6' 4'', 90.07642, False, True, False, False
+Invisible Doom, 49, 79, 35, 60, 75, 6, 77, 51, 81, 25, 69.22, Clever, Johannesburg, 0x1b409b, Impulsive, 15' 3'', 73.60262, True, False, True, True
+Spider Phantom, 2, 15, 91, 22, 24, 18, 43, 69, 34, 77, 38.68, Brave, Beijing, 0xdf6f4b, Impulsive, 4' 2'', 9.38972, True, False, False, True
+Spider Warrior, 48, 52, 62, 30, 60, 51, 37, 67, 52, 84, 31.34, Clever, Singapore, 0x6666f4, Stubborn, 9' 4'', 241.55534, False, True, False, True
+Master Skull, 57, 10, 65, 77, 21, 96, 65, 80, 16, 53, 25.95, Cunning, Tehran, 0xec409b, Light sensitive, 15' 7'', 148.17868, False, False, False, True
+Professor Torch, 74, 27, 23, 84, 41, 85, 69, 26, 77, 59, 20.00, Stoic, Bogota, 0x7a9dbe, Manipulable, 20' 3'', 129.00568, True, True, True, False
+Master Phantom, 43, 12, 88, 47, 42, 79, 26, 26, 38, 68, 36.81, Reckless, Baghdad, 0x559216, Overconfident, 5' 6'', 128.26233, False, True, True, False
+Power Hulk, 20, 13, 65, 31, 29, 0, 11, 19, 1, 90, 67.64, Sarcastic, Rio de Janeiro, 0x137280, Power addicted, 13' 6'', 97.77903, False, True, False, False
+Doctor Darkness, 66, 49, 39, 46, 80, 96, 75, 71, 26, 26, 22.61, Cunning, Nagoya, 0xff8643, Stubborn, 10' 5'', 216.40942, False, True, False, False
+Master Machine, 61, 75, 88, 55, 0, 16, 80, 6, 4, 33, 20.37, Protective, Chennai, 0x5d3b17, Greedy, 4' 10'', 264.43049, True, False, False, False
+Invisible Phantom, 92, 83, 46, 24, 18, 17, 92, 56, 45, 31, 50.51, Charismatic, Lahore, 0xaf2d2f, Lonely, 2' 2'', 211.94871, True, False, True, True
+Crimson Woman, 99, 23, 73, 95, 30, 97, 80, 64, 76, 63, 30.53, Compassionate, San Diego, 0x3cf640, Greedy, 7' 10'', 90.68924, False, False, False, False
+Impossible Lightning, 34, 82, 88, 83, 6, 92, 22, 54, 81, 33, 58.55, Stoic, Columbus, 0x69956f, Trusting, 3' 4'', 297.01252, False, True, False, False
+Super Daredevil, 12, 7, 64, 72, 4, 59, 26, 100, 77, 34, 18.00, Reckless, Kolkata, 0x350ce4, Lonely, 0' 4'', 258.93202, False, True, True, False
+Ancient Daredevil, 10, 36, 60, 23, 55, 45, 21, 69, 3, 43, 50.36, Calculating, Dalian, 0x1f9f77, Sound sensitive, 13' 4'', 185.38454, True, True, False, True
+Masked Claw, 51, 10, 40, 19, 87, 52, 56, 58, 85, 67, 41.23, Clever, Mumbai, 0xc46169, Vengeful, 18' 0'', 33.18207, False, False, True, False
+Super Centurion, 17, 23, 31, 41, 18, 84, 91, 27, 85, 4, 8948.44, Calculating, San Francisco, 0x61f976, Radiation weak, 1' 2'', 172.61379, False, True, False, True
+Professor Claw, 89, 34, 31, 6, 91, 20, 32, 92, 59, 16, 1466.23, Ruthless, Phoenix, 0x9355dc, Distrustful, 10' 6'', 116.20469, False, True, True, True
+Iron Hornet, 48, 56, 7, 69, 54, 73, 89, 92, 85, 75, 39.05, Stoic, Madrid, 0xb1fe3e, Power addicted, 13' 4'', 7.18777, False, True, True, True
+Dark Entity, 57, 86, 76, 51, 47, 53, 51, 90, 52, 33, 18.00, Vengeful, Lagos, 0x06ca62, Ice weakness, 13' 4'', 155.16147, True, False, True, False
+Night Girl, 90, 47, 14, 24, 63, 45, 8, 13, 55, 3, 18.00, Sarcastic, Columbus, 0x66dbf3, Silver weakness, 9' 6'', 170.47354, False, False, True, True
+Power Ghost, 48, 28, 13, 22, 4, 1, 38, 58, 42, 23, 25.10, Cold blooded, London, 0x03f0d3, Impulsive, 7' 10'', 185.14079, False, False, False, True
+Radioactive Boy, 54, 95, 10, 62, 82, 59, 72, 71, 88, 31, 4693.59, Compassionate, Kolkata, 0x9b5601, Overconfident, 12' 0'', 20.07856, True, False, True, False
+Masked Girl, 18, 96, 88, 7, 18, 98, 53, 9, 30, 32, 34.84, Cruel, Lima, 0x24ea0f, Hubris, 0' 5'', 72.23355, False, False, True, True
+Invisible Boy, 53, 100, 74, 6, 68, 74, 75, 84, 14, 70, 46.04, Vengeful, Charlotte, 0xc4378d, Power addicted, 3' 8'', 132.03567, True, False, True, False
+Rocket Hornet, 62, 11, 5, 15, 93, 48, 15, 58, 22, 1, 589.84, Power hungry, Johannesburg, 0x0abef4, Short sighted, 9' 10'', 189.49843, True, True, True, True
+Iron Phantom, 100, 29, 58, 85, 93, 27, 52, 47, 73, 94, 33.08, Sadistic, Belo Horizonte, 0xc833d0, Soft hearted, 15' 0'', 296.16887, True, True, True, False
+Iron Fist, 100, 32, 11, 37, 89, 78, 34, 50, 20, 36, 42.93, Honorable, Jakarta, 0xef2a2b, Trusting, 7' 8'', 258.90064, False, False, False, True
+The Master, 88, 24, 64, 63, 4, 79, 27, 26, 93, 10, 21.55, Protective, Osaka, 0x19df0b, Manipulable, 15' 11'', 240.70324, False, False, False, False
+Rocket Ghost, 13, 63, 69, 87, 21, 46, 90, 21, 66, 12, 18.00, Cruel, Surat, 0x21a3d5, Distrustful, 4' 2'', 135.31028, False, False, False, False
+Doctor Girl, 28, 100, 13, 96, 73, 38, 77, 91, 89, 2, 42.88, Cold blooded, Sao Paulo, 0x11741c, Lonely, 3' 3'', 51.43547, True, True, False, True
+Crimson Warrior, 59, 65, 41, 89, 52, 42, 82, 9, 20, 100, 2699.71, Brave, Dongguan, 0xbc1a19, Power addicted, 20' 1'', 70.62660, False, False, False, True
+Night Claw, 11, 80, 7, 66, 67, 68, 5, 78, 70, 84, 31.53, Compassionate, Foshan, 0xaf45dd, Short sighted, 12' 3'', 263.86881, False, False, False, False
+The Girl, 85, 66, 96, 57, 3, 16, 18, 35, 37, 77, 27.44, Brave, Dalian, 0xd405f5, Water weakness, 4' 4'', 90.16779, False, True, True, True
+The Soldier, 45, 54, 81, 47, 0, 32, 55, 58, 68, 50, 22.87, Compassionate, Suzhou, 0x4217c1, Radiation weak, 4' 9'', 142.61169, False, False, False, True
+Iron Entity, 52, 8, 13, 32, 89, 81, 96, 35, 85, 33, 4369.06, Cunning, New York City, 0x452b43, Water weakness, 16' 9'', 293.56087, False, True, False, True
+Ms Machine, 79, 31, 64, 71, 74, 92, 22, 22, 10, 63, 52.92, Vengeful, Mexico City, 0x637c15, Naive, 16' 10'', 146.67814, True, False, True, False
+The Void, 56, 44, 100, 82, 74, 78, 96, 78, 1, 75, 20.60, Arrogant, Seattle, 0x23b8bd, Magic vulnerable, 17' 10'', 24.14290, False, True, True, False
+Master Fist, 98, 43, 87, 55, 89, 95, 18, 72, 43, 10, 47.97, Calculating, Manila, 0xab12ad, Manipulable, 14' 3'', 12.00298, False, True, True, False
+Human Shadow, 62, 8, 36, 0, 84, 11, 90, 96, 30, 13, 37.85, Cunning, Cape Town, 0xe5cf2f, Naive, 17' 10'', 241.35554, True, True, False, False
+Captain Woman, 70, 42, 11, 84, 74, 95, 62, 20, 17, 79, 36.69, Cunning, New York City, 0xafae63, Impulsive, 5' 7'', 73.41381, True, True, True, True
+Metal Centurion, 86, 100, 21, 97, 54, 31, 87, 64, 55, 58, 23.46, Calculating, Dhaka, 0xc043be, Egotistical, 2' 4'', 108.20244, True, False, False, False
+Invisible Darkness, 34, 66, 63, 61, 78, 41, 90, 62, 46, 34, 30.75, Compassionate, Tokyo, 0x1d3690, Water weakness, 12' 2'', 286.83117, True, True, False, True
+Power Shadow, 8, 24, 34, 2, 28, 6, 22, 85, 99, 24, 18.00, Protective, Tehran, 0xc96bd9, Sound sensitive, 13' 0'', 21.96447, True, True, True, True
+Dark Lightning, 64, 10, 81, 20, 77, 19, 82, 71, 35, 35, 18.00, Arrogant, Columbus, 0xb606e6, Radiation weak, 15' 3'', 165.75778, True, True, False, True
+Ancient Ghost, 80, 77, 70, 28, 22, 87, 84, 42, 88, 97, 8846.86, Sadistic, Bangalore, 0xb8eb39, Light sensitive, 0' 1'', 145.09267, False, False, True, False
+Master Man, 65, 99, 33, 54, 94, 2, 42, 48, 1, 43, 48.90, Brave, Columbus, 0xdc46c4, Soft hearted, 9' 9'', 31.13955, False, True, False, False
+Human Warrior, 77, 8, 71, 62, 38, 80, 61, 93, 49, 61, 42.41, Stoic, Kuala Lumpur, 0x6c41e9, Sound sensitive, 7' 1'', 70.37228, False, True, True, True
+Radioactive Warrior, 11, 45, 68, 88, 28, 2, 86, 23, 51, 34, 58.73, Brave, Sydney, 0xde7551, Naive, 0' 2'', 141.90465, True, True, False, True
+Crimson Centurion, 28, 55, 62, 10, 99, 73, 49, 45, 50, 5, 35.50, Loyal, Sao Paulo, 0x558ad1, Guilt ridden, 20' 10'', 166.02228, True, True, True, False
+Wonder Fist, 5, 32, 85, 17, 56, 70, 27, 8, 100, 86, 1020.79, Charismatic, Shenzhen, 0xd1a657, Ice weakness, 20' 1'', 50.47289, False, False, True, False
+Spider Hulk, 92, 61, 32, 50, 74, 50, 35, 62, 80, 15, 53.63, Charismatic, Kano, 0xd027e5, Soft hearted, 6' 4'', 275.51656, True, False, False, False
+Crimson Crusader, 69, 47, 27, 99, 79, 38, 22, 68, 98, 11, 18.00, Calculating, Brasilia, 0x12ab00, Light sensitive, 9' 1'', 169.93725, True, False, True, False
+The Knight, 71, 50, 15, 98, 19, 21, 81, 27, 41, 53, 29.25, Cruel, Nagoya, 0xd882a6, Reckless, 5' 3'', 42.59001, True, True, True, True
+Human Phantom, 88, 40, 35, 43, 65, 7, 55, 96, 27, 53, 21.20, Power hungry, Fortaleza, 0xfa2ceb, Distrustful, 5' 8'', 11.50264, True, False, True, False
+Super Cloak, 13, 6, 43, 91, 38, 62, 78, 91, 90, 73, 57.70, Cunning, Phoenix, 0x620ceb, Sound sensitive, 20' 11'', 26.02512, True, False, False, True
+Doctor Cloak, 96, 43, 25, 58, 70, 88, 60, 12, 7, 16, 19.30, Vengeful, Columbus, 0x068e67, Sound sensitive, 13' 8'', 259.53276, True, True, True, False
+Impossible Knight, 74, 83, 88, 100, 37, 49, 5, 16, 58, 60, 35.69, Brave, Chongqing, 0xf33d8e, Hotheaded, 9' 8'', 54.92040, False, True, False, False
+Ms Fist, 95, 78, 67, 95, 55, 83, 46, 99, 30, 99, 24.19, Stoic, Wuhan, 0xda7509, Energy drain, 6' 7'', 289.85521, False, False, False, False
+Invisible Girl, 97, 45, 66, 10, 17, 11, 92, 81, 30, 16, 37.28, Loyal, Beijing, 0x732ea7, Power addicted, 8' 6'', 76.41299, True, True, False, True
+Wonder Surfer, 49, 4, 78, 78, 11, 15, 90, 53, 15, 88, 35.30, Stoic, Karachi, 0x600f2d, Lonely, 20' 6'', 210.29375, False, False, False, True
+Spider Surfer, 70, 7, 60, 44, 43, 100, 18, 82, 19, 28, 23.23, Determined, Madrid, 0x0072d1, Lonely, 4' 4'', 213.76307, True, False, True, False
+Rocket Darkness, 61, 0, 19, 16, 47, 5, 13, 36, 54, 2, 40.37, Cold blooded, Bogota, 0xed73c6, Energy drain, 19' 2'', 151.74760, True, True, False, False
+Silver Warrior, 80, 67, 18, 12, 82, 48, 97, 96, 45, 77, 18.00, Clever, Yangon, 0x4eb6ab, Electric weakness, 17' 5'', 231.94336, False, True, True, False
+Master Lightning, 100, 32, 30, 81, 87, 5, 55, 17, 51, 78, 42.51, Charismatic, Sao Paulo, 0x5b7e62, Hubris, 5' 3'', 25.50435, True, True, True, False
+Metal Claw, 30, 4, 11, 22, 80, 86, 88, 24, 83, 34, 35.35, Manipulative, Belo Horizonte, 0x924f8c, Darkness bound, 2' 2'', 102.23730, True, True, False, True
+Masked Entity, 37, 42, 25, 55, 70, 63, 85, 56, 8, 51, 58.17, Arrogant, Tianjin, 0xd69d23, Technology vulnerable, 7' 7'', 198.30993, True, True, True, True
+Super Hulk, 66, 95, 17, 82, 1, 72, 36, 20, 53, 39, 18.00, Clever, San Jose, 0xb40b29, Lonely, 5' 2'', 87.63790, True, True, False, True
+Masked Lightning, 6, 84, 79, 72, 34, 9, 71, 41, 84, 52, 43.91, Arrogant, Ahmedabad, 0x09faf4, Power addicted, 14' 1'', 67.81508, False, True, False, True
+The Lightning, 70, 78, 68, 78, 96, 17, 20, 76, 44, 38, 38.24, Brave, Dongguan, 0xf1e9a6, Technology vulnerable, 19' 0'', 271.41686, False, False, True, True
+Ancient Crusader, 14, 41, 53, 9, 85, 69, 19, 97, 50, 70, 53.19, Loyal, Barcelona, 0x2ccbf5, Technology vulnerable, 3' 2'', 49.94767, False, True, False, False
+Metal Entity, 25, 21, 25, 85, 19, 17, 23, 78, 37, 18, 52.91, Cunning, Kinshasa, 0x116d29, Darkness bound, 11' 5'', 281.49379, True, False, True, True
+Masked Hulk, 14, 90, 38, 65, 62, 69, 80, 53, 27, 50, 36.87, Compassionate, Ahmedabad, 0xf2481a, Ice weakness, 5' 7'', 102.05915, True, False, True, False
+Impossible Soldier, 94, 17, 72, 15, 53, 93, 74, 29, 94, 54, 44.14, Honorable, Tehran, 0x7660d9, Trusting, 19' 9'', 290.16983, True, True, False, False
+Human Ghost, 43, 71, 89, 33, 57, 1, 57, 78, 59, 41, 41.56, Reckless, Jacksonville, 0xab50f4, Distrustful, 4' 2'', 72.43636, True, True, False, True
+Spider Fist, 54, 11, 45, 23, 18, 77, 42, 11, 36, 54, 35.62, Arrogant, San Jose, 0x5203ce, Manipulable, 7' 9'', 5.82527, False, False, True, False
+Wonder Ghost, 41, 99, 20, 55, 91, 69, 71, 32, 21, 94, 39.36, Brave, Mexico City, 0x1fee7b, Hotheaded, 7' 7'', 176.24367, True, False, True, False
+Rocket Daredevil, 73, 88, 43, 3, 49, 6, 91, 71, 95, 46, 3265.90, Clever, Wuhan, 0x6befe9, Guilt ridden, 13' 4'', 57.68123, False, True, True, True
+Rocket Entity, 35, 10, 7, 5, 75, 46, 16, 63, 67, 58, 37.28, Cruel, Dhaka, 0x166154, Fire weakness, 17' 11'', 145.19972, False, True, True, False
+Silver Crusader, 12, 15, 31, 16, 92, 78, 79, 49, 89, 95, 2704.41, Honorable, Manila, 0xb62bee, Magic vulnerable, 5' 8'', 76.79724, True, True, False, False
+Radioactive Machine, 23, 60, 0, 94, 92, 76, 86, 6, 12, 17, 52.81, Calculating, Porto Alegre, 0xd81f90, Electric weakness, 3' 6'', 231.67030, True, False, True, False
+Masked Centurion, 55, 11, 30, 6, 57, 12, 53, 43, 49, 98, 40.13, Loyal, Osaka, 0x277c0a, Water weakness, 8' 10'', 221.40486, True, True, True, True
+Dark Machine, 73, 34, 1, 15, 35, 24, 0, 91, 97, 76, 28.20, Arrogant, Guangzhou, 0xe85c67, Manipulable, 3' 10'', 158.67873, False, False, False, True
+Metal Void, 41, 91, 72, 37, 16, 79, 85, 89, 73, 97, 23.42, Power hungry, Xi'an, 0xea9886, Prideful, 18' 8'', 50.42060, True, False, True, True
+Power Soldier, 34, 9, 79, 24, 17, 28, 23, 6, 11, 80, 18.00, Clever, Lagos, 0xc9db12, Technology vulnerable, 17' 7'', 200.17239, True, False, True, False
+Dark Ghost, 61, 94, 100, 48, 12, 25, 2, 35, 93, 81, 19.04, Determined, Nagoya, 0xfa494a, Greedy, 12' 6'', 177.35392, False, False, True, False
+Spider Master, 14, 27, 43, 38, 64, 46, 24, 34, 27, 21, 38.74, Obsessive, Dhaka, 0xc1a380, Impulsive, 3' 11'', 100.17790, True, True, False, False
+Invisible X, 26, 33, 28, 77, 65, 18, 44, 73, 54, 60, 19.50, Clever, London, 0x47a5a4, Hotheaded, 11' 5'', 160.35537, False, False, True, False
+Captain Cloak, 72, 28, 16, 10, 21, 50, 27, 70, 11, 98, 41.44, Stoic, Beijing, 0x2c65f7, Greedy, 2' 0'', 10.88966, False, False, True, True
+Mr Warrior, 28, 10, 58, 89, 3, 76, 77, 4, 4, 35, 57.55, Stoic, Singapore, 0xd29ecf, Manipulable, 17' 9'', 262.32531, True, False, False, False
+Wonder Shadow, 99, 17, 10, 86, 9, 28, 77, 93, 93, 69, 31.80, Manipulative, Dalian, 0x26a943, Soft hearted, 0' 8'', 182.69153, True, True, False, True
+Crimson Skull, 80, 4, 80, 57, 12, 87, 52, 30, 41, 84, 46.33, Power hungry, Lagos, 0xc886e7, Lonely, 13' 5'', 55.23421, False, False, True, True
+Human Man, 82, 69, 18, 71, 82, 11, 73, 50, 67, 16, 24.61, Vengeful, Haerbin, 0x4f8985, Technology vulnerable, 1' 6'', 168.30952, False, True, True, True
+Captain Boy, 42, 65, 16, 41, 62, 13, 62, 74, 56, 32, 23.73, Brave, Cape Town, 0x39e3b2, Reckless, 5' 8'', 260.62655, True, True, True, True
+Impossible Crusader, 28, 11, 66, 3, 41, 65, 50, 73, 38, 54, 24.26, Charismatic, Delhi, 0x4ff2a1, Stubborn, 2' 3'', 271.61480, True, False, False, False
+Incredible Centurion, 67, 46, 48, 2, 86, 37, 97, 56, 10, 89, 38.04, Obsessive, Cairo, 0x2ebd36, Overconfident, 2' 4'', 90.36245, True, False, False, False
+Human Soldier, 28, 100, 16, 76, 75, 86, 87, 22, 22, 69, 49.46, Sadistic, Phoenix, 0x204558, Technology vulnerable, 14' 7'', 163.29886, True, True, False, False
+Captain Daredevil, 87, 3, 71, 33, 98, 90, 27, 79, 82, 53, 46.86, Obsessive, Detroit, 0x42af42, Energy drain, 20' 11'', 171.24940, False, False, False, False
+Master Doom, 75, 92, 81, 47, 86, 24, 25, 71, 51, 49, 19.93, Cunning, Lima, 0x5a87f6, Hotheaded, 17' 0'', 199.14763, False, False, True, False
+Masked Shadow, 97, 72, 76, 6, 65, 95, 71, 34, 11, 96, 53.92, Vengeful, Ahmedabad, 0x84080c, Poison susceptible, 13' 11'', 21.43269, False, True, True, False
+Doctor Machine, 76, 78, 11, 64, 36, 24, 29, 17, 44, 36, 25.77, Ruthless, Charlotte, 0x999c39, Energy drain, 17' 10'', 131.84921, True, True, False, False
+Impossible Entity, 32, 0, 43, 63, 67, 31, 43, 68, 77, 71, 55.84, Sadistic, Guangzhou, 0xe5b2cc, Fearful, 2' 4'', 168.12563, True, True, False, True
+Wonder Machine, 43, 32, 77, 56, 14, 45, 67, 7, 96, 37, 44.60, Stoic, Kano, 0x850911, Fire weakness, 18' 7'', 41.38027, False, True, False, False
+Human Master, 81, 59, 45, 60, 6, 27, 90, 34, 14, 72, 4641.01, Obsessive, Houston, 0x8e4e28, Soft hearted, 1' 8'', 157.58516, False, True, False, True
+Master Claw, 12, 16, 62, 66, 67, 95, 70, 89, 92, 56, 34.62, Ruthless, Suzhou, 0x3c11ea, Silver weakness, 20' 10'', 251.67987, False, False, False, False
+Power Entity, 65, 5, 46, 37, 10, 100, 19, 60, 57, 23, 63.67, Protective, Shenzhen, 0x68ecef, Poison susceptible, 7' 10'', 259.72449, False, True, False, False
+Mr Doom, 100, 27, 92, 97, 23, 43, 53, 7, 6, 26, 30.37, Sadistic, Indianapolis, 0x56ef81, Prideful, 1' 2'', 68.61721, True, True, True, True
+Metal Phantom, 86, 60, 11, 21, 65, 86, 19, 41, 88, 53, 44.52, Stoic, Kinshasa, 0xe996e9, Fire weakness, 3' 10'', 161.12213, True, False, False, False
+Professor Skull, 28, 4, 24, 57, 34, 89, 10, 62, 50, 48, 86.52, Honorable, Haerbin, 0xc58e40, Light sensitive, 12' 11'', 11.08223, True, True, True, False
+Rocket Shadow, 62, 71, 59, 13, 72, 97, 65, 93, 3, 87, 36.82, Loyal, Dhaka, 0x810393, Vengeful, 7' 4'', 248.09267, False, True, True, True
+Invisible Knight, 89, 0, 86, 6, 60, 73, 73, 23, 89, 67, 50.09, Determined, Baghdad, 0xe62a2e, Prideful, 13' 1'', 246.42568, False, True, True, True
+Ms Hornet, 57, 95, 82, 82, 78, 31, 98, 41, 99, 70, 62.69, Determined, Indianapolis, 0xd481dd, Silver weakness, 7' 1'', 246.41434, True, False, False, False
+Dark Void, 16, 38, 44, 7, 75, 75, 57, 31, 15, 52, 36.37, Manipulative, Haerbin, 0x5fe06a, Short sighted, 20' 10'', 30.25437, False, False, True, False
+Power Phantom, 43, 35, 9, 49, 66, 57, 5, 70, 38, 9, 57.06, Compassionate, Wuhan, 0x8ae31d, Fire weakness, 14' 8'', 106.53774, True, False, False, True
+The Phantom, 53, 14, 43, 97, 9, 66, 16, 26, 60, 5, 52.16, Protective, Dongguan, 0x249b2b, Egotistical, 16' 2'', 6.13169, True, False, True, False
+Iron Master, 40, 18, 48, 73, 71, 0, 96, 23, 97, 0, 45.52, Cruel, Seattle, 0x28e216, Poison susceptible, 19' 4'', 237.41860, False, False, True, False
+Impossible Woman, 29, 85, 33, 78, 56, 42, 84, 39, 79, 71, 44.52, Obsessive, Nairobi, 0xe666e8, Magic vulnerable, 13' 2'', 157.28488, False, False, True, False
+Dark Centurion, 67, 83, 85, 65, 55, 96, 18, 67, 76, 48, 28.03, Stoic, Dongguan, 0x01eec7, Soft hearted, 18' 6'', 233.65038, False, True, False, False
+Captain Skull, 40, 27, 44, 3, 64, 70, 22, 39, 92, 85, 18.00, Charismatic, Tokyo, 0x544d1a, Paranoid, 20' 0'', 289.69502, False, True, False, True
+Impossible X, 95, 72, 58, 59, 2, 70, 30, 71, 41, 93, 28.62, Loyal, Chengdu, 0x038b84, Naive, 10' 3'', 80.89096, True, True, True, True
+Silver Cloak, 51, 14, 0, 30, 30, 16, 29, 24, 34, 91, 67.44, Calculating, Belo Horizonte, 0xc6f8fc, Vengeful, 0' 4'', 30.33972, False, False, True, True
+Mr Man, 56, 37, 48, 4, 66, 42, 0, 19, 68, 57, 33.42, Power hungry, Shenzhen, 0xeda31e, Manipulable, 3' 6'', 24.04155, True, True, True, False
+Iron Skull, 3, 34, 81, 48, 66, 29, 13, 40, 43, 69, 23.28, Determined, Surat, 0xc86a11, Technology vulnerable, 2' 10'', 70.98687, True, False, False, True
+Impossible Girl, 97, 62, 30, 58, 61, 31, 3, 54, 49, 74, 27.18, Charismatic, Riyadh, 0x7dbac3, Electric weakness, 10' 2'', 180.36735, True, False, False, True
+Metal X, 84, 46, 62, 3, 33, 3, 2, 13, 45, 79, 23.74, Determined, Dar es Salaam, 0x45f8ea, Overconfident, 20' 1'', 151.62342, False, True, False, True
+Mr Surfer, 52, 98, 61, 84, 24, 65, 10, 16, 63, 70, 18.00, Manipulative, Abidjan, 0xdb3bf6, Power addicted, 6' 6'', 42.29754, True, False, True, False
+Power Boy, 30, 32, 66, 52, 34, 14, 62, 62, 81, 54, 42.58, Power hungry, San Francisco, 0x865abb, Silver weakness, 3' 4'', 126.77392, True, False, True, True
+Invisible Entity, 57, 94, 81, 42, 89, 51, 100, 31, 93, 79, 18.00, Manipulative, Shenyang, 0xc0b7c5, Soft hearted, 2' 6'', 168.38220, False, False, False, True
+Super Crusader, 58, 40, 45, 56, 19, 75, 45, 9, 40, 39, 60.02, Power hungry, San Francisco, 0x14dddd, Distrustful, 2' 1'', 19.94356, False, True, False, False
+Metal Woman, 51, 11, 51, 11, 64, 9, 32, 92, 97, 41, 40.54, Arrogant, Barcelona, 0x3e0f29, Electric weakness, 19' 7'', 86.80501, True, True, True, True
+Crimson Void, 81, 81, 60, 81, 67, 27, 47, 31, 52, 90, 25.62, Obsessive, Dongguan, 0x227fee, Fire weakness, 7' 1'', 147.41041, False, True, True, True
+Green Entity, 96, 42, 81, 55, 81, 84, 75, 37, 11, 66, 28.69, Loyal, Nanjing, 0x24d82c, Ice weakness, 8' 6'', 201.19947, True, True, False, False
+Silver Doom, 81, 12, 48, 8, 37, 9, 45, 36, 74, 8, 18.00, Arrogant, Charlotte, 0xce4ad8, Impulsive, 20' 10'', 96.04037, False, True, True, True
+Green Doom, 14, 7, 83, 39, 62, 25, 77, 80, 65, 32, 35.17, Honorable, Suzhou, 0x3bc1f9, Trusting, 12' 1'', 6.55487, False, True, False, True
+Night Man, 18, 26, 22, 62, 67, 88, 5, 3, 58, 14, 58.77, Determined, Porto Alegre, 0x1cf00c, Ice weakness, 19' 8'', 141.97435, True, True, False, False
+Captain Master, 90, 56, 40, 19, 81, 78, 60, 66, 18, 17, 23.65, Obsessive, Chennai, 0x8545ba, Naive, 20' 6'', 3.72469, True, True, True, True
+Metal Ghost, 53, 64, 28, 75, 45, 44, 54, 31, 1, 2, 8503.67, Ruthless, Paris, 0x08ef93, Hubris, 5' 4'', 168.51871, False, False, False, True
+Professor Hornet, 49, 25, 26, 6, 98, 27, 87, 16, 6, 91, 33.60, Stoic, Manila, 0xd1b2fc, Short sighted, 16' 10'', 22.59320, True, True, True, True
+Radioactive Surfer, 55, 5, 9, 94, 65, 97, 23, 70, 39, 68, 52.53, Brave, Toronto, 0xba7e06, Poison susceptible, 19' 9'', 27.33339, True, True, True, False
+Mr Hornet, 54, 52, 46, 49, 42, 90, 18, 10, 72, 21, 30.10, Cunning, Jakarta, 0x96759a, Power addicted, 10' 6'', 150.34776, False, True, True, False
+Radioactive Hornet, 28, 57, 76, 31, 100, 16, 48, 97, 90, 55, 35.94, Power hungry, Nairobi, 0xeefe0b, Hubris, 1' 0'', 74.71286, True, False, True, False
+Invisible Ghost, 3, 9, 14, 15, 1, 9, 73, 88, 74, 2, 22.59, Vengeful, Suzhou, 0x44bc62, Prideful, 2' 2'', 269.31061, True, True, True, True
+Radioactive Ghost, 3, 57, 36, 71, 28, 68, 33, 13, 15, 81, 47.24, Honorable, Kuala Lumpur, 0x30f63a, Technology vulnerable, 2' 1'', 268.93818, True, True, False, False
+Captain Crusader, 79, 55, 90, 32, 64, 14, 93, 90, 60, 48, 18.00, Stoic, Guangzhou, 0x536548, Guilt ridden, 15' 2'', 263.60702, True, True, True, False
+Metal Surfer, 35, 60, 84, 88, 47, 91, 21, 40, 21, 52, 47.78, Honorable, Lagos, 0x7aef1f, Energy drain, 8' 8'', 132.97161, True, False, True, True
+Night Master, 71, 91, 63, 63, 82, 64, 95, 79, 92, 81, 38.12, Cold blooded, Chicago, 0xff76e4, Fearful, 17' 4'', 84.06189, True, False, False, False
+Night Ghost, 20, 72, 26, 8, 4, 17, 64, 14, 60, 31, 27.92, Arrogant, Sydney, 0x57e778, Fearful, 11' 4'', 55.17158, False, True, False, False
+Rocket Woman, 66, 12, 38, 66, 64, 38, 97, 59, 78, 32, 28.25, Reckless, Cape Town, 0x134c67, Guilt ridden, 4' 6'', 33.56086, True, True, False, True
+Mr X, 44, 93, 73, 34, 75, 19, 6, 22, 24, 28, 43.80, Manipulative, Sao Paulo, 0x69fbbe, Water weakness, 0' 7'', 228.90122, False, True, True, False
+Ancient Claw, 98, 95, 25, 72, 19, 76, 0, 31, 41, 78, 38.34, Calculating, Istanbul, 0xfcb17e, Guilt ridden, 19' 8'', 202.80032, False, True, False, False
+Silver Phantom, 5, 23, 28, 12, 55, 98, 72, 98, 62, 31, 33.03, Manipulative, Tianjin, 0xbf8206, Radiation weak, 17' 7'', 125.09526, False, True, True, False
+Night Hornet, 91, 88, 55, 16, 58, 14, 14, 33, 100, 37, 39.71, Cold blooded, Seattle, 0x81a9c9, Radiation weak, 2' 7'', 103.92305, False, False, False, True
+Silver Boy, 88, 73, 3, 12, 77, 19, 56, 16, 70, 64, 45.74, Sadistic, Nanjing, 0xb64ddd, Light sensitive, 5' 2'', 210.20344, True, False, True, True
+Doctor Torch, 87, 63, 42, 82, 28, 82, 11, 39, 0, 24, 33.67, Arrogant, Ahmedabad, 0x1422bd, Poison susceptible, 2' 0'', 212.20438, True, False, False, False
+Crimson Cloak, 14, 9, 96, 7, 65, 83, 85, 45, 25, 5, 18.20, Protective, Istanbul, 0xa2b59c, Obsessive, 5' 3'', 8.64866, True, True, True, True
+Silver Daredevil, 72, 65, 29, 37, 93, 21, 14, 75, 19, 22, 18.60, Determined, Washington, 0xbfeee9, Hubris, 7' 1'', 18.35875, False, False, True, False
+Metal Daredevil, 86, 100, 1, 53, 4, 6, 19, 36, 22, 45, 54.70, Vengeful, Zhengzhou, 0xd3cf3c, Guilt ridden, 2' 2'', 247.92387, True, False, True, False
+Master Crusader, 61, 98, 18, 40, 71, 70, 53, 24, 17, 86, 46.44, Brave, Madrid, 0x43a42d, Ice weakness, 5' 10'', 226.75276, False, False, True, True
+Iron Machine, 68, 30, 69, 91, 5, 97, 7, 3, 85, 2, 55.96, Ruthless, Sao Paulo, 0xb93d47, Ice weakness, 7' 2'', 18.29828, True, False, False, False
+Radioactive Phantom, 60, 13, 97, 28, 77, 77, 70, 93, 64, 5, 42.98, Power hungry, Chongqing, 0x330392, Fire weakness, 10' 3'', 172.76964, True, False, True, True
+Crimson Phantom, 21, 75, 46, 37, 7, 43, 81, 53, 57, 80, 18.37, Vengeful, Hong Kong, 0x98b6a4, Short sighted, 14' 4'', 297.54791, True, True, True, False
+Ancient Girl, 99, 85, 14, 87, 94, 83, 80, 19, 53, 61, 53.71, Determined, Karachi, 0x2409d3, Fire weakness, 1' 6'', 235.76104, False, True, False, False
+Radioactive Skull, 11, 40, 82, 33, 34, 48, 65, 39, 77, 9, 30.14, Arrogant, Belo Horizonte, 0xc3c911, Naive, 10' 3'', 234.18384, False, False, True, True
+Ms Lightning, 38, 68, 40, 92, 86, 8, 65, 63, 59, 29, 48.83, Cold blooded, Mexico City, 0xaf1704, Silver weakness, 13' 2'', 44.65531, True, False, True, True
+Crimson X, 59, 71, 75, 7, 87, 37, 29, 63, 14, 73, 33.00, Determined, Cairo, 0x31cbd4, Hubris, 20' 11'', 268.48413, True, False, False, False
+Ancient X, 90, 75, 40, 27, 1, 16, 49, 60, 11, 72, 45.82, Obsessive, Santiago, 0x0c851b, Fire weakness, 5' 7'', 99.09089, False, True, False, False
+Captain Darkness, 60, 70, 51, 81, 86, 42, 60, 8, 11, 35, 6793.44, Cunning, Sydney, 0x6ad513, Trusting, 14' 4'', 232.22187, False, True, False, False
+Incredible Lightning, 25, 83, 92, 95, 6, 67, 95, 55, 71, 5, 25.12, Determined, Singapore, 0xc5806e, Distrustful, 1' 9'', 75.34550, False, True, False, False
+Wonder Void, 39, 94, 87, 67, 44, 53, 33, 78, 26, 72, 47.92, Ruthless, Chengdu, 0x6a9f30, Impulsive, 2' 8'', 247.10681, False, False, True, False
+Silver Master, 14, 3, 26, 94, 39, 37, 6, 56, 47, 48, 18.92, Reckless, Rio de Janeiro, 0xd31450, Manipulable, 4' 2'', 138.45143, False, True, True, False
+Masked Hornet, 32, 97, 5, 97, 59, 36, 60, 10, 64, 40, 48.20, Manipulative, Suzhou, 0x9c79e0, Short sighted, 14' 1'', 141.67090, True, False, False, True
+Green Torch, 53, 16, 61, 73, 76, 63, 1, 39, 32, 17, 60.43, Cold blooded, Detroit, 0x1b692b, Hotheaded, 8' 2'', 147.08382, True, True, False, True
+Invisible Woman, 92, 20, 21, 10, 54, 81, 91, 0, 66, 71, 46.77, Determined, Riyadh, 0x9f943d, Stubborn, 6' 8'', 267.28245, False, True, False, False
+Captain Shadow, 15, 93, 3, 41, 58, 47, 96, 4, 10, 46, 24.88, Ruthless, Wuhan, 0x4b6756, Water weakness, 20' 10'', 231.91102, True, False, True, False
+The Doom, 6, 74, 36, 71, 60, 61, 87, 3, 26, 8, 44.69, Honorable, Los Angeles, 0x9a0e03, Power addicted, 13' 10'', 222.92103, True, True, False, False
+The Shadow, 78, 71, 3, 42, 92, 11, 9, 16, 88, 77, 32.62, Vengeful, Ahmedabad, 0xb9bd0c, Poison susceptible, 13' 4'', 156.91360, False, False, True, True
+Radioactive Shadow, 74, 44, 38, 6, 74, 90, 85, 56, 8, 75, 37.02, Manipulative, Chicago, 0x32f07a, Distrustful, 17' 9'', 275.39993, True, True, True, False
+Incredible Claw, 37, 64, 73, 51, 2, 29, 97, 95, 41, 53, 49.87, Compassionate, Chicago, 0x6134bf, Fire weakness, 3' 7'', 113.77921, False, False, True, True
+Iron Boy, 25, 20, 78, 31, 74, 78, 12, 69, 61, 83, 38.84, Protective, Chicago, 0xbb54cc, Prideful, 16' 4'', 23.51389, True, False, False, False
+Ancient Boy, 19, 88, 10, 77, 84, 40, 6, 36, 68, 44, 38.03, Protective, Hong Kong, 0x419120, Magic vulnerable, 10' 11'', 34.28803, False, True, False, True
+Ancient Doom, 10, 71, 38, 49, 100, 83, 75, 15, 53, 82, 41.26, Loyal, Houston, 0x9673bc, Electric weakness, 20' 8'', 119.24026, True, False, False, False
+Spider Torch, 27, 25, 5, 68, 79, 51, 23, 59, 84, 54, 35.13, Determined, Delhi, 0xb000dc, Reckless, 10' 8'', 62.38867, True, False, False, True
+Human Centurion, 14, 81, 99, 66, 90, 98, 98, 81, 32, 54, 39.87, Protective, Chicago, 0xf57c02, Trusting, 7' 6'', 200.75011, True, True, True, False
+Impossible Doom, 93, 32, 59, 37, 72, 57, 16, 85, 43, 2, 37.47, Vengeful, Osaka, 0xfb0845, Stubborn, 20' 4'', 2.56451, True, True, True, True
+Spider Girl, 22, 96, 6, 60, 80, 77, 3, 51, 53, 78, 21.16, Vengeful, Chongqing, 0x885e1e, Energy drain, 0' 11'', 122.04653, True, True, False, False
+Ancient Darkness, 90, 34, 97, 55, 94, 15, 95, 87, 59, 62, 42.80, Arrogant, San Jose, 0x073b7a, Naive, 18' 7'', 289.70597, False, False, True, True
+Iron Shadow, 10, 58, 3, 61, 18, 12, 31, 97, 28, 66, 32.20, Sadistic, Cairo, 0x25cffe, Technology vulnerable, 13' 5'', 162.09525, False, False, False, False
+Night Skull, 52, 7, 56, 77, 99, 27, 0, 37, 87, 95, 30.42, Brave, Manila, 0xb58df6, Fearful, 5' 11'', 106.65438, False, True, False, True
+Invisible Master, 48, 16, 0, 91, 52, 20, 12, 65, 25, 97, 57.25, Clever, Jacksonville, 0xc2433e, Lonely, 7' 7'', 81.53910, False, False, True, False
+Incredible Hornet, 35, 100, 2, 79, 97, 1, 2, 99, 16, 26, 28.29, Cruel, Guangzhou, 0x35244f, Naive, 11' 2'', 65.05852, True, True, True, False
+Super Surfer, 72, 2, 71, 41, 24, 57, 3, 90, 100, 45, 49.64, Cruel, Cairo, 0x21a848, Impulsive, 19' 3'', 281.70401, True, False, True, False
+Invisible Shadow, 58, 56, 91, 93, 54, 45, 37, 99, 45, 4, 51.58, Ruthless, Baghdad, 0xd1b2ff, Prideful, 7' 6'', 78.92950, True, True, False, False
+Super Void, 64, 48, 49, 5, 93, 26, 26, 83, 9, 24, 44.15, Sadistic, Rio de Janeiro, 0xa3a706, Prideful, 13' 3'', 127.19061, True, True, True, False
+Mr Hulk, 32, 24, 95, 43, 80, 95, 32, 9, 75, 48, 18.00, Cold blooded, London, 0x1f8ab5, Fire weakness, 10' 8'', 39.38804, False, False, False, False
+Mr Cloak, 26, 97, 97, 23, 76, 21, 32, 24, 52, 21, 60.73, Sadistic, Karachi, 0x408cca, Fearful, 0' 6'', 151.70665, True, False, False, True
+Doctor Shadow, 24, 17, 99, 52, 56, 32, 35, 30, 89, 19, 75.97, Stoic, Paris, 0x50fb26, Fearful, 17' 2'', 259.62983, False, True, False, True
+Rocket Man, 52, 51, 74, 92, 4, 83, 100, 9, 35, 1, 47.27, Ruthless, Lima, 0xe90157, Distrustful, 7' 0'', 85.28639, False, False, True, False
+Power Centurion, 83, 70, 70, 50, 29, 13, 87, 97, 82, 30, 37.96, Protective, Karachi, 0x82cd4e, Paranoid, 16' 0'', 106.09831, False, False, True, False
+Ancient Void, 52, 32, 68, 69, 5, 8, 99, 31, 41, 4, 28.26, Compassionate, Paris, 0x5d7076, Prideful, 18' 4'', 180.08685, False, False, True, False
+Spider Entity, 2, 89, 76, 54, 72, 44, 42, 9, 84, 56, 29.18, Cold blooded, Osaka, 0x734835, Greedy, 7' 1'', 80.63039, False, False, False, True
+Mr Ghost, 83, 95, 31, 47, 37, 6, 7, 94, 57, 41, 18.00, Compassionate, Dallas, 0x3ea01f, Fearful, 8' 0'', 108.25048, False, False, True, False
+Silver Centurion, 47, 72, 79, 30, 64, 18, 47, 47, 90, 75, 31.10, Compassionate, Detroit, 0x64ba29, Paranoid, 12' 8'', 164.47706, True, False, True, False
+Iron Soldier, 11, 6, 12, 89, 35, 22, 80, 48, 84, 89, 30.66, Protective, Chengdu, 0x54794f, Darkness bound, 7' 0'', 67.59019, False, True, False, False
+Iron Knight, 41, 50, 28, 97, 71, 36, 73, 73, 52, 37, 34.14, Reckless, Shenzhen, 0x1d40a9, Prideful, 9' 2'', 122.02222, True, False, False, False
+Omega Doom, 63, 29, 99, 76, 47, 92, 49, 48, 38, 79, 36.47, Protective, Beijing, 0x302ef2, Paranoid, 10' 4'', 2.10747, True, False, True, False
+Omega Phantom, 8, 46, 46, 36, 45, 59, 2, 32, 64, 70, 18.00, Protective, Wuhan, 0xa85c7f, Impulsive, 2' 11'', 18.79157, False, True, True, False
+Human Doom, 91, 79, 30, 24, 42, 65, 22, 60, 16, 80, 29.23, Calculating, Mexico City, 0x544889, Paranoid, 0' 3'', 98.96800, True, False, True, False
+Doctor Crusader, 13, 20, 13, 2, 42, 77, 35, 83, 64, 95, 49.58, Vengeful, Hong Kong, 0x68c195, Water weakness, 13' 3'', 109.18527, True, False, False, False
+Ms Crusader, 75, 68, 75, 58, 90, 99, 17, 3, 32, 56, 56.56, Reckless, Hangzhou, 0x8b1080, Soft hearted, 2' 11'', 228.36342, False, False, True, False
+Masked Fist, 76, 49, 55, 83, 67, 61, 11, 37, 62, 9, 44.92, Charismatic, Paris, 0x3a7697, Magic vulnerable, 15' 7'', 132.75681, True, True, False, False
+Human Surfer, 23, 83, 28, 55, 41, 76, 26, 75, 31, 68, 21.56, Determined, Kinshasa, 0x67d496, Greedy, 1' 0'', 95.70654, False, False, False, True
+Radioactive Man, 22, 35, 87, 34, 15, 31, 2, 80, 66, 85, 47.34, Charismatic, Paris, 0x8898c1, Soft hearted, 14' 8'', 70.14416, True, True, True, False
+Power Lightning, 14, 39, 91, 94, 86, 1, 3, 16, 78, 74, 54.97, Sadistic, Lahore, 0xacff14, Ice weakness, 3' 6'', 218.62523, True, True, False, False
+Masked Torch, 83, 26, 28, 12, 69, 43, 61, 48, 97, 18, 61.21, Stoic, Hong Kong, 0xbecf03, Trusting, 16' 7'', 252.74689, True, True, False, False
+Professor Soldier, 58, 1, 84, 54, 56, 34, 72, 83, 85, 28, 26.25, Reckless, Philadelphia, 0x466118, Vengeful, 20' 7'', 229.73131, True, True, True, False
+Rocket Master, 54, 45, 70, 59, 59, 80, 39, 53, 12, 61, 52.64, Honorable, Addis Ababa, 0x8657f5, Hotheaded, 16' 8'', 248.70388, True, False, True, False
+Rocket Centurion, 32, 56, 15, 53, 100, 6, 11, 91, 66, 83, 50.85, Brave, Bangalore, 0x841490, Hubris, 15' 5'', 261.33596, True, True, True, False
+Masked X, 52, 7, 94, 98, 94, 76, 78, 95, 36, 60, 34.39, Sarcastic, Luanda, 0xab8810, Electric weakness, 2' 8'', 25.76593, False, False, True, False
+Wonder Hornet, 0, 24, 90, 39, 74, 66, 7, 48, 51, 15, 27.20, Obsessive, Qingdao, 0x5a3933, Poison susceptible, 11' 0'', 171.56124, False, False, False, False
+Invisible Surfer, 0, 18, 2, 34, 39, 41, 21, 89, 20, 16, 64.67, Arrogant, Singapore, 0xcaf001, Fire weakness, 5' 1'', 8.77207, False, True, False, True
+Power Daredevil, 67, 99, 63, 79, 23, 80, 32, 71, 34, 29, 37.73, Cruel, Chengdu, 0x248d4f, Energy drain, 19' 0'', 280.15619, True, True, False, False
+Professor Machine, 99, 87, 49, 79, 21, 16, 32, 97, 69, 84, 49.90, Calculating, Dalian, 0x929d57, Obsessive, 8' 3'', 269.08232, True, True, True, True
+Ms Doom, 53, 41, 57, 37, 50, 42, 40, 48, 44, 15, 18.00, Arrogant, Baghdad, 0x7094df, Paranoid, 13' 2'', 191.15473, True, True, False, False
+Doctor Warrior, 1, 78, 75, 13, 69, 55, 29, 9, 23, 46, 42.92, Honorable, Austin, 0xd6fbe9, Guilt ridden, 19' 3'', 221.79833, False, True, True, True
+Professor Warrior, 98, 86, 10, 67, 77, 48, 20, 73, 18, 96, 19.64, Reckless, Abidjan, 0x30ff88, Hubris, 15' 9'', 196.19026, False, False, True, False
+Night Cloak, 90, 69, 75, 88, 28, 45, 38, 79, 72, 75, 53.33, Calculating, Shanghai, 0x1185e0, Magic vulnerable, 17' 9'', 27.08346, False, True, False, True
+Human Darkness, 65, 12, 56, 8, 10, 17, 35, 33, 23, 65, 58.34, Loyal, Melbourne, 0xa4aa7a, Radiation weak, 10' 11'', 64.43644, True, False, True, False
+Iron Woman, 47, 91, 21, 16, 66, 82, 73, 30, 3, 26, 5406.20, Vengeful, Lagos, 0x0cd599, Fearful, 18' 1'', 123.15850, False, True, False, False
+Night Woman, 8, 0, 91, 25, 34, 79, 52, 55, 14, 71, 50.10, Clever, Phoenix, 0xd36895, Trusting, 0' 4'', 64.96651, True, True, False, True
+Power Darkness, 42, 94, 62, 56, 8, 53, 77, 89, 21, 43, 18.00, Cold blooded, Kinshasa, 0x47fa5d, Lonely, 4' 6'', 268.96237, False, False, True, False
+Incredible Doom, 73, 62, 66, 93, 64, 86, 59, 11, 7, 34, 43.55, Charismatic, Osaka, 0x94cc74, Overconfident, 13' 4'', 22.43644, False, True, True, False
+Silver Knight, 51, 98, 46, 68, 61, 12, 87, 79, 6, 37, 20.51, Manipulative, Madrid, 0x4b2d13, Obsessive, 7' 8'', 224.27054, True, False, True, False
+Ancient Torch, 11, 4, 30, 41, 27, 61, 33, 67, 26, 30, 21.98, Protective, Tianjin, 0xedd1f1, Overconfident, 17' 8'', 109.50189, True, True, False, True
+Dark Cloak, 93, 91, 10, 7, 16, 79, 23, 65, 72, 7, 42.40, Calculating, Wuhan, 0x7c00c5, Paranoid, 3' 7'', 158.63392, False, True, False, True
+Professor Centurion, 0, 2, 61, 40, 23, 49, 25, 18, 43, 77, 30.20, Compassionate, Melbourne, 0x8f03a0, Lonely, 4' 0'', 175.35312, False, True, True, True
+Ancient Entity, 12, 62, 15, 59, 4, 79, 7, 3, 95, 65, 31.89, Ruthless, Shanghai, 0x3e40a2, Overconfident, 13' 10'', 117.09582, True, True, False, True
+Captain Entity, 80, 68, 63, 72, 88, 2, 40, 47, 10, 20, 19.49, Clever, Dar es Salaam, 0xfbf3f1, Impulsive, 20' 11'', 127.67042, True, False, False, False
+Invisible Hulk, 98, 83, 26, 64, 38, 46, 1, 95, 71, 70, 34.76, Calculating, Tianjin, 0x68de98, Energy drain, 19' 7'', 77.99887, False, False, True, True
+Silver Torch, 6, 66, 68, 86, 47, 61, 44, 77, 4, 17, 27.17, Vengeful, San Diego, 0x6680c2, Silver weakness, 20' 11'', 23.57358, True, True, True, True
+Captain Man, 70, 2, 16, 58, 50, 28, 54, 49, 84, 40, 48.60, Determined, San Diego, 0x05a57e, Vengeful, 1' 1'', 177.40380, True, False, True, False
+Doctor Void, 15, 63, 78, 100, 82, 46, 6, 67, 89, 16, 53.12, Sarcastic, Guangzhou, 0x8cecef, Fearful, 3' 11'', 133.60221, False, True, True, False
+Human Hulk, 50, 30, 70, 60, 94, 77, 53, 52, 7, 75, 77.14, Cunning, Barcelona, 0xb7ed93, Fire weakness, 7' 5'', 157.33401, True, False, False, False
+Ms Torch, 79, 41, 11, 25, 97, 32, 93, 86, 85, 25, 45.14, Calculating, Nanjing, 0xb443b3, Lonely, 2' 7'', 251.34473, True, False, False, False
+Radioactive Void, 55, 68, 65, 48, 9, 14, 27, 39, 44, 87, 37.13, Vengeful, Lima, 0x111b80, Sound sensitive, 19' 1'', 105.91173, False, True, True, True
+Wonder Man, 6, 51, 46, 59, 88, 98, 38, 14, 57, 64, 18.00, Cold blooded, Guangzhou, 0xa4689d, Water weakness, 19' 8'', 278.56788, True, False, False, False
+Master Torch, 48, 66, 34, 36, 6, 31, 13, 32, 77, 52, 26.10, Protective, Lagos, 0x5c71c8, Ice weakness, 10' 7'', 88.53600, True, False, False, True
+Dark Skull, 95, 84, 37, 79, 64, 38, 11, 69, 90, 98, 49.35, Sadistic, Hyderabad, 0x7e53fc, Prideful, 12' 10'', 234.50607, False, True, False, True
+Doctor Daredevil, 93, 48, 37, 46, 51, 83, 84, 6, 45, 99, 30.88, Manipulative, Dhaka, 0xb095c8, Electric weakness, 15' 9'', 106.94189, True, True, False, True
+Iron X, 67, 25, 42, 36, 27, 45, 57, 90, 48, 32, 33.70, Cruel, Haerbin, 0xb92ea2, Manipulable, 19' 0'', 138.71185, False, False, True, False
+Crimson Claw, 10, 12, 96, 4, 5, 16, 46, 75, 50, 14, 18.00, Cunning, Moscow, 0xc5d202, Electric weakness, 15' 11'', 213.71027, False, False, True, True
+Radioactive Claw, 57, 60, 88, 74, 75, 18, 43, 22, 57, 16, 42.61, Obsessive, Luanda, 0x883fcc, Hotheaded, 9' 2'', 58.47700, False, False, True, False
+Green Centurion, 50, 94, 84, 76, 14, 18, 11, 59, 2, 87, 38.14, Ruthless, Zhengzhou, 0xcbafcb, Ice weakness, 1' 9'', 234.77666, False, False, False, True
+Ms Centurion, 33, 46, 10, 12, 29, 50, 69, 45, 14, 93, 4663.33, Honorable, Chengdu, 0x5f3e83, Obsessive, 12' 4'', 98.85177, True, False, True, True
+Incredible Void, 89, 95, 93, 20, 84, 28, 91, 36, 1, 76, 38.80, Vengeful, Denver, 0x150b8b, Energy drain, 12' 6'', 298.61140, False, True, False, True
+Invisible Skull, 91, 20, 63, 25, 48, 84, 99, 98, 5, 16, 58.29, Compassionate, Manila, 0xff4ec6, Lonely, 13' 9'', 183.08997, False, False, True, False
+Doctor Knight, 99, 99, 59, 9, 91, 86, 33, 39, 87, 92, 42.94, Charismatic, Addis Ababa, 0x7407ff, Light sensitive, 18' 9'', 131.66145, False, True, True, False
+Rocket Lightning, 41, 95, 98, 33, 59, 38, 27, 59, 57, 37, 9424.82, Loyal, Nagoya, 0x513df3, Paranoid, 17' 10'', 174.76741, True, True, False, True
+Masked Warrior, 42, 44, 7, 1, 45, 94, 77, 12, 27, 100, 26.20, Calculating, Qingdao, 0x93510a, Magic vulnerable, 16' 2'', 263.75581, True, False, True, True
+Invisible Fist, 57, 33, 22, 30, 23, 19, 77, 47, 15, 1, 23.11, Stoic, Karachi, 0xac2fd8, Ice weakness, 8' 0'', 32.56097, False, True, True, False
+Ms Girl, 21, 63, 2, 18, 39, 1, 41, 37, 97, 46, 59.30, Cold blooded, Porto Alegre, 0x074030, Poison susceptible, 9' 7'', 45.52479, True, False, False, True
+Iron Doom, 96, 85, 7, 67, 59, 35, 85, 59, 48, 34, 22.03, Obsessive, Shanghai, 0x7e38b4, Egotistical, 16' 3'', 250.09040, True, True, False, False
+Wonder Cloak, 89, 99, 17, 52, 78, 20, 98, 46, 89, 21, 34.76, Arrogant, Foshan, 0xbc7113, Magic vulnerable, 6' 4'', 259.56892, True, True, True, True
+Incredible Boy, 59, 97, 89, 30, 42, 4, 90, 77, 51, 13, 49.56, Obsessive, Foshan, 0x86d8a7, Ice weakness, 16' 7'', 198.83635, True, True, True, True
+Night Torch, 36, 4, 8, 84, 26, 96, 62, 91, 77, 40, 47.87, Clever, Sydney, 0xa70892, Light sensitive, 13' 8'', 237.26861, True, False, True, False
+Spider Hornet, 55, 56, 65, 98, 42, 66, 83, 59, 4, 53, 51.56, Sadistic, Fortaleza, 0xf0a78c, Impulsive, 9' 9'', 90.13893, False, False, True, False
+Masked Phantom, 29, 35, 91, 61, 86, 51, 69, 1, 81, 36, 55.69, Compassionate, Shenzhen, 0x8c675a, Stubborn, 5' 0'', 287.60457, True, False, True, True
+Dark Phantom, 84, 58, 55, 32, 100, 70, 66, 18, 11, 43, 40.10, Obsessive, Cairo, 0x23d7d6, Magic vulnerable, 11' 7'', 280.92751, True, True, False, False
+Professor Void, 52, 55, 9, 25, 92, 53, 81, 49, 2, 39, 49.48, Power hungry, Detroit, 0xbc164e, Egotistical, 12' 8'', 269.87409, True, True, True, False
+Rocket Phantom, 36, 38, 81, 37, 12, 77, 52, 0, 17, 35, 30.91, Cunning, Chongqing, 0x465ecf, Naive, 15' 3'', 242.72795, True, True, False, True
+Dark Knight, 4, 80, 31, 71, 82, 43, 83, 37, 73, 62, 36.05, Brave, Beijing, 0xa99a24, Technology vulnerable, 10' 11'', 139.74965, True, False, False, False
+Power Man, 11, 44, 53, 78, 50, 77, 52, 46, 50, 82, 26.59, Power hungry, Shenzhen, 0x27a970, Water weakness, 20' 2'', 83.76424, False, False, False, False
+Ancient Shadow, 19, 98, 87, 0, 75, 12, 68, 77, 50, 61, 42.93, Charismatic, Johannesburg, 0x5f1808, Technology vulnerable, 13' 2'', 155.58557, False, True, False, True
+Power Master, 22, 52, 87, 96, 79, 4, 15, 33, 16, 22, 62.16, Clever, Yangon, 0xd4f3f5, Hubris, 10' 0'', 298.58768, False, True, False, False
+Super Fist, 2, 63, 29, 58, 39, 68, 11, 92, 29, 30, 55.87, Sarcastic, Foshan, 0xf0aca1, Fearful, 10' 7'', 182.03420, False, True, False, False
+Ancient Hulk, 43, 34, 62, 12, 22, 88, 24, 42, 35, 32, 35.16, Calculating, Johannesburg, 0x17e44a, Power addicted, 9' 2'', 286.65884, True, False, True, True
+Ms Ghost, 14, 90, 88, 71, 53, 25, 30, 91, 4, 20, 20.86, Sarcastic, Qingdao, 0xded2b5, Naive, 17' 3'', 46.76158, False, True, False, False
+Silver Woman, 23, 4, 83, 22, 89, 86, 1, 63, 18, 22, 32.28, Obsessive, Kuala Lumpur, 0x39b615, Trusting, 11' 6'', 14.65823, True, False, True, False
+Crimson Fist, 67, 86, 66, 49, 42, 24, 62, 76, 17, 38, 54.94, Cruel, Foshan, 0x96d3fb, Soft hearted, 15' 7'', 186.58547, True, False, False, False
+Night Centurion, 9, 26, 35, 74, 7, 94, 14, 76, 71, 20, 33.98, Reckless, Philadelphia, 0xa74f63, Technology vulnerable, 3' 1'', 144.82851, False, True, True, True
+Green Boy, 52, 44, 70, 89, 3, 67, 32, 46, 34, 67, 38.63, Compassionate, Pune, 0xe674b1, Vengeful, 1' 10'', 259.53453, False, False, False, False
+Human Hornet, 89, 64, 8, 76, 91, 37, 10, 30, 41, 95, 33.48, Cunning, Belo Horizonte, 0x5fce79, Magic vulnerable, 12' 3'', 259.04064, True, True, True, False
+Omega Hulk, 84, 63, 70, 76, 94, 5, 35, 100, 16, 2, 6643.02, Sadistic, Santiago, 0x13248d, Hotheaded, 15' 6'', 62.25314, False, False, False, False
+Masked Cloak, 41, 20, 19, 96, 8, 88, 4, 7, 10, 80, 4883.63, Honorable, Kinshasa, 0x5dcd27, Egotistical, 8' 0'', 118.04525, False, False, False, False
+Master Daredevil, 43, 0, 100, 93, 37, 87, 58, 34, 31, 43, 50.99, Brave, Nanjing, 0x7c906f, Energy drain, 2' 11'', 261.31024, True, False, True, False
+Doctor Hulk, 32, 66, 35, 22, 28, 9, 65, 54, 67, 5, 23.90, Sadistic, Mumbai, 0x1eb50a, Fearful, 5' 2'', 44.27299, True, True, False, True
+Radioactive Darkness, 6, 28, 35, 100, 54, 77, 87, 25, 11, 84, 1106.91, Clever, Kuala Lumpur, 0xb5685a, Lonely, 6' 1'', 250.25032, False, False, True, True
+Ms Hulk, 53, 45, 88, 9, 96, 100, 88, 97, 27, 8, 35.84, Sadistic, Toronto, 0xcb7e28, Short sighted, 18' 6'', 143.31835, False, True, True, False
+Professor Crusader, 36, 43, 44, 48, 0, 37, 89, 44, 68, 10, 37.40, Sarcastic, Seattle, 0x001b2b, Darkness bound, 20' 11'', 4.86707, True, True, True, True
+Ancient Warrior, 28, 91, 100, 5, 92, 73, 71, 95, 58, 44, 34.08, Reckless, Suzhou, 0xb3a0cf, Power addicted, 6' 1'', 115.73917, False, True, True, False
+Human Daredevil, 70, 94, 23, 48, 61, 47, 4, 1, 25, 25, 46.49, Cunning, Haerbin, 0x4088b6, Overconfident, 7' 2'', 122.07047, False, True, True, True
+Incredible Ghost, 68, 85, 82, 77, 94, 56, 69, 19, 5, 69, 31.98, Cold blooded, Foshan, 0x6d41e5, Sound sensitive, 12' 4'', 150.16531, True, False, False, True
+Radioactive Hulk, 68, 16, 63, 22, 91, 98, 19, 94, 14, 14, 45.49, Calculating, Mexico City, 0x26ebb5, Distrustful, 19' 8'', 143.83088, False, True, True, True
+Human Skull, 55, 4, 43, 5, 19, 37, 92, 81, 24, 75, 18.22, Cruel, Shenyang, 0x79dc0f, Hubris, 18' 2'', 189.58638, True, True, False, False
+Professor Ghost, 37, 36, 50, 65, 94, 20, 54, 96, 19, 7, 22.84, Determined, Madrid, 0x114eb2, Light sensitive, 2' 8'', 172.50184, False, False, True, True
+Dark Claw, 57, 34, 67, 62, 61, 34, 12, 81, 79, 32, 38.06, Brave, Singapore, 0xb9bd1e, Hotheaded, 16' 0'', 185.85367, False, False, False, True
+Dark Man, 9, 83, 63, 72, 32, 95, 98, 96, 31, 21, 51.42, Cold blooded, Bogota, 0xb33b70, Technology vulnerable, 18' 7'', 205.78223, True, True, True, False
+Omega Skull, 89, 9, 94, 85, 76, 28, 29, 49, 26, 38, 42.37, Sadistic, Kano, 0x87f409, Silver weakness, 2' 5'', 149.67391, False, False, False, False
+Master Master, 34, 69, 77, 88, 95, 57, 64, 27, 65, 26, 33.88, Honorable, Lima, 0x6056b7, Water weakness, 10' 4'', 93.15720, False, False, True, False
+Silver Shadow, 94, 36, 34, 38, 73, 56, 17, 98, 57, 62, 25.77, Sadistic, Hangzhou, 0x733c00, Water weakness, 15' 10'', 37.89784, True, False, False, True
+Spider Doom, 28, 33, 4, 6, 12, 48, 9, 53, 73, 97, 29.50, Calculating, San Diego, 0x311285, Overconfident, 6' 3'', 100.33577, True, False, True, False
+The Centurion, 90, 100, 53, 38, 61, 90, 35, 59, 14, 96, 40.49, Loyal, Lagos, 0x22ec6e, Power addicted, 3' 7'', 261.25593, False, False, False, False
+Crimson Girl, 48, 80, 45, 11, 28, 15, 98, 37, 21, 30, 65.64, Protective, Abidjan, 0x37e462, Light sensitive, 5' 2'', 55.49627, True, False, True, True
+Power Hornet, 44, 53, 55, 3, 8, 88, 15, 38, 64, 32, 18.00, Sarcastic, Haerbin, 0x4e7292, Silver weakness, 18' 8'', 239.87369, False, False, False, False
+Mr Daredevil, 78, 45, 72, 61, 86, 26, 49, 72, 6, 26, 39.45, Arrogant, Addis Ababa, 0xf479af, Lonely, 9' 11'', 216.01634, False, True, False, True
+Super Darkness, 60, 53, 94, 73, 85, 96, 100, 2, 42, 36, 31.93, Stoic, Shenzhen, 0x30f2ed, Trusting, 17' 6'', 55.44535, False, False, False, False
+Invisible Warrior, 30, 76, 88, 19, 99, 92, 58, 15, 99, 50, 29.14, Reckless, Dallas, 0x9287a8, Light sensitive, 3' 1'', 71.21287, False, False, False, True
+Spider Claw, 49, 45, 23, 41, 67, 87, 41, 60, 52, 18, 20.82, Cold blooded, Denver, 0x672472, Short sighted, 16' 2'', 26.16566, True, False, True, True
+Ms Surfer, 39, 79, 50, 90, 29, 42, 45, 33, 90, 23, 43.79, Sarcastic, Shenyang, 0x3efee6, Prideful, 19' 6'', 94.74917, False, True, False, True
+Master X, 84, 80, 25, 58, 77, 95, 4, 50, 66, 0, 18.00, Determined, Detroit, 0x2b7c6b, Hotheaded, 19' 11'', 146.34325, False, False, True, False
+Green Knight, 13, 39, 90, 58, 52, 24, 95, 18, 11, 96, 18.00, Loyal, Ho Chi Minh City, 0x592234, Fearful, 4' 6'', 158.71865, False, True, False, False
+Mr Lightning, 73, 29, 76, 13, 69, 34, 92, 55, 86, 36, 41.08, Arrogant, Seattle, 0xebee29, Electric weakness, 3' 1'', 281.97465, False, True, False, False
+Rocket Soldier, 72, 18, 39, 70, 39, 40, 65, 5, 22, 65, 18.00, Determined, Moscow, 0xa0bb90, Darkness bound, 4' 6'', 21.94327, False, True, False, True
+Impossible Skull, 100, 0, 19, 99, 76, 17, 97, 76, 22, 73, 32.51, Vengeful, Nanjing, 0xc35a2c, Radiation weak, 11' 6'', 205.52997, False, True, True, True
+Iron Centurion, 75, 1, 21, 99, 79, 30, 23, 43, 34, 62, 36.57, Sadistic, Chongqing, 0xabbbcc, Prideful, 5' 11'', 206.85300, False, True, True, True
+Incredible Skull, 91, 24, 5, 36, 65, 71, 18, 3, 38, 1, 45.91, Vengeful, Wuhan, 0x436d77, Sound sensitive, 0' 6'', 46.93844, False, False, True, True
+Night Machine, 28, 58, 93, 12, 18, 59, 80, 57, 77, 99, 38.53, Clever, Singapore, 0xa86b9e, Hubris, 7' 8'', 186.85566, True, True, False, False
+Invisible Centurion, 2, 23, 23, 44, 21, 34, 99, 0, 71, 84, 31.55, Reckless, Shanghai, 0xc5d242, Distrustful, 13' 7'', 79.11763, False, True, False, False
+Night Warrior, 21, 24, 87, 74, 66, 71, 88, 91, 53, 77, 37.85, Cold blooded, Nairobi, 0x856076, Distrustful, 20' 1'', 186.74517, True, True, True, True
+Spider Ghost, 40, 48, 2, 77, 10, 21, 83, 80, 41, 16, 48.96, Sadistic, San Jose, 0xad84f8, Water weakness, 7' 7'', 69.27339, True, False, True, False
+Super Soldier, 72, 46, 44, 63, 56, 52, 58, 58, 49, 46, 59.19, Cruel, Kano, 0xe64b63, Stubborn, 7' 1'', 230.30034, True, False, True, True
+The Skull, 31, 16, 22, 26, 35, 14, 92, 51, 58, 28, 33.47, Sarcastic, Nairobi, 0x3f9531, Vengeful, 13' 3'', 8.44228, True, True, True, True
+Night Daredevil, 77, 35, 50, 71, 79, 21, 3, 65, 52, 32, 33.35, Compassionate, Hyderabad, 0xf8e272, Poison susceptible, 1' 8'', 77.13356, True, False, True, True
+Mr Fist, 71, 76, 92, 19, 10, 58, 43, 32, 34, 86, 49.71, Arrogant, Dongguan, 0xea8a24, Lonely, 9' 3'', 143.43664, True, False, True, False
+Spider Knight, 14, 69, 51, 21, 61, 95, 63, 64, 17, 28, 46.10, Ruthless, Madrid, 0x1c28be, Overconfident, 18' 9'', 106.96170, False, False, False, True
+Professor Entity, 8, 70, 4, 34, 60, 98, 66, 16, 61, 77, 18.00, Sadistic, Nagoya, 0xbab988, Radiation weak, 8' 7'', 283.86042, False, False, True, False
+Masked Ghost, 72, 21, 69, 5, 52, 10, 28, 9, 49, 24, 18.00, Honorable, Bogota, 0xa717e9, Trusting, 15' 5'', 237.29208, False, True, True, False
+Dark Soldier, 79, 5, 73, 94, 93, 3, 23, 99, 90, 12, 19.54, Calculating, Foshan, 0xd81545, Stubborn, 5' 11'', 19.75878, True, False, True, False
+Professor Fist, 13, 13, 14, 81, 84, 48, 85, 74, 64, 20, 3995.27, Loyal, Dongguan, 0x2564cf, Fearful, 0' 0'', 247.62031, True, False, False, True
+Captain Claw, 65, 6, 98, 16, 73, 92, 79, 20, 33, 68, 63.26, Vengeful, Zhengzhou, 0xd40be6, Egotistical, 1' 2'', 70.86648, True, True, False, True
+Doctor Centurion, 71, 37, 66, 56, 68, 71, 54, 33, 46, 47, 44.07, Charismatic, Houston, 0x3cb1ad, Egotistical, 5' 1'', 27.14506, True, False, False, False
+Crimson Darkness, 0, 94, 72, 35, 25, 19, 0, 27, 84, 95, 46.48, Cold blooded, Tehran, 0x9e708d, Greedy, 12' 6'', 122.70185, True, True, False, False
+Doctor Boy, 49, 68, 70, 65, 90, 43, 0, 10, 18, 2, 25.18, Loyal, Beijing, 0x2030b1, Darkness bound, 18' 7'', 297.37650, True, False, False, True
+Green Man, 74, 10, 12, 35, 32, 20, 77, 0, 13, 82, 22.73, Obsessive, Charlotte, 0x3e94db, Electric weakness, 6' 3'', 289.05443, True, False, True, False
+Green Phantom, 78, 13, 5, 83, 99, 95, 11, 53, 82, 62, 45.56, Cold blooded, Ho Chi Minh City, 0x5891e7, Poison susceptible, 18' 5'', 89.82256, False, True, False, True
+Iron Cloak, 26, 25, 9, 25, 34, 27, 96, 10, 92, 8, 45.98, Cold blooded, Shanghai, 0x302a7e, Egotistical, 15' 11'', 216.59407, False, True, True, False
+Wonder Daredevil, 9, 71, 36, 71, 34, 9, 36, 53, 42, 63, 20.08, Sarcastic, San Jose, 0xee751e, Manipulable, 8' 6'', 97.26156, True, False, True, True
