@@ -1164,8 +1164,8 @@ def _pick_model():
     return "qwen3.5:0.8b"
 
 
-OLLAMA_MODEL = _pick_model()
-print(f"Using LLM model: {OLLAMA_MODEL}")
+# OLLAMA_MODEL = _pick_model()
+# print(f"Using LLM model: {OLLAMA_MODEL}")
 
 
 def llm_chat(system_prompt, user_prompt):
