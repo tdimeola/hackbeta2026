@@ -16,7 +16,7 @@ class Game:
     def __init__(self):
         pg.init()
         pg.mouse.set_visible(False)
-        self.screen = pg.display.set_mode(RES)
+        self.screen = pg.display.set_mode((0, 0), pg.FULLSCREEN)
         pg.event.set_grab(True)
         self.clock = pg.time.Clock()
         self.delta_time = 1
@@ -63,6 +63,8 @@ class Game:
             self.player.single_fire_event(event)
 
     def loop(self):
+        if self.player.health < 1:
+            return True, "quantum"
         self.check_events()
         self.update()
         self.draw()
