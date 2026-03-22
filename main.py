@@ -129,18 +129,44 @@ DEATH_COLLAPSE_SOUND.set_volume(0.9)
 EVIL_LAUGH_SOUND = pygame.mixer.Sound("sounds/evil-laugh.mp3")
 EVIL_LAUGH_SOUND.set_volume(0.9)
 
+# Volume settings (0.0 – 1.0)
+master_volume = 1.0
+music_volume = 0.6
+
+# Registry of (Sound, base_volume) for applying master_volume
+_sfx_registry = [
+    (sfx_door, 0.7),
+    (sfx_pop, 0.6),
+    (EVIDENCE_SOUND, 0.9),
+    (REVEAL_SOUND, 0.9),
+    (NIGHT_SOUND, 0.8),
+    (DEATH_COLLAPSE_SOUND, 0.9),
+    (EVIL_LAUGH_SOUND, 0.9),
+]
+
+
+def apply_master_volume():
+    for sound, base_vol in _sfx_registry:
+        sound.set_volume(base_vol * master_volume)
+    for sound in _stone_pool + _grass_pool:
+        sound.set_volume(0.55 * master_volume)
+
+
+def apply_music_volume():
+    pygame.mixer.music.set_volume(music_volume)
+
 
 def music_start_menu():
     """Fade in main menu soundtrack."""
     pygame.mixer.music.load(MENU_MUSIC)
-    pygame.mixer.music.set_volume(0.5)
+    pygame.mixer.music.set_volume(music_volume)
     pygame.mixer.music.play(loops=-1, fade_ms=2000)
 
 
 def music_start_day():
     """Fade in daytime soundtrack."""
     pygame.mixer.music.load(DAY_MUSIC)
-    pygame.mixer.music.set_volume(0.6)
+    pygame.mixer.music.set_volume(music_volume)
     pygame.mixer.music.play(loops=-1, fade_ms=3000)
 
 
@@ -584,6 +610,7 @@ class Game:
         self.dialogue_loading = False
         self.accuse_selection = 0
         self.accuse_result_correct = False
+        self.settings_selection = 0  # 0 = master volume, 1 = music volume
         self.talked_to = set()
         self.player_x = 0.0
         self.player_y = 0.0
@@ -1590,10 +1617,15 @@ while running:
                         game.start_fade(lambda: game.try_exit_interior())
                     else:
                         running = False
+                elif game.state == "SETTINGS":
+                    game.state = "MENU"
                 else:
                     running = False
 
             # Menu
+            if game.state == "MENU" and event.key == pygame.K_s and not game.fading:
+                game.state = "SETTINGS"
+
             if game.state == "MENU" and event.key == pygame.K_RETURN and not game.fading:
                 game.start_fade(lambda: game.new_game())
 
@@ -1700,6 +1732,21 @@ while running:
             elif game.state == "ACCUSE_RESULT":
                 if (event.key == pygame.K_RETURN or event.key == pygame.K_SPACE) and not game.fading:
                     game.start_fade(lambda: game.start_night())
+
+            # Settings
+            elif game.state == "SETTINGS":
+                if event.key == pygame.K_UP:
+                    game.settings_selection = (game.settings_selection - 1) % 2
+                elif event.key == pygame.K_DOWN:
+                    game.settings_selection = (game.settings_selection + 1) % 2
+                elif event.key in (pygame.K_LEFT, pygame.K_RIGHT):
+                    delta = 0.1 if event.key == pygame.K_RIGHT else -0.1
+                    if game.settings_selection == 0:
+                        master_volume = round(max(0.0, min(1.0, master_volume + delta)), 1)
+                        apply_master_volume()
+                    else:
+                        music_volume = round(max(0.0, min(1.0, music_volume + delta)), 1)
+                        apply_music_volume()
 
             # Win/Lose
             elif game.state in ("WIN", "LOSE"):
@@ -1817,6 +1864,7 @@ while running:
         draw_centered_text(screen, "A villain hides among the townspeople.", font_md, (200, 200, 200), 270)
         draw_centered_text(screen, "Find them before it's too late.", font_md, (200, 200, 200), 310)
         draw_centered_text(screen, "Press ENTER to begin", font_md, (255, 255, 255), 420)
+        draw_centered_text(screen, "Press S for Settings", font_sm, (180, 180, 180), 460)
         draw_centered_text(screen, "[WASD] Move  [E] Interact  [B] Journal  [L] Log  [J] Clues  [TAB] Accuse", font_sm, (150, 150, 150), 500)
 
     elif game.state == "NIGHT":
@@ -2330,6 +2378,21 @@ while running:
         for line in game.storyteller_text.split("\n"):
             cur_y = draw_centered_text_wrapped(screen, line, font_lg, BLOOD_RED, cur_y)
         draw_centered_text(screen, "Press ENTER for main menu", font_md, (255, 180, 180), 500)
+
+    elif game.state == "SETTINGS":
+        screen.fill((20, 20, 30))
+        draw_centered_text(screen, "SETTINGS", font_lg, (220, 220, 255), 140)
+        draw_centered_text(screen, "[UP/DOWN] Select   [LEFT/RIGHT] Adjust   [ESC] Back", font_sm, (150, 150, 180), 200)
+
+        labels = ["Master Volume", "Music Volume"]
+        values = [master_volume, music_volume]
+        for i, (label, val) in enumerate(zip(labels, values)):
+            y = 280 + i * 80
+            col = (255, 255, 100) if i == game.settings_selection else (200, 200, 200)
+            prefix = "> " if i == game.settings_selection else "  "
+            bar_filled = int(val * 10)
+            bar = "[" + "#" * bar_filled + "-" * (10 - bar_filled) + "]"
+            draw_centered_text(screen, f"{prefix}{label}  {bar}  {int(val * 100)}%", font_md, col, y)
 
     # Fade overlay (drawn over everything)
     if game.fade_alpha > 0:
